@@ -3,10 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>stitchflow</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}El Senior Dumingag{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <!-- HTMX CDN -->
+    <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-{% block content %}
-{% endblock content %}
+<body class="bg-gray-100">
+    <div class="flex h-screen" x-data="{ sidebarOpen: false }">
+        <!-- Mobile sidebar overlay -->
+        <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 z-20 bg-black bg-opacity-50 md:hidden"></div>
+        
+        <!-- Sidebar -->
+        {% if user.is_authenticated and user.is_staff %}
+        <div :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="bg-green-800 text-white w-64 space-y-6 py-7 px-2 fixed inset-y-0 left-0 z-30 transform transition duration-300 ease-in-out md:translate-x-0 md:static md:inset-0">
+            <div class="flex justify-between items-center px-4">
+                <div class="text-white text-2xl font-bold">
+                    <a href="{% url 'etailoring:admin_dashboard' %}">El Senior Dumingag</a>
+                </div>
+                <button @click="sidebarOpen = false" class="md:hidden text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <nav>
+                <a href="{% url 'etailoring:admin_dashboard' %}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-green-900{% endif %}">
+                    <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                </a>
+                
+                <div class="py-2.5 px-4 text-green-200 text-sm font-bold uppercase">Customer Management</div>
+                <a href="{% url 'etailoring:create_customer' %}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 {% if request.resolver_match.url_name == 'create_customer' %}bg-green-900{% endif %}">
+                    <i class="fas fa-user-plus mr-2"></i>Create Customer
+                </a>
+                <a href="{% url 'etailoring:create_order' %}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 {% if request.resolver_match.url_name == 'create_order' %}bg-green-900{% endif %}">
+                    <i class="fas fa-shopping-cart mr-2"></i>Create Order
+                </a>
+                <a href="{% url 'etailoring:manage_customers' %}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 {% if request.resolver_match.url_name == 'manage_customers' %}bg-green-900{% endif %}">
+                    <i class="fas fa-users mr-2"></i>Manage Customers
+                </a>
+                
+                <div class="py-2.5 px-4 text-green-200 text-sm font-bold uppercase">Inventory Management</div>
+                <a href="{% url 'etailoring:inventory_management' %}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 {% if request.resolver_match.url_name == 'inventory_management' %}bg-green-900{% endif %}">
+                    <i class="fas fa-boxes mr-2"></i>View Inventory
+                </a>
+                <a href="{% url 'etailoring:manage_fabrics' %}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 {% if request.resolver_match.url_name == 'manage_fabrics' %}bg-green-900{% endif %}">
+                    <i class="fas fa-fabric mr-2"></i>Manage Fabrics
+                </a>
+                <a href="{% url 'etailoring:manage_accessories' %}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 {% if request.resolver_match.url_name == 'manage_accessories' %}bg-green-900{% endif %}">
+                    <i class="fas fa-puzzle-piece mr-2"></i>Manage Accessories
+                </a>
+                
+                <div class="py-2.5 px-4 text-green-200 text-sm font-bold uppercase">Staff Management</div>
+                <a href="{% url 'etailoring:manage_tailors' %}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 {% if request.resolver_match.url_name == 'manage_tailors' %}bg-green-900{% endif %}">
+                    <i class="fas fa-user-tie mr-2"></i>Manage Tailors
+                </a>
+                
+                <div class="py-2.5 px-4 text-green-200 text-sm font-bold uppercase">Order Management</div>
+                <a href="{% url 'etailoring:manage_orders' %}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 {% if request.resolver_match.url_name == 'manage_orders' %}bg-green-900{% endif %}">
+                    <i class="fas fa-list mr-2"></i>View All Orders
+                </a>
+                <a href="{% url 'etailoring:manage_tasks' %}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 {% if request.resolver_match.url_name == 'manage_tasks' %}bg-green-900{% endif %}">
+                    <i class="fas fa-tasks mr-2"></i>Manage Tasks
+                </a>
+                <a href="{% url 'etailoring:manage_commissions' %}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 {% if request.resolver_match.url_name == 'manage_commissions' %}bg-green-900{% endif %}">
+                    <i class="fas fa-money-bill-wave mr-2"></i>Commissions
+                </a>
+                
+                <div class="py-2.5 px-4 text-green-200 text-sm font-bold uppercase">System</div>
+                <a href="{% url 'etailoring:command_management' %}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700 {% if request.resolver_match.url_name == 'command_management' %}bg-green-900{% endif %}">
+                    <i class="fas fa-terminal mr-2"></i>Command Management
+                </a>
+                <a href="#" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700">
+                    <i class="fas fa-cog mr-2"></i>Settings
+                </a>
+                <a href="{% url 'etailoring:logout' %}" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </a>
+            </nav>
+        </div>
+        {% elif user.is_authenticated and user.userextension.role == 'TAILOR' %}
+        <div :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="bg-gradient-to-b from-green-800 to-green-900 text-white w-64 space-y-6 py-7 px-2 fixed inset-y-0 left-0 z-30 transform transition duration-300 ease-in-out md:translate-x-0 md:static md:inset-0 shadow-xl">
+            <div class="flex justify-between items-center px-4">
+                <div class="text-white text-2xl font-bold flex items-center">
+                    <i class="fas fa-cut mr-3 text-green-300"></i>
+                    <a href="{% url 'etailoring:tailor_dashboard' %}">El Senior Dumingag</a>
+                </div>
+                <button @click="sidebarOpen = false" class="md:hidden text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <nav class="mt-8">
+                <a href="{% url 'etailoring:tailor_dashboard' %}" class="block py-3 px-4 rounded-lg transition duration-200 hover:bg-green-700 {% if request.resolver_match.url_name == 'tailor_dashboard' %}bg-green-700 shadow-inner{% endif %}">
+                    <i class="fas fa-tachometer-alt mr-3"></i>Dashboard
+                </a>
+                
+                <div class="px-4 py-3 text-green-200 text-xs font-semibold uppercase tracking-wider mt-6 mb-2 flex items-center">
+                    <i class="fas fa-tasks mr-2"></i> My Work
+                </div>
+                <a href="{% url 'etailoring:tailor_dashboard' %}#tasks" class="block py-3 px-4 rounded-lg transition duration-200 hover:bg-green-700 ml-4">
+                    <i class="fas fa-clipboard-list mr-3"></i>My Tasks
+                </a>
+                <a href="{% url 'etailoring:tailor_dashboard' %}#commissions" class="block py-3 px-4 rounded-lg transition duration-200 hover:bg-green-700 ml-4">
+                    <i class="fas fa-money-bill-wave mr-3"></i>My Commissions
+                </a>
+                
+                <div class="px-4 py-3 text-green-200 text-xs font-semibold uppercase tracking-wider mt-6 mb-2 flex items-center">
+                    <i class="fas fa-chart-line mr-2"></i> Reports
+                </div>
+                <a href="{% url 'etailoring:tailor_dashboard' %}#completed" class="block py-3 px-4 rounded-lg transition duration-200 hover:bg-green-700 ml-4">
+                    <i class="fas fa-check-circle mr-3"></i>Completed Tasks
+                </a>
+                <a href="{% url 'etailoring:tailor_dashboard' %}#earnings" class="block py-3 px-4 rounded-lg transition duration-200 hover:bg-green-700 ml-4">
+                    <i class="fas fa-chart-bar mr-3"></i>Earnings Summary
+                </a>
+                
+                <div class="px-4 py-3 text-green-200 text-xs font-semibold uppercase tracking-wider mt-6 mb-2 flex items-center">
+                    <i class="fas fa-user-circle mr-2"></i> Account
+                </div>
+                <a href="#" class="block py-3 px-4 rounded-lg transition duration-200 hover:bg-green-700 ml-4">
+                    <i class="fas fa-user mr-3"></i>My Profile
+                </a>
+                <a href="#" class="block py-3 px-4 rounded-lg transition duration-200 hover:bg-green-700 ml-4">
+                    <i class="fas fa-cog mr-3"></i>Settings
+                </a>
+                <a href="{% url 'etailoring:logout' %}" class="block py-3 px-4 rounded-lg transition duration-200 hover:bg-green-700 ml-4">
+                    <i class="fas fa-sign-out-alt mr-3"></i>Logout
+                </a>
+            </nav>
+            
+            <!-- Tailor Info Footer -->
+            <div class="absolute bottom-0 left-0 right-0 p-4 bg-green-900 bg-opacity-50">
+                <div class="flex items-center">
+                    <div class="bg-green-700 rounded-full p-2 mr-3">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="text-sm">
+                        <p class="font-medium truncate">{{ user.first_name }} {{ user.last_name }}</p>
+                        <p class="text-green-300 text-xs">Professional Tailor</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Main Content Area -->
+        <div class="flex-1 overflow-auto flex flex-col">
+            <!-- Mobile header with toggle button -->
+            {% if user.is_authenticated %}
+            <div class="md:hidden bg-white shadow-sm p-4 flex items-center">
+                <button @click="sidebarOpen = true" class="text-gray-600 mr-4">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <div class="text-lg font-semibold text-gray-800">
+                    {% if user.is_staff %}
+                        Admin Dashboard
+                    {% elif user.userextension.role == 'TAILOR' %}
+                        Tailor Dashboard
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Page Content -->
+            <div class="flex-1">
+                {% block content %}
+                <!-- Page content will be inserted here -->
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Handle logout - clear tokens from storage
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutLinks = document.querySelectorAll("a[href=\"{% url 'etailoring:logout' %}\"]");
+            logoutLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Clear tokens from storage
+                    sessionStorage.removeItem('authToken');
+                    localStorage.removeItem('authToken');
+                    console.log('Authentication tokens cleared');
+                });
+            });
+        });
+    </script>
 </body>
 </html>

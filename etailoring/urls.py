@@ -1,6 +1,75 @@
 from django.urls import path
-from .views import home
+from . import views
+
+app_name = 'etailoring'
 
 urlpatterns = [
-    path('', home, name='home'),
+    # Homepage
+    path('', views.homepage, name='homepage'),
+    
+    # Page URLs
+    path('login/', views.login_view, name='login'),
+    path('register/', views.register_page_view, name='register'),
+    path('create-customer/', views.create_customer_view, name='create_customer'),
+    path('create-order/', views.create_order_view, name='create_order'),
+    path('inventory-management/', views.inventory_management_view, name='inventory_management'),
+    path('customer-management/', views.customer_management_view, name='customer_management'),
+    path('command-management/', views.command_management_view, name='command_management'),
+    path('manage-customers/', views.manage_customers_view, name='manage_customers'),
+    path('manage-fabrics/', views.manage_fabrics_view, name='manage_fabrics'),
+    path('manage-accessories/', views.manage_accessories_view, name='manage_accessories'),
+    path('manage-tailors/', views.manage_tailors_view, name='manage_tailors'),
+    path('manage-orders/', views.manage_orders_view, name='manage_orders'),
+    path('manage-tasks/', views.manage_tasks_view, name='manage_tasks'),
+    path('manage-commissions/', views.manage_commissions_view, name='manage_commissions'),
+    path('logout/', views.logout_page_view, name='logout'),
+    path('assign-order/<int:order_id>/', views.assign_order_view, name='assign_order'),
+    
+    # Dashboard URLs
+    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('tailor-dashboard/', views.tailor_dashboard, name='tailor_dashboard'),
+    path('customer-dashboard/', views.customer_dashboard, name='customer_dashboard'),
+    
+    # Authentication URLs
+    path('api/login/', views.CustomAuthToken.as_view(), name='api_login'),
+    path('api/logout/', views.logout_view, name='api_logout'),
+    path('api/register/', views.register_view, name='api_register'),
+    
+    # Admin URLs
+    path('api/admin/customers/', views.CustomerListCreateView.as_view(), name='admin_customer_list'),
+    path('api/admin/customers/<int:pk>/', views.CustomerDetailView.as_view(), name='admin_customer_detail'),
+    
+    path('api/admin/tailors/', views.TailorListCreateView.as_view(), name='admin_tailor_list'),
+    path('api/admin/tailors/<int:pk>/', views.TailorDetailView.as_view(), name='admin_tailor_detail'),
+    
+    path('api/admin/fabrics/', views.FabricListCreateView.as_view(), name='admin_fabric_list'),
+    path('api/admin/fabrics/<int:pk>/', views.FabricDetailView.as_view(), name='admin_fabric_detail'),
+    
+    path('api/admin/accessories/', views.AccessoryListCreateView.as_view(), name='admin_accessory_list'),
+    path('api/admin/accessories/<int:pk>/', views.AccessoryDetailView.as_view(), name='admin_accessory_detail'),
+    
+    path('api/admin/orders/', views.OrderListCreateView.as_view(), name='admin_order_list'),
+    path('api/admin/orders/<int:pk>/', views.OrderDetailView.as_view(), name='admin_order_detail'),
+    
+    path('api/admin/tasks/', views.TaskListCreateView.as_view(), name='admin_task_list'),
+    path('api/admin/tasks/<int:pk>/', views.TaskDetailView.as_view(), name='admin_task_detail'),
+    
+    path('api/admin/commissions/', views.CommissionListView.as_view(), name='admin_commission_list'),
+    path('api/admin/commissions/<int:commission_id>/pay/', views.pay_commission, name='admin_pay_commission'),
+    path('api/admin/orders/<int:order_id>/process-payment/', views.process_customer_payment, name='admin_process_payment'),
+    path('api/admin/tasks/<int:task_id>/pay-commission/', views.pay_commission_for_task, name='admin_pay_commission_for_task'),
+    path('api/admin/assign-order/', views.assign_order_to_tailor, name='admin_assign_order'),
+    path('api/admin/fabrics/<int:fabric_id>/restock/', views.restock_fabric, name='admin_restock_fabric'),
+    path('api/admin/accessories/<int:accessory_id>/restock/', views.restock_accessory, name='admin_restock_accessory'),
+    
+    # Tailor URLs
+    path('api/tailor/tasks/', views.TailorTaskListView.as_view(), name='tailor_task_list'),
+    path('api/tailor/tasks/<int:pk>/', views.TailorTaskDetailView.as_view(), name='tailor_task_detail'),
+    path('api/tailor/tasks/<int:task_id>/start/', views.start_task, name='tailor_start_task'),
+    path('api/tailor/tasks/<int:task_id>/complete/', views.complete_task, name='tailor_complete_task'),
+    path('api/tailor/commissions/', views.TailorCommissionListView.as_view(), name='tailor_commission_list'),
+    
+    # Customer URLs
+    path('api/customer/orders/', views.CustomerOrderListView.as_view(), name='customer_order_list'),
+    path('api/customer/orders/<int:pk>/', views.CustomerOrderDetailView.as_view(), name='customer_order_detail'),
 ]

@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Customers - El Senior Dumingag{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Manage Customers</h2>
+        <div class="flex space-x-2">
+            <button id="refreshBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+                <i class="fas fa-sync-alt mr-2"></i>Refresh
+            </button>
+            <a href="{% url 'etailoring:create_customer' %}" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                <i class="fas fa-user-plus mr-2"></i>Create Customer
+            </a>
+        </div>
+    </div>
+    
+    <!-- Search and Filter -->
+    <div class="mb-6">
+        <div class="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-4 md:space-y-0">
+            <div class="flex-1">
+                <input type="text" id="searchInput" placeholder="Search customers by name or phone..." 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500">
+            </div>
+            <button id="searchBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                <i class="fas fa-search mr-2"></i>Search
+            </button>
+        </div>
+    </div>
+    
+    <!-- Customer Table -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white border border-gray-200">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="py-2 px-4 border-b text-left">ID</th>
+                    <th class="py-2 px-4 border-b text-left">Name</th>
+                    <th class="py-2 px-4 border-b text-left">Phone</th>
+                    <th class="py-2 px-4 border-b text-left">Email</th>
+                    <th class="py-2 px-4 border-b text-left">Orders</th>
+                    <th class="py-2 px-4 border-b text-left">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="customerTableBody">
+                <!-- Customer data will be loaded here -->
+                <tr>
+                    <td colspan="6" class="py-4 px-4 text-center text-gray-500">Loading customer data...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    // Load customer data when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCustomerData();
+    });
+    
+    // Refresh button
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+        loadCustomerData();
+    });
+    
+    // Search button
+    document.getElementById('searchBtn').addEventListener('click', function() {
+        loadCustomerData();
+    });
+    
+    // Search input enter key
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            loadCustomerData();
+        }
+    });
+    
+    function loadCustomerData() {
+        const searchQuery = document.getElementById('searchInput').value;
+        
+        // Fetch customer data from API
+        fetch('/api/admin/customers/', {
+            headers: {
+                'Authorization': 'Token ' + localStorage.getItem('authToken'),
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(customers => {
+            const customerTableBody = document.getElementById('customerTableBody');
+            customerTableBody.innerHTML = '';
+            
+            if (customers.length === 0) {
+                customerTableBody.innerHTML = '<tr><td colspan="6" class="py-4 px-4 text-center text-gray-500">No customers found</td></tr>';
+                return;
+            }
+            
+            // Filter customers based on search query
+            let filteredCustomers = customers;
+            if (searchQuery) {
+                filteredCustomers = customers.filter(customer => 
+                    customer.user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    customer.user.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    customer.phone_number.includes(searchQuery)
+                );
+            }
+            
+            if (filteredCustomers.length === 0) {
+                customerTableBody.innerHTML = '<tr><td colspan="6" class="py-4 px-4 text-center text-gray-500">No customers match your search</td></tr>';
+                return;
+            }
+            
+            filteredCustomers.forEach(customer => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="py-2 px-4 border-b">${customer.id}</td>
+                    <td class="py-2 px-4 border-b">${customer.user.first_name} ${customer.user.last_name}</td>
+                    <td class="py-2 px-4 border-b">${customer.phone_number}</td>
+                    <td class="py-2 px-4 border-b">${customer.user.email || 'N/A'}</td>
+                    <td class="py-2 px-4 border-b">0</td>
+                    <td class="py-2 px-4 border-b">
+                        <button class="text-indigo-600 hover:text-indigo-900 mr-2 edit-customer" data-id="${customer.id}" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="text-blue-600 hover:text-blue-900 mr-2 create-order" data-id="${customer.id}" title="Create Order">
+                            <i class="fas fa-shopping-cart"></i>
+                        </button>
+                        <button class="text-red-600 hover:text-red-900 delete-customer" data-id="${customer.id}" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                customerTableBody.appendChild(row);
+            });
+            
+            // Add event listeners to action buttons
+            document.querySelectorAll('.edit-customer').forEach(button => {
+                button.addEventListener('click', function() {
+                    const customerId = this.getAttribute('data-id');
+                    editCustomer(customerId);
+                });
+            });
+            
+            document.querySelectorAll('.create-order').forEach(button => {
+                button.addEventListener('click', function() {
+                    const customerId = this.getAttribute('data-id');
+                    window.location.href = `/create-order/?customer=${customerId}`;
+                });
+            });
+            
+            document.querySelectorAll('.delete-customer').forEach(button => {
+                button.addEventListener('click', function() {
+                    const customerId = this.getAttribute('data-id');
+                    deleteCustomer(customerId);
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error loading customers:', error);
+            document.getElementById('customerTableBody').innerHTML = '<tr><td colspan="6" class="py-4 px-4 text-center text-red-500">Error loading customer data</td></tr>';
+        });
+    }
+    
+    function editCustomer(customerId) {
+        // Redirect to customer edit page (would need to be implemented)
+        alert('Edit customer functionality would be implemented here. Customer ID: ' + customerId);
+    }
+    
+    function deleteCustomer(customerId) {
+        if (confirm('Are you sure you want to delete this customer? This action cannot be undone.')) {
+            // Delete customer via API
+            fetch(`/api/admin/customers/${customerId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Token ' + localStorage.getItem('authToken'),
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Customer deleted successfully!');
+                    loadCustomerData(); // Refresh the table
+                } else {
+                    alert('Error deleting customer.');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting customer:', error);
+                alert('Error deleting customer.');
+            });
+        }
+    }
+</script>
+{% endblock %}

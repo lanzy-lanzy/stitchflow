@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Fabrics - El Senior Dumingag{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Manage Fabrics</h2>
+        <div class="flex space-x-2">
+            <button id="refreshBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+                <i class="fas fa-sync-alt mr-2"></i>Refresh
+            </button>
+            <button id="addFabricBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                <i class="fas fa-plus mr-2"></i>Add Fabric
+            </button>
+        </div>
+    </div>
+    
+    <!-- Fabric Table -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white border border-gray-200">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="py-2 px-4 border-b text-left">ID</th>
+                    <th class="py-2 px-4 border-b text-left">Name</th>
+                    <th class="py-2 px-4 border-b text-left">Description</th>
+                    <th class="py-2 px-4 border-b text-left">Unit Type</th>
+                    <th class="py-2 px-4 border-b text-left">Quantity</th>
+                    <th class="py-2 px-4 border-b text-left">Price/Unit</th>
+                    <th class="py-2 px-4 border-b text-left">Status</th>
+                    <th class="py-2 px-4 border-b text-left">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="fabricTableBody">
+                <!-- Fabric data will be loaded here -->
+                <tr>
+                    <td colspan="8" class="py-4 px-4 text-center text-gray-500">Loading fabric data...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add/Edit Fabric Modal -->
+<div id="fabricModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-2xl max-h-screen overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold" id="modalTitle">Add Fabric</h3>
+            <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="fabricForm">
+            <input type="hidden" id="fabricId">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-gray-700 mb-2" for="name">Name *</label>
+                    <input type="text" id="name" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2" for="unitType">Unit Type *</label>
+                    <select id="unitType" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                        <option value="">Select unit type</option>
+                        <option value="METERS">Meters</option>
+                        <option value="YARDS">Yards</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2" for="quantity">Quantity *</label>
+                    <input type="number" id="quantity" step="0.01" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2" for="pricePerUnit">Price/Unit *</label>
+                    <input type="number" id="pricePerUnit" step="0.01" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-gray-700 mb-2" for="description">Description</label>
+                    <textarea id="description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2" for="lowStockThreshold">Low Stock Threshold</label>
+                    <input type="number" id="lowStockThreshold" step="0.01" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md" value="10">
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-2">
+                <button type="button" id="cancelFabricBtn" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Save Fabric</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    // Load fabric data when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        loadFabricData();
+    });
+    
+    // Refresh button
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+        loadFabricData();
+    });
+    
+    // Add fabric button
+    document.getElementById('addFabricBtn').addEventListener('click', function() {
+        openFabricModal();
+    });
+    
+    // Close modal buttons
+    document.getElementById('closeModal').addEventListener('click', closeFabricModal);
+    document.getElementById('cancelFabricBtn').addEventListener('click', closeFabricModal);
+    
+    // Fabric form submission
+    document.getElementById('fabricForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveFabric();
+    });
+    
+    function loadFabricData() {
+        // Fetch fabric data from API
+        fetch('/api/admin/fabrics/', {
+            headers: {
+                'Authorization': 'Token ' + localStorage.getItem('authToken'),
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(fabrics => {
+            const fabricTableBody = document.getElementById('fabricTableBody');
+            fabricTableBody.innerHTML = '';
+            
+            if (fabrics.length === 0) {
+                fabricTableBody.innerHTML = '<tr><td colspan="8" class="py-4 px-4 text-center text-gray-500">No fabrics found</td></tr>';
+                return;
+            }
+            
+            fabrics.forEach(fabric => {
+                const isLowStock = fabric.quantity <= fabric.low_stock_threshold;
+                
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="py-2 px-4 border-b">${fabric.id}</td>
+                    <td class="py-2 px-4 border-b">${fabric.name}</td>
+                    <td class="py-2 px-4 border-b">${fabric.description || 'N/A'}</td>
+                    <td class="py-2 px-4 border-b">${fabric.get_unit_type_display}</td>
+                    <td class="py-2 px-4 border-b">${fabric.quantity} ${fabric.unit_type}</td>
+                    <td class="py-2 px-4 border-b">$${fabric.price_per_unit}</td>
+                    <td class="py-2 px-4 border-b">
+                        <span class="px-2 py-1 rounded-full text-xs ${isLowStock ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
+                            ${isLowStock ? 'Low Stock' : 'In Stock'}
+                        </span>
+                    </td>
+                    <td class="py-2 px-4 border-b">
+                        <button class="text-indigo-600 hover:text-indigo-900 mr-2 edit-fabric" data-id="${fabric.id}" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="text-red-600 hover:text-red-900 delete-fabric" data-id="${fabric.id}" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                fabricTableBody.appendChild(row);
+            });
+            
+            // Add event listeners to action buttons
+            document.querySelectorAll('.edit-fabric').forEach(button => {
+                button.addEventListener('click', function() {
+                    const fabricId = this.getAttribute('data-id');
+                    editFabric(fabricId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-fabric').forEach(button => {
+                button.addEventListener('click', function() {
+                    const fabricId = this.getAttribute('data-id');
+                    deleteFabric(fabricId);
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error loading fabrics:', error);
+            document.getElementById('fabricTableBody').innerHTML = '<tr><td colspan="8" class="py-4 px-4 text-center text-red-500">Error loading fabric data</td></tr>';
+        });
+    }
+    
+    function openFabricModal(fabric = null) {
+        document.getElementById('fabricModal').classList.remove('hidden');
+        document.getElementById('fabricModal').classList.add('flex');
+        
+        if (fabric) {
+            // Edit mode
+            document.getElementById('modalTitle').textContent = 'Edit Fabric';
+            document.getElementById('fabricId').value = fabric.id;
+            document.getElementById('name').value = fabric.name;
+            document.getElementById('unitType').value = fabric.unit_type;
+            document.getElementById('quantity').value = fabric.quantity;
+            document.getElementById('pricePerUnit').value = fabric.price_per_unit;
+            document.getElementById('description').value = fabric.description || '';
+            document.getElementById('lowStockThreshold').value = fabric.low_stock_threshold;
+        } else {
+            // Create mode
+            document.getElementById('modalTitle').textContent = 'Add Fabric';
+            document.getElementById('fabricForm').reset();
+            document.getElementById('fabricId').value = '';
+            document.getElementById('lowStockThreshold').value = '10';
+        }
+    }
+    
+    function closeFabricModal() {
+        document.getElementById('fabricModal').classList.add('hidden');
+        document.getElementById('fabricModal').classList.remove('flex');
+    }
+    
+    function saveFabric() {
+        const fabricId = document.getElementById('fabricId').value;
+        const fabricData = {
+            name: document.getElementById('name').value,
+            unit_type: document.getElementById('unitType').value,
+            quantity: document.getElementById('quantity').value,
+            price_per_unit: document.getElementById('pricePerUnit').value,
+            description: document.getElementById('description').value,
+            low_stock_threshold: document.getElementById('lowStockThreshold').value
+        };
+        
+        const method = fabricId ? 'PUT' : 'POST';
+        const url = fabricId ? `/api/admin/fabrics/${fabricId}/` : '/api/admin/fabrics/';
+        
+        // For PUT requests, we need to include all fields
+        if (fabricId) {
+            fabricData.id = fabricId;
+        }
+        
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Token ' + localStorage.getItem('authToken'),
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(fabricData)
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error('Failed to save fabric');
+            }
+        })
+        .then(data => {
+            alert('Fabric saved successfully!');
+            closeFabricModal();
+            loadFabricData();
+        })
+        .catch(error => {
+            console.error('Error saving fabric:', error);
+            alert('Error saving fabric.');
+        });
+    }
+    
+    function editFabric(fabricId) {
+        // Fetch fabric details from API
+        fetch(`/api/admin/fabrics/${fabricId}/`, {
+            headers: {
+                'Authorization': 'Token ' + localStorage.getItem('authToken'),
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(fabric => {
+            openFabricModal(fabric);
+        })
+        .catch(error => {
+            console.error('Error loading fabric:', error);
+            alert('Error loading fabric details.');
+        });
+    }
+    
+    function deleteFabric(fabricId) {
+        if (confirm('Are you sure you want to delete this fabric? This action cannot be undone.')) {
+            // Delete fabric via API
+            fetch(`/api/admin/fabrics/${fabricId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Token ' + localStorage.getItem('authToken'),
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Fabric deleted successfully!');
+                    loadFabricData(); // Refresh the table
+                } else {
+                    alert('Error deleting fabric.');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting fabric:', error);
+                alert('Error deleting fabric.');
+            });
+        }
+    }
+</script>
+{% endblock %}

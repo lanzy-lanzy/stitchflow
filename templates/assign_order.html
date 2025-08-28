@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Assign Order to Tailor - El Senior Dumingag{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-8">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">Assign Order #{{ order.id }} to Tailor</h1>
+        
+        <div id="statusMessage" class="hidden mb-6 p-4 rounded-md"></div>
+        
+        <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6">
+            <h2 class="text-lg font-semibold text-gray-700 mb-4">Order Details</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-gray-600"><strong>Customer:</strong> {{ order.customer.user.first_name }} {{ order.customer.user.last_name }}</p>
+                    <p class="text-gray-600"><strong>Fabric:</strong> {{ order.fabric.name }} ({{ order.fabric.unit_type }})</p>
+                    <p class="text-gray-600"><strong>Total Amount:</strong> ${{ order.total_amount }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600"><strong>Status:</strong> 
+                        <span class="px-2 py-1 rounded-full text-xs {% if order.status == 'PENDING' %}bg-yellow-100 text-yellow-800{% elif order.status == 'ASSIGNED' %}bg-blue-100 text-blue-800{% elif order.status == 'COMPLETED' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ order.status }}
+                        </span>
+                    </p>
+                    <p class="text-gray-600"><strong>Created:</strong> {{ order.created_at|date:"M d, Y" }}</p>
+                </div>
+            </div>
+            
+            {% if order.accessories.all %}
+            <div class="mt-4">
+                <p class="text-gray-600"><strong>Accessories:</strong></p>
+                <ul class="list-disc list-inside ml-4">
+                    {% for accessory in order.accessories.all %}
+                    <li class="text-gray-600">{{ accessory.name }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        
+        <form id="assignOrderForm" method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-700 mb-4">Assign to Tailor</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="tailor" class="block text-sm font-medium text-gray-700 mb-1">Select Tailor *</label>
+                        <select id="tailor" name="tailor" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="">Select a tailor</option>
+                            {% for tailor in tailors %}
+                            <option value="{{ tailor.id }}">{{ tailor.user.first_name }} {{ tailor.user.last_name }} ({{ tailor.specialty }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-4">
+                <a href="{% url 'etailoring:manage_orders' %}" 
+                    class="px-6 py-2 bg-gray-300 text-gray-700 font-medium rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                    Cancel
+                </a>
+                <button type="submit" 
+                    class="px-6 py-2 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                    Assign Order
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Show status message function
+    function showStatusMessage(message, type) {
+        const statusMessage = document.getElementById('statusMessage');
+        statusMessage.textContent = message;
+        statusMessage.className = `mb-6 p-4 rounded-md ${type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`;
+        statusMessage.classList.remove('hidden');
+        
+        // Scroll to top to see the message
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Hide message after 5 seconds
+        setTimeout(() => {
+            statusMessage.classList.add('hidden');
+        }, 5000);
+    }
+    
+    // Handle form submission
+    document.getElementById('assignOrderForm').addEventListener('submit', function(e) {
+        const submitButton = this.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Assigning...';
+    });
+</script>
+{% endblock %}

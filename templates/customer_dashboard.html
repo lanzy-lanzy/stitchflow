@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Access Denied - El Senior Dumingag{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md text-center">
+    <h2 class="text-2xl font-bold mb-6 text-gray-800">Access Denied</h2>
+    <p class="text-gray-600 mb-6">Customer dashboard access is not available.</p>
+    <a href="{% url 'etailoring:homepage' %}" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+        Return to Homepage
+    </a>
+</div>
+{% endblock %}

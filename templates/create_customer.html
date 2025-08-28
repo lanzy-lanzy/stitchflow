@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Customer - El Senior Dumingag{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-8">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">Create New Customer</h1>
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-blue-700">
+                        <strong>Note:</strong> Phone number is critical for notifying customers when their orders are ready for pickup.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="statusMessage" class="hidden mb-6 p-4 rounded-md"></div>
+        
+        <form id="customerForm" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Customer Basic Information -->
+            <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-700 mb-4">Customer Information</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="first_name" class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                        <input type="text" id="first_name" name="first_name" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label for="last_name" class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                        <input type="text" id="last_name" name="last_name" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="email" name="email"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label for="phone_number" class="block text-sm font-medium text-gray-700 mb-1">
+                            <span class="text-red-500">*</span> Phone Number <span class="text-xs text-gray-500">(for notifications)</span>
+                        </label>
+                        <input type="tel" id="phone_number" name="phone_number" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-yellow-50">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Address *</label>
+                        <textarea id="address" name="address" rows="3" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Measurements Section -->
+            <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-700 mb-4">Measurements (Optional)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label for="measurement_chest" class="block text-sm font-medium text-gray-700 mb-1">Chest (inches)</label>
+                        <input type="number" id="measurement_chest" name="measurement_chest" step="0.1"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label for="measurement_waist" class="block text-sm font-medium text-gray-700 mb-1">Waist (inches)</label>
+                        <input type="number" id="measurement_waist" name="measurement_waist" step="0.1"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label for="measurement_hip" class="block text-sm font-medium text-gray-700 mb-1">Hip (inches)</label>
+                        <input type="number" id="measurement_hip" name="measurement_hip" step="0.1"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label for="measurement_inseam" class="block text-sm font-medium text-gray-700 mb-1">Inseam (inches)</label>
+                        <input type="number" id="measurement_inseam" name="measurement_inseam" step="0.1"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label for="measurement_sleeve" class="block text-sm font-medium text-gray-700 mb-1">Sleeve Length (inches)</label>
+                        <input type="number" id="measurement_sleeve" name="measurement_sleeve" step="0.1"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label for="measurement_shoulder" class="block text-sm font-medium text-gray-700 mb-1">Shoulder Width (inches)</label>
+                        <input type="number" id="measurement_shoulder" name="measurement_shoulder" step="0.1"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-4">
+                <button type="button" id="cancelBtn"
+                    class="px-6 py-2 bg-gray-300 text-gray-700 font-medium rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" 
+                    class="px-6 py-2 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                    Create Customer
+                </button>
+            </div>
+        </form>
+        
+        <!-- Post-creation options (hidden by default) -->
+        <div id="postCreationOptions" class="hidden mt-8 bg-green-50 border border-green-200 rounded-lg p-6">
+            <h2 class="text-xl font-bold text-green-800 mb-4">Customer Created Successfully!</h2>
+            <p class="text-green-700 mb-4">What would you like to do next?</p>
+            <div class="flex flex-wrap gap-4">
+                <button id="createOrderBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                    Create Order for This Customer
+                </button>
+                <button id="createAnotherBtn" class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">
+                    Create Another Customer
+                </button>
+                <a href="{% url 'etailoring:admin_dashboard' %}" class="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">
+                    Return to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('customerForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Generate a random username and password for the customer (they won't login)
+        const randomStr = Math.random().toString(36).substring(2, 10);
+        const username = 'customer_' + randomStr;
+        const password = Math.random().toString(36).substring(2, 15);
+        
+        // Collect measurements
+        const measurements = {};
+        const measurementFields = [
+            'chest', 'waist', 'hip', 'inseam', 'sleeve', 'shoulder'
+        ];
+        
+        measurementFields.forEach(field => {
+            const value = document.getElementById('measurement_' + field).value;
+            if (value) {
+                measurements[field] = parseFloat(value);
+            }
+        });
+        
+        // Create the customer data
+        const customerData = {
+            user: {
+                username: username,
+                email: document.getElementById('email').value || username + '@example.com',
+                password: password,
+                first_name: document.getElementById('first_name').value,
+                last_name: document.getElementById('last_name').value
+            },
+            phone_number: document.getElementById('phone_number').value,
+            address: document.getElementById('address').value,
+            measurements: measurements
+        };
+        
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        // Submit the data
+        fetch('/api/register/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(customerData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(errors => {
+                    throw new Error(JSON.stringify(errors));
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            showStatusMessage('Customer created successfully!', 'success');
+            // Hide the form and show post-creation options
+            document.getElementById('customerForm').classList.add('hidden');
+            document.getElementById('postCreationOptions').classList.remove('hidden');
+            
+            // Store the created customer ID for potential order creation
+            localStorage.setItem('lastCreatedCustomerId', data.id);
+            
+            // Show customer details (optional) - since we generate the username/password
+            console.log('Created customer:', data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showStatusMessage('Error creating customer: ' + error.message, 'error');
+        });
+    });
+    
+    // Handle cancel button
+    document.getElementById('cancelBtn').addEventListener('click', function() {
+        if (confirm('Are you sure you want to cancel? Any entered information will be lost.')) {
+            window.location.href = '{% url "etailoring:admin_dashboard" %}';
+        }
+    });
+    
+    // Handle post-creation buttons
+    document.getElementById('createOrderBtn').addEventListener('click', function() {
+        const customerId = localStorage.getItem('lastCreatedCustomerId');
+        if (customerId) {
+            // Redirect to order creation page for this customer
+            window.location.href = '{% url "etailoring:create_order" %}';
+        }
+    });
+    
+    document.getElementById('createAnotherBtn').addEventListener('click', function() {
+        // Reset the form and show it again
+        document.getElementById('customerForm').reset();
+        document.getElementById('customerForm').classList.remove('hidden');
+        document.getElementById('postCreationOptions').classList.add('hidden');
+        // Clear status message
+        document.getElementById('statusMessage').classList.add('hidden');
+    });
+    
+    function showStatusMessage(message, type) {
+        const statusElement = document.getElementById('statusMessage');
+        statusElement.textContent = message;
+        statusElement.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+        
+        if (type === 'success') {
+            statusElement.classList.add('bg-green-100', 'text-green-800');
+        } else {
+            statusElement.classList.add('bg-red-100', 'text-red-800');
+        }
+        
+        statusElement.classList.remove('hidden');
+    }
+</script>
+{% endblock %}

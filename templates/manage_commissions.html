@@ -1,0 +1,420 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Commissions - El Senior Dumingag{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Manage Commissions</h2>
+        <div class="flex space-x-2">
+            <button id="refreshBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+                <i class="fas fa-sync-alt mr-2"></i>Refresh
+            </button>
+        </div>
+    </div>
+    
+    <!-- Filter Options -->
+    <div class="mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-gray-700 mb-2">Status</label>
+                <select id="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <option value="">All Statuses</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="PAID">Paid</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-gray-700 mb-2">Tailor</label>
+                <select id="tailorFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <option value="">All Tailors</option>
+                    <!-- Tailors will be loaded here -->
+                </select>
+            </div>
+            <div>
+                <label class="block text-gray-700 mb-2">Date Range</label>
+                <div class="flex space-x-2">
+                    <input type="date" id="dateFromFilter" class="flex-1 px-3 py-2 border border-gray-300 rounded-md" placeholder="From">
+                    <input type="date" id="dateToFilter" class="flex-1 px-3 py-2 border border-gray-300 rounded-md" placeholder="To">
+                </div>
+            </div>
+        </div>
+        <div class="mt-4">
+            <button id="applyFiltersBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                Apply Filters
+            </button>
+            <button id="clearFiltersBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 ml-2">
+                Clear Filters
+            </button>
+        </div>
+    </div>
+    
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-blue-50 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-blue-800 mb-2">Total Commissions</h3>
+            <div class="text-3xl font-bold text-blue-600" id="totalCommissions">$0.00</div>
+        </div>
+        <div class="bg-yellow-50 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-yellow-800 mb-2">Pending Commissions</h3>
+            <div class="text-3xl font-bold text-yellow-600" id="pendingCommissions">$0.00</div>
+        </div>
+        <div class="bg-green-50 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-green-800 mb-2">Paid Commissions</h3>
+            <div class="text-3xl font-bold text-green-600" id="paidCommissions">$0.00</div>
+        </div>
+    </div>
+    
+    <!-- Commission Table -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white border border-gray-200">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="py-2 px-4 border-b text-left">ID</th>
+                    <th class="py-2 px-4 border-b text-left">Tailor</th>
+                    <th class="py-2 px-4 border-b text-left">Order</th>
+                    <th class="py-2 px-4 border-b text-left">Amount</th>
+                    <th class="py-2 px-4 border-b text-left">Status</th>
+                    <th class="py-2 px-4 border-b text-left">Created At</th>
+                    <th class="py-2 px-4 border-b text-left">Paid At</th>
+                    <th class="py-2 px-4 border-b text-left">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="commissionTableBody">
+                <!-- Commission data will be loaded here -->
+                <tr>
+                    <td colspan="8" class="py-4 px-4 text-center text-gray-500">Loading commission data...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    <div class="flex justify-between items-center mt-6">
+        <div class="text-gray-600">
+            Showing <span id="startRecord">0</span> to <span id="endRecord">0</span> of <span id="totalRecords">0</span> records
+        </div>
+        <div class="flex space-x-2">
+            <button id="prevPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50" disabled>
+                Previous
+            </button>
+            <button id="nextPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50" disabled>
+                Next
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    // Current page and pagination info
+    let currentPage = 1;
+    let totalPages = 1;
+    let totalRecords = 0;
+    
+    // Initialize authentication token from URL parameter if present
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if auth token is in URL (e.g., after login redirect)
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        
+        if (token) {
+            // Store token in both session and local storage
+            sessionStorage.setItem('authToken', token);
+            localStorage.setItem('authToken', token);
+            
+            // Remove token from URL to avoid leaking it in browser history
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+            
+            console.log('Authentication token set from URL parameter');
+        }
+        
+        // Load data
+        loadCommissionData();
+        loadTailorFilterData();
+        loadCommissionSummary();
+    });
+    
+    // Refresh button
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+        loadCommissionData();
+        loadCommissionSummary();
+    });
+    
+    // Apply filters button
+    document.getElementById('applyFiltersBtn').addEventListener('click', function() {
+        currentPage = 1;
+        loadCommissionData();
+        loadCommissionSummary();
+    });
+    
+    // Clear filters button
+    document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+        document.getElementById('statusFilter').value = '';
+        document.getElementById('tailorFilter').value = '';
+        document.getElementById('dateFromFilter').value = '';
+        document.getElementById('dateToFilter').value = '';
+        currentPage = 1;
+        loadCommissionData();
+        loadCommissionSummary();
+    });
+    
+    // Pagination buttons
+    document.getElementById('prevPage').addEventListener('click', function() {
+        if (currentPage > 1) {
+            currentPage--;
+            loadCommissionData();
+        }
+    });
+    
+    document.getElementById('nextPage').addEventListener('click', function() {
+        if (currentPage < totalPages) {
+            currentPage++;
+            loadCommissionData();
+        }
+    });
+    
+    function loadCommissionData() {
+        // Build query parameters
+        const params = new URLSearchParams();
+        params.append('page', currentPage);
+        
+        const statusFilter = document.getElementById('statusFilter').value;
+        if (statusFilter) {
+            params.append('status', statusFilter);
+        }
+        
+        const tailorFilter = document.getElementById('tailorFilter').value;
+        if (tailorFilter) {
+            params.append('tailor', tailorFilter);
+        }
+        
+        const dateFromFilter = document.getElementById('dateFromFilter').value;
+        if (dateFromFilter) {
+            params.append('date_from', dateFromFilter);
+        }
+        
+        const dateToFilter = document.getElementById('dateToFilter').value;
+        if (dateToFilter) {
+            params.append('date_to', dateToFilter);
+        }
+        
+        // Get token from session storage first, then local storage as fallback
+        let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+        
+        // If no token is found, check if we can get it from the cookie
+        if (!authToken) {
+            // Log authentication state for debugging
+            console.log('No auth token found in storage, using session authentication');
+        }
+        
+        // Fetch commission data from API
+        fetch(`/api/admin/commissions/?${params.toString()}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
+            },
+            credentials: 'include' // Include cookies for session authentication
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch commissions: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const commissions = data.results || data; // Handle both paginated and non-paginated responses
+            const commissionTableBody = document.getElementById('commissionTableBody');
+            commissionTableBody.innerHTML = '';
+            
+            if (commissions.length === 0) {
+                commissionTableBody.innerHTML = '<tr><td colspan="8" class="py-4 px-4 text-center text-gray-500">No commissions found</td></tr>';
+                updatePagination(0, 1, 0);
+                return;
+            }
+            
+            commissions.forEach(commission => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="py-2 px-4 border-b">${commission.id}</td>
+                    <td class="py-2 px-4 border-b">${commission.tailor.user.first_name} ${commission.tailor.user.last_name}</td>
+                    <td class="py-2 px-4 border-b">Order #${commission.order}</td>
+                    <td class="py-2 px-4 border-b">$${commission.amount}</td>
+                    <td class="py-2 px-4 border-b">
+                        <span class="px-2 py-1 rounded-full text-xs ${getStatusColorClass(commission.status)}">
+                            ${commission.status}
+                        </span>
+                    </td>
+                    <td class="py-2 px-4 border-b">${new Date(commission.created_at).toLocaleDateString()}</td>
+                    <td class="py-2 px-4 border-b">${commission.paid_at ? new Date(commission.paid_at).toLocaleDateString() : 'N/A'}</td>
+                    <td class="py-2 px-4 border-b">
+                        ${commission.status === 'PENDING' ? 
+                            `<button class="text-green-600 hover:text-green-900 pay-commission" data-id="${commission.id}" title="Pay Commission">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </button>` : 
+                            '—'
+                        }
+                    </td>
+                `;
+                commissionTableBody.appendChild(row);
+            });
+            
+            // Update pagination info
+            if (data.count !== undefined) {
+                updatePagination(data.count, currentPage, 10);
+            } else {
+                updatePagination(commissions.length, 1, commissions.length);
+            }
+            
+            // Add event listeners to action buttons
+            document.querySelectorAll('.pay-commission').forEach(button => {
+                button.addEventListener('click', function() {
+                    const commissionId = this.getAttribute('data-id');
+                    payCommission(commissionId);
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error loading commissions:', error);
+            document.getElementById('commissionTableBody').innerHTML = '<tr><td colspan="8" class="py-4 px-4 text-center text-red-500">Error loading commission data: ' + error.message + '</td></tr>';
+        });
+    }
+    
+    function loadCommissionSummary() {
+        // Get token from session storage first, then local storage as fallback
+        let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+        
+        // Fetch all commissions to calculate summary
+        fetch('/api/admin/commissions/', {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
+            },
+            credentials: 'include' // Include cookies for session authentication
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch commissions: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(commissions => {
+            let totalAmount = 0;
+            let pendingAmount = 0;
+            let paidAmount = 0;
+            
+            commissions.forEach(commission => {
+                totalAmount += parseFloat(commission.amount);
+                if (commission.status === 'PENDING') {
+                    pendingAmount += parseFloat(commission.amount);
+                } else if (commission.status === 'PAID') {
+                    paidAmount += parseFloat(commission.amount);
+                }
+            });
+            
+            document.getElementById('totalCommissions').textContent = '$' + totalAmount.toFixed(2);
+            document.getElementById('pendingCommissions').textContent = '$' + pendingAmount.toFixed(2);
+            document.getElementById('paidCommissions').textContent = '$' + paidAmount.toFixed(2);
+        })
+        .catch(error => {
+            console.error('Error loading commission summary:', error);
+        });
+    }
+    
+    function loadTailorFilterData() {
+        // Get token from session storage first, then local storage as fallback
+        let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+        
+        // Fetch tailor data for filter dropdown
+        fetch('/api/admin/tailors/', {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
+            },
+            credentials: 'include' // Include cookies for session authentication
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch tailors: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(tailors => {
+            const tailorFilter = document.getElementById('tailorFilter');
+            tailors.forEach(tailor => {
+                const option = document.createElement('option');
+                option.value = tailor.id;
+                option.textContent = `${tailor.user.first_name} ${tailor.user.last_name}`;
+                tailorFilter.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading tailors for filter:', error);
+        });
+    }
+    
+    function updatePagination(total, current, perPage) {
+        totalRecords = total;
+        currentPage = current;
+        totalPages = Math.ceil(total / perPage);
+        
+        document.getElementById('startRecord').textContent = ((current - 1) * perPage) + 1;
+        document.getElementById('endRecord').textContent = Math.min(current * perPage, total);
+        document.getElementById('totalRecords').textContent = total;
+        
+        document.getElementById('prevPage').disabled = current === 1;
+        document.getElementById('nextPage').disabled = current === totalPages;
+    }
+    
+    function getStatusColorClass(status) {
+        switch(status) {
+            case 'PENDING':
+                return 'bg-yellow-100 text-yellow-800';
+            case 'PAID':
+                return 'bg-green-100 text-green-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    }
+    
+    function payCommission(commissionId) {
+        if (confirm('Are you sure you want to mark this commission as paid?')) {
+            // Get token from session storage first, then local storage as fallback
+            let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+            
+            // Pay commission via API
+            fetch(`/api/admin/commissions/${commissionId}/pay/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                    ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
+                },
+                credentials: 'include' // Include cookies for session authentication
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to pay commission: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Commission marked as paid!');
+                loadCommissionData(); // Refresh the table
+                loadCommissionSummary(); // Refresh the summary
+            })
+            .catch(error => {
+                console.error('Error paying commission:', error);
+                alert('Error paying commission: ' + error.message);
+            });
+        }
+    }
+</script>
+{% endblock %}

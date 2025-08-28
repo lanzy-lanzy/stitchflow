@@ -1,0 +1,375 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - El Senior Dumingag{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Admin Dashboard</h2>
+        <button class="md:hidden bg-indigo-600 text-white px-4 py-2 rounded-lg">
+            <i class="fas fa-bars"></i> Menu
+        </button>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-indigo-50 rounded-lg p-6 text-center">
+            <div class="text-4xl font-bold text-indigo-600 mb-2">{{ customers_count }}</div>
+            <div class="text-gray-700">Customers</div>
+        </div>
+        
+        <div class="bg-purple-50 rounded-lg p-6 text-center">
+            <div class="text-4xl font-bold text-purple-600 mb-2">{{ tailors_count }}</div>
+            <div class="text-gray-700">Tailors</div>
+        </div>
+        
+        <div class="bg-blue-50 rounded-lg p-6 text-center">
+            <div class="text-4xl font-bold text-blue-600 mb-2">{{ orders_count }}</div>
+            <div class="text-gray-700">Orders</div>
+        </div>
+        
+        <div class="bg-green-50 rounded-lg p-6 text-center">
+            <div class="text-4xl font-bold text-green-600 mb-2">{{ tasks_count }}</div>
+            <div class="text-gray-700">Tasks</div>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-800">Recent Orders</h3>
+            <div id="recentOrders" class="space-y-4">
+                <!-- Orders will be loaded here via API -->
+                <p class="text-gray-600">Loading recent orders...</p>
+            </div>
+        </div>
+        
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-800">Pending Tasks</h3>
+            <div id="pendingTasks" class="space-y-4">
+                <!-- Tasks will be loaded here via API -->
+                <p class="text-gray-600">Loading pending tasks...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Commission Summary -->
+    <div class="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">Commission Summary</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-blue-50 rounded-lg p-4">
+                <h4 class="text-md font-semibold text-blue-800 mb-2">Total Commissions</h4>
+                <div class="text-2xl font-bold text-blue-600" id="totalCommissions">$0.00</div>
+            </div>
+            <div class="bg-yellow-50 rounded-lg p-4">
+                <h4 class="text-md font-semibold text-yellow-800 mb-2">Pending Commissions</h4>
+                <div class="text-2xl font-bold text-yellow-600" id="pendingCommissions">$0.00</div>
+            </div>
+            <div class="bg-green-50 rounded-lg p-4">
+                <h4 class="text-md font-semibold text-green-800 mb-2">Paid Commissions</h4>
+                <div class="text-2xl font-bold text-green-600" id="paidCommissions">$0.00</div>
+            </div>
+        </div>
+        <div class="mt-4">
+            <a href="{% url 'etailoring:manage_commissions' %}" class="text-indigo-600 hover:text-indigo-800 font-medium">
+                View All Commissions →
+            </a>
+        </div>
+    </div>
+    
+    <!-- Completed Tasks and Customer Payments -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-800">Recently Completed Tasks</h3>
+            <div id="completedTasks" class="space-y-4">
+                <!-- Completed tasks will be loaded here via API -->
+                <p class="text-gray-600">Loading completed tasks...</p>
+            </div>
+            <div class="mt-4">
+                <a href="{% url 'etailoring:manage_tasks' %}?status=COMPLETED" class="text-indigo-600 hover:text-indigo-800 font-medium">
+                    View All Completed Tasks →
+                </a>
+            </div>
+        </div>
+        
+        <div class="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 class="text-lg font-semibold mb-4 text-gray-800">Pending Customer Payments</h3>
+            <div id="pendingPayments" class="space-y-4">
+                <!-- Pending payments will be loaded here via API -->
+                <p class="text-gray-600">Loading pending payments...</p>
+            </div>
+            <div class="mt-4">
+                <a href="{% url 'etailoring:manage_orders' %}?payment_status=PENDING" class="text-indigo-600 hover:text-indigo-800 font-medium">
+                    View All Pending Payments →
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions Section -->
+    <div class="bg-white border border-gray-200 rounded-lg p-6">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">Quick Actions</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <a href="{% url 'etailoring:create_customer' %}" class="bg-indigo-600 text-white rounded-lg p-4 text-center hover:bg-indigo-700 transition-colors">
+                <i class="fas fa-user-plus text-xl mb-2"></i>
+                <div>Create Customer</div>
+            </a>
+            <a href="{% url 'etailoring:create_order' %}" class="bg-blue-600 text-white rounded-lg p-4 text-center hover:bg-blue-700 transition-colors">
+                <i class="fas fa-shopping-cart text-xl mb-2"></i>
+                <div>Create Order</div>
+            </a>
+            <a href="{% url 'etailoring:inventory_management' %}" class="bg-purple-600 text-white rounded-lg p-4 text-center hover:bg-purple-700 transition-colors">
+                <i class="fas fa-boxes text-xl mb-2"></i>
+                <div>Manage Inventory</div>
+            </a>
+            <a href="{% url 'etailoring:manage_tailors' %}" class="bg-green-600 text-white rounded-lg p-4 text-center hover:bg-green-700 transition-colors">
+                <i class="fas fa-user-tie text-xl mb-2"></i>
+                <div>Manage Tailors</div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    // Load recent orders
+    fetch('/api/admin/orders/', {
+        headers: {
+            'Authorization': 'Token ' + (localStorage.getItem('authToken') || ''),
+            'X-CSRFToken': csrfToken
+        },
+        credentials: 'include' // Include cookies
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        const recentOrdersElement = document.getElementById('recentOrders');
+        recentOrdersElement.innerHTML = '';
+        
+        if (!data || data.length === 0) {
+            recentOrdersElement.innerHTML = '<p class="text-gray-600">No orders yet.</p>';
+            return;
+        }
+        
+        // Display only the 5 most recent orders
+        const recentOrders = data.slice(0, 5);
+        
+        recentOrders.forEach(order => {
+            const orderElement = document.createElement('div');
+            orderElement.className = 'border border-gray-200 rounded-lg p-4';
+            orderElement.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <h4 class="font-medium">Order #${order.id}</h4>
+                    <span class="px-2 py-1 text-xs rounded-full ${getStatusColor(order.status)}">${order.status}</span>
+                </div>
+                <p class="text-sm text-gray-600 mt-2">Customer: ${order.customer && order.customer.user ? order.customer.user.first_name + ' ' + order.customer.user.last_name : 'Unknown'}</p>
+                <p class="text-sm text-gray-600">Total: $${order.total_amount || '0.00'}</p>
+                <p class="text-xs text-gray-500 mt-2">Created: ${order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}</p>
+            `;
+            recentOrdersElement.appendChild(orderElement);
+        });
+    })
+    .catch(error => {
+        console.error('Error loading orders:', error);
+        document.getElementById('recentOrders').innerHTML = '<p class="text-red-600">Error loading orders. Please refresh the page.</p>';
+    });
+    
+    // Load pending tasks
+    fetch('/api/admin/tasks/', {
+        headers: {
+            'Authorization': 'Token ' + (localStorage.getItem('authToken') || ''),
+            'X-CSRFToken': csrfToken
+        },
+        credentials: 'include' // Include cookies
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        const pendingTasksElement = document.getElementById('pendingTasks');
+        pendingTasksElement.innerHTML = '';
+        
+        if (!data || data.length === 0) {
+            pendingTasksElement.innerHTML = '<p class="text-gray-600">No pending tasks.</p>';
+            return;
+        }
+        
+        // Filter to pending tasks and take only 5
+        const pendingTasks = data.filter(task => task.status === 'PENDING').slice(0, 5);
+        
+        if (pendingTasks.length === 0) {
+            pendingTasksElement.innerHTML = '<p class="text-gray-600">No pending tasks.</p>';
+            return;
+        }
+        
+        pendingTasks.forEach(task => {
+            const taskElement = document.createElement('div');
+            taskElement.className = 'border border-gray-200 rounded-lg p-4';
+            taskElement.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <h4 class="font-medium">Task for Order #${task.order}</h4>
+                    <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">PENDING</span>
+                </div>
+                <p class="text-sm text-gray-600 mt-2">Assigned to: ${task.tailor && task.tailor.user ? task.tailor.user.first_name + ' ' + task.tailor.user.last_name : 'Unassigned'}</p>
+            `;
+            pendingTasksElement.appendChild(taskElement);
+        });
+    })
+    .catch(error => {
+        console.error('Error loading tasks:', error);
+        document.getElementById('pendingTasks').innerHTML = '<p class="text-red-600">Error loading tasks. Please refresh the page.</p>';
+    });
+    
+    // Load completed tasks
+    fetch('/api/admin/tasks/?status=COMPLETED', {
+        headers: {
+            'Authorization': 'Token ' + (localStorage.getItem('authToken') || ''),
+            'X-CSRFToken': csrfToken
+        },
+        credentials: 'include' // Include cookies
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        const completedTasksElement = document.getElementById('completedTasks');
+        completedTasksElement.innerHTML = '';
+        
+        if (!data || data.length === 0) {
+            completedTasksElement.innerHTML = '<p class="text-gray-600">No completed tasks yet.</p>';
+            return;
+        }
+        
+        // Display only the 5 most recent completed tasks
+        const recentCompletedTasks = data.slice(0, 5);
+        
+        recentCompletedTasks.forEach(task => {
+            const taskElement = document.createElement('div');
+            taskElement.className = 'border border-gray-200 rounded-lg p-4';
+            taskElement.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <h4 class="font-medium">Task for Order #${task.order}</h4>
+                    <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">COMPLETED</span>
+                </div>
+                <p class="text-sm text-gray-600 mt-2">Assigned to: ${task.tailor && task.tailor.user ? task.tailor.user.first_name + ' ' + task.tailor.user.last_name : 'Unassigned'}</p>
+                <p class="text-sm text-gray-600">Completed: ${task.completed_at ? new Date(task.completed_at).toLocaleDateString() : 'N/A'}</p>
+            `;
+            completedTasksElement.appendChild(taskElement);
+        });
+    })
+    .catch(error => {
+        console.error('Error loading completed tasks:', error);
+        document.getElementById('completedTasks').innerHTML = '<p class="text-red-600">Error loading completed tasks. Please refresh the page.</p>';
+    });
+    
+    // Load pending payments
+    fetch('/api/admin/orders/?payment_status=PENDING', {
+        headers: {
+            'Authorization': 'Token ' + (localStorage.getItem('authToken') || ''),
+            'X-CSRFToken': csrfToken
+        },
+        credentials: 'include' // Include cookies
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        const pendingPaymentsElement = document.getElementById('pendingPayments');
+        pendingPaymentsElement.innerHTML = '';
+        
+        if (!data || data.length === 0) {
+            pendingPaymentsElement.innerHTML = '<p class="text-gray-600">No pending payments.</p>';
+            return;
+        }
+        
+        // Display only the 5 most recent pending payments
+        const recentPendingPayments = data.slice(0, 5);
+        
+        recentPendingPayments.forEach(order => {
+            const orderElement = document.createElement('div');
+            orderElement.className = 'border border-gray-200 rounded-lg p-4';
+            orderElement.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <h4 class="font-medium">Order #${order.id}</h4>
+                    <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">PENDING</span>
+                </div>
+                <p class="text-sm text-gray-600 mt-2">Customer: ${order.customer && order.customer.user ? order.customer.user.first_name + ' ' + order.customer.user.last_name : 'Unknown'}</p>
+                <p class="text-sm text-gray-600">Total: $${order.total_amount || '0.00'}</p>
+                <p class="text-xs text-gray-500 mt-2">Created: ${order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}</p>
+            `;
+            pendingPaymentsElement.appendChild(orderElement);
+        });
+    })
+    .catch(error => {
+        console.error('Error loading pending payments:', error);
+        document.getElementById('pendingPayments').innerHTML = '<p class="text-red-600">Error loading pending payments. Please refresh the page.</p>';
+    });
+    
+    // Load commission summary
+    fetch('/api/admin/commissions/', {
+        headers: {
+            'Authorization': 'Token ' + (localStorage.getItem('authToken') || ''),
+            'X-CSRFToken': csrfToken
+        },
+        credentials: 'include' // Include cookies
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(commissions => {
+        let totalAmount = 0;
+        let pendingAmount = 0;
+        let paidAmount = 0;
+        
+        commissions.forEach(commission => {
+            const amount = parseFloat(commission.amount) || 0;
+            totalAmount += amount;
+            if (commission.status === 'PENDING') {
+                pendingAmount += amount;
+            } else if (commission.status === 'PAID') {
+                paidAmount += amount;
+            }
+        });
+        
+        document.getElementById('totalCommissions').textContent = '$' + totalAmount.toFixed(2);
+        document.getElementById('pendingCommissions').textContent = '$' + pendingAmount.toFixed(2);
+        document.getElementById('paidCommissions').textContent = '$' + paidAmount.toFixed(2);
+    })
+    .catch(error => {
+        console.error('Error loading commission summary:', error);
+        // Don't show error to user for this non-critical feature
+    });
+    
+    // Helper function to get appropriate color for order status
+    function getStatusColor(status) {
+        switch(status) {
+            case 'PENDING':
+                return 'bg-yellow-100 text-yellow-800';
+            case 'IN_PROGRESS':
+                return 'bg-blue-100 text-blue-800';
+            case 'COMPLETED':
+                return 'bg-green-100 text-green-800';
+            case 'CANCELLED':
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    }
+</script>
+{% endblock %}

@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-vk4@gf@iq041+kcn2i$djuu+1)1i(*bb&*)#7cu$t79exj1yeu
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['testserver', '127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -132,3 +134,19 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 TEMPLATES[0]['DIRS'].append(os.path.join(BASE_DIR, 'templates'))
+
+# REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
+# Authentication settings
+LOGIN_URL = 'etailoring:login'
+LOGIN_REDIRECT_URL = 'etailoring:homepage'
+LOGOUT_REDIRECT_URL = 'etailoring:homepage'

@@ -1,0 +1,453 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Tasks - Stitch Flow{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Manage Tasks</h2>
+        <div class="flex space-x-2">
+            <button id="refreshBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+                <i class="fas fa-sync-alt mr-2"></i>Refresh
+            </button>
+        </div>
+    </div>
+    
+    <!-- Filter Options -->
+    <div class="mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-gray-700 mb-2">Status</label>
+                <select id="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <option value="">All Statuses</option>
+                    <option value="ASSIGNED">Assigned</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="COMPLETED">Completed</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-gray-700 mb-2">Tailor</label>
+                <select id="tailorFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <option value="">All Tailors</option>
+                    <!-- Tailors will be loaded here -->
+                </select>
+            </div>
+            <div>
+                <label class="block text-gray-700 mb-2">Order</label>
+                <select id="orderFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <option value="">All Orders</option>
+                    <!-- Orders will be loaded here -->
+                </select>
+            </div>
+        </div>
+        <div class="mt-4">
+            <button id="applyFiltersBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                Apply Filters
+            </button>
+            <button id="clearFiltersBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 ml-2">
+                Clear Filters
+            </button>
+        </div>
+    </div>
+    
+    <!-- Task Table -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white border border-gray-200">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="py-2 px-4 border-b text-left">ID</th>
+                    <th class="py-2 px-4 border-b text-left">Order</th>
+                    <th class="py-2 px-4 border-b text-left">Customer</th>
+                    <th class="py-2 px-4 border-b text-left">Tailor</th>
+                    <th class="py-2 px-4 border-b text-left">Status</th>
+                    <th class="py-2 px-4 border-b text-left">Assigned At</th>
+                    <th class="py-2 px-4 border-b text-left">Completed At</th>
+                    <th class="py-2 px-4 border-b text-left">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="taskTableBody">
+                <!-- Task data will be loaded here -->
+                <tr>
+                    <td colspan="8" class="py-4 px-4 text-center text-gray-500">Loading task data...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    // Initialize authentication token from URL parameter if present
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if auth token is in URL (e.g., after login redirect)
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        
+        if (token) {
+            // Store token in both session and local storage
+            sessionStorage.setItem('authToken', token);
+            localStorage.setItem('authToken', token);
+            
+            // Remove token from URL to avoid leaking it in browser history
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+            
+            console.log('Authentication token set from URL parameter');
+        }
+        
+        // Load data
+        loadTaskData();
+        loadTailorFilterData();
+        loadOrderFilterData();
+    });
+    
+    // Refresh button
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+        loadTaskData();
+    });
+    
+    // Apply filters button
+    document.getElementById('applyFiltersBtn').addEventListener('click', function() {
+        loadTaskData();
+    });
+    
+    // Clear filters button
+    document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+        document.getElementById('statusFilter').value = '';
+        document.getElementById('tailorFilter').value = '';
+        document.getElementById('orderFilter').value = '';
+        loadTaskData();
+    });
+    
+    function loadTaskData() {
+        // Build query parameters
+        const params = new URLSearchParams();
+        
+        const statusFilter = document.getElementById('statusFilter').value;
+        if (statusFilter) {
+            params.append('status', statusFilter);
+        }
+        
+        const tailorFilter = document.getElementById('tailorFilter').value;
+        if (tailorFilter) {
+            params.append('tailor', tailorFilter);
+        }
+        
+        const orderFilter = document.getElementById('orderFilter').value;
+        if (orderFilter) {
+            params.append('order', orderFilter);
+        }
+        
+        // Get token from session storage first, then local storage as fallback
+        let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+        
+        // If no token is found, check if we can get it from the cookie
+        if (!authToken) {
+            // Log authentication state for debugging
+            console.log('No auth token found in storage, using session authentication');
+        }
+        
+        // Fetch task data from API
+        fetch(`/api/admin/tasks/?${params.toString()}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
+            },
+            credentials: 'include' // Include cookies for session authentication
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch tasks: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(tasks => {
+            const taskTableBody = document.getElementById('taskTableBody');
+            taskTableBody.innerHTML = '';
+            
+            if (tasks.length === 0) {
+                taskTableBody.innerHTML = '<tr><td colspan="8" class="py-4 px-4 text-center text-gray-500">No tasks found</td></tr>';
+                return;
+            }
+            
+            tasks.forEach(task => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="py-2 px-4 border-b">${task.id}</td>
+                    <td class="py-2 px-4 border-b">Order #${task.order || 'N/A'}</td>
+                    <td class="py-2 px-4 border-b">${task.customer_name || 'N/A'}</td>
+                    <td class="py-2 px-4 border-b">${task.tailor && task.tailor.user ? `${task.tailor.user.first_name} ${task.tailor.user.last_name}` : 'Unassigned'}</td>
+                    <td class="py-2 px-4 border-b">
+                        <span class="px-2 py-1 rounded-full text-xs ${getStatusColorClass(task.status)}">
+                            ${task.status || 'UNKNOWN'}
+                        </span>
+                    </td>
+                    <td class="py-2 px-4 border-b">${task.assigned_at ? new Date(task.assigned_at).toLocaleDateString() : 'N/A'}</td>
+                    <td class="py-2 px-4 border-b">${task.completed_at ? new Date(task.completed_at).toLocaleDateString() : 'N/A'}</td>
+                    <td class="py-2 px-4 border-b">
+                        <button class="text-indigo-600 hover:text-indigo-900 mr-2 view-task" data-id="${task.id}" title="View">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="text-blue-600 hover:text-blue-900 mr-2 edit-task" data-id="${task.id}" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        ${task.status === 'COMPLETED' ? 
+                        `<button class="text-green-600 hover:text-green-900 mr-2 process-payment" data-order-id="${task.order}" title="Process Payment">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </button>
+                        <button class="text-purple-600 hover:text-purple-900 pay-commission" data-task-id="${task.id}" title="Pay Commission">
+                            <i class="fas fa-coins"></i>
+                        </button>` : 
+                        `<button class="text-green-600 hover:text-green-900 complete-task" data-id="${task.id}" title="Complete">
+                            <i class="fas fa-check"></i>
+                        </button>`}
+                    </td>
+                `;
+                taskTableBody.appendChild(row);
+            });
+            
+            // Add event listeners to action buttons
+            document.querySelectorAll('.view-task').forEach(button => {
+                button.addEventListener('click', function() {
+                    const taskId = this.getAttribute('data-id');
+                    viewTask(taskId);
+                });
+            });
+            
+            document.querySelectorAll('.edit-task').forEach(button => {
+                button.addEventListener('click', function() {
+                    const taskId = this.getAttribute('data-id');
+                    editTask(taskId);
+                });
+            });
+            
+            document.querySelectorAll('.complete-task').forEach(button => {
+                button.addEventListener('click', function() {
+                    const taskId = this.getAttribute('data-id');
+                    completeTask(taskId);
+                });
+            });
+            
+            // Add event listeners for payment processing and commission payment
+            document.querySelectorAll('.process-payment').forEach(button => {
+                button.addEventListener('click', function() {
+                    const orderId = this.getAttribute('data-order-id');
+                    processCustomerPayment(orderId);
+                });
+            });
+            
+            document.querySelectorAll('.pay-commission').forEach(button => {
+                button.addEventListener('click', function() {
+                    const taskId = this.getAttribute('data-task-id');
+                    payCommission(taskId);
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error loading tasks:', error);
+            document.getElementById('taskTableBody').innerHTML = '<tr><td colspan="8" class="py-4 px-4 text-center text-red-500">Error loading task data: ' + error.message + '</td></tr>';
+        });
+    }
+    
+    function loadTailorFilterData() {
+        // Get token from session storage first, then local storage as fallback
+        let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+        
+        // Fetch tailor data for filter dropdown
+        fetch('/api/admin/tailors/', {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
+            },
+            credentials: 'include' // Include cookies for session authentication
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch tailors: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(tailors => {
+            const tailorFilter = document.getElementById('tailorFilter');
+            tailors.forEach(tailor => {
+                const option = document.createElement('option');
+                option.value = tailor.id;
+                option.textContent = `${tailor.user.first_name} ${tailor.user.last_name}`;
+                tailorFilter.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading tailors for filter:', error);
+        });
+    }
+    
+    function loadOrderFilterData() {
+        // Get token from session storage first, then local storage as fallback
+        let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+        
+        // Fetch order data for filter dropdown
+        fetch('/api/admin/orders/', {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
+            },
+            credentials: 'include' // Include cookies for session authentication
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch orders: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(orders => {
+            const orderFilter = document.getElementById('orderFilter');
+            orders.forEach(order => {
+                const option = document.createElement('option');
+                option.value = order.id;
+                
+                let customerName = 'Unknown Customer';
+                if (order.customer && order.customer.user) {
+                    customerName = `${order.customer.user.first_name} ${order.customer.user.last_name}`;
+                }
+                
+                option.textContent = `Order #${order.id} - ${customerName}`;
+                orderFilter.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading orders for filter:', error);
+        });
+    }
+
+    function getStatusColorClass(status) {
+        switch(status) {
+            case 'ASSIGNED':
+                return 'bg-blue-100 text-blue-800';
+            case 'IN_PROGRESS':
+                return 'bg-indigo-100 text-indigo-800';
+            case 'COMPLETED':
+                return 'bg-green-100 text-green-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    }
+    
+    function viewTask(taskId) {
+        // View task details (would show a modal or redirect to task detail page)
+        alert('View task functionality would be implemented here. Task ID: ' + taskId);
+    }
+    
+    function editTask(taskId) {
+        // Edit task (would show a modal or redirect to edit page)
+        alert('Edit task functionality would be implemented here. Task ID: ' + taskId);
+    }
+    
+    function completeTask(taskId) {
+        if (confirm('Are you sure you want to mark this task as completed?')) {
+            // Get token from session storage first, then local storage as fallback
+            let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+            
+            // Update task status via API
+            fetch(`/api/admin/tasks/${taskId}/`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                    ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
+                },
+                credentials: 'include', // Include cookies for session authentication
+                body: JSON.stringify({
+                    status: 'COMPLETED',
+                    completed_at: new Date().toISOString()
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to update task: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Task marked as completed!');
+                loadTaskData(); // Refresh the table
+            })
+            .catch(error => {
+                console.error('Error completing task:', error);
+                alert('Error completing task: ' + error.message);
+            });
+        }
+    }
+    
+    // Process customer payment for an order
+    function processCustomerPayment(orderId) {
+        if (confirm('Are you sure you want to mark this order as paid?')) {
+            // Get token from session storage first, then local storage as fallback
+            let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+            
+            // Process payment via the API endpoint
+            fetch(`/api/admin/orders/${orderId}/process-payment/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                    ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
+                },
+                credentials: 'include' // Include cookies for session authentication
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to process payment: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Order marked as paid!');
+                loadTaskData(); // Refresh the table
+            })
+            .catch(error => {
+                console.error('Error processing payment:', error);
+                alert('Error processing payment: ' + error.message);
+            });
+        }
+    }
+    
+    // Pay commission for a completed task
+    function payCommission(taskId) {
+        if (confirm('Are you sure you want to pay the commission for this task?')) {
+            // Get token from session storage first, then local storage as fallback
+            let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+            
+            // Pay commission via the API endpoint
+            fetch(`/api/admin/tasks/${taskId}/pay-commission/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                    ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
+                },
+                credentials: 'include' // Include cookies for session authentication
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to pay commission: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert('Commission paid successfully!');
+                loadTaskData(); // Refresh the table
+            })
+            .catch(error => {
+                console.error('Error paying commission:', error);
+                alert('Error paying commission: ' + error.message);
+            });
+        }
+    }
+</script>
+{% endblock %}

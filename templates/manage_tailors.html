@@ -1,0 +1,312 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Tailors - El Senior Dumingag{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-lg shadow-md p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">Manage Tailors</h2>
+        <div class="flex space-x-2">
+            <button id="refreshBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+                <i class="fas fa-sync-alt mr-2"></i>Refresh
+            </button>
+            <button id="addTailorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                <i class="fas fa-user-plus mr-2"></i>Add Tailor
+            </button>
+        </div>
+    </div>
+    
+    <!-- Tailor Table -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white border border-gray-200">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="py-2 px-4 border-b text-left">ID</th>
+                    <th class="py-2 px-4 border-b text-left">Name</th>
+                    <th class="py-2 px-4 border-b text-left">Phone</th>
+                    <th class="py-2 px-4 border-b text-left">Email</th>
+                    <th class="py-2 px-4 border-b text-left">Specialty</th>
+                    <th class="py-2 px-4 border-b text-left">Commission Rate</th>
+                    <th class="py-2 px-4 border-b text-left">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tailorTableBody">
+                <!-- Tailor data will be loaded here -->
+                <tr>
+                    <td colspan="7" class="py-4 px-4 text-center text-gray-500">Loading tailor data...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add/Edit Tailor Modal -->
+<div id="tailorModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-full max-w-2xl max-h-screen overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold" id="modalTitle">Add Tailor</h3>
+            <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="tailorForm">
+            <input type="hidden" id="tailorId">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-gray-700 mb-2" for="firstName">First Name *</label>
+                    <input type="text" id="firstName" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2" for="lastName">Last Name *</label>
+                    <input type="text" id="lastName" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2" for="username">Username *</label>
+                    <input type="text" id="username" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2" for="phone">Phone *</label>
+                    <input type="text" id="phone" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2" for="email">Email</label>
+                    <input type="email" id="email" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2" for="specialty">Specialty *</label>
+                    <input type="text" id="specialty" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2" for="commissionRate">Commission Rate (%) *</label>
+                    <input type="number" id="commissionRate" step="0.01" min="0" max="100" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700 mb-2" for="password">Password *</label>
+                    <input type="password" id="password" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-2">
+                <button type="button" id="cancelTailorBtn" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Save Tailor</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    // Load tailor data when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        loadTailorData();
+    });
+    
+    // Refresh button
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+        loadTailorData();
+    });
+    
+    // Add tailor button
+    document.getElementById('addTailorBtn').addEventListener('click', function() {
+        openTailorModal();
+    });
+    
+    // Close modal buttons
+    document.getElementById('closeModal').addEventListener('click', closeTailorModal);
+    document.getElementById('cancelTailorBtn').addEventListener('click', closeTailorModal);
+    
+    // Tailor form submission
+    document.getElementById('tailorForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveTailor();
+    });
+    
+    function loadTailorData() {
+        // Fetch tailor data from API
+        fetch('/api/admin/tailors/', {
+            headers: {
+                'Authorization': 'Token ' + localStorage.getItem('authToken'),
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(tailors => {
+            const tailorTableBody = document.getElementById('tailorTableBody');
+            tailorTableBody.innerHTML = '';
+            
+            if (tailors.length === 0) {
+                tailorTableBody.innerHTML = '<tr><td colspan="7" class="py-4 px-4 text-center text-gray-500">No tailors found</td></tr>';
+                return;
+            }
+            
+            tailors.forEach(tailor => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="py-2 px-4 border-b">${tailor.id}</td>
+                    <td class="py-2 px-4 border-b">${tailor.user.first_name} ${tailor.user.last_name}</td>
+                    <td class="py-2 px-4 border-b">${tailor.phone_number}</td>
+                    <td class="py-2 px-4 border-b">${tailor.user.email || 'N/A'}</td>
+                    <td class="py-2 px-4 border-b">${tailor.specialty}</td>
+                    <td class="py-2 px-4 border-b">${tailor.commission_rate}%</td>
+                    <td class="py-2 px-4 border-b">
+                        <button class="text-indigo-600 hover:text-indigo-900 mr-2 edit-tailor" data-id="${tailor.id}" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="text-red-600 hover:text-red-900 delete-tailor" data-id="${tailor.id}" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tailorTableBody.appendChild(row);
+            });
+            
+            // Add event listeners to action buttons
+            document.querySelectorAll('.edit-tailor').forEach(button => {
+                button.addEventListener('click', function() {
+                    const tailorId = this.getAttribute('data-id');
+                    editTailor(tailorId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-tailor').forEach(button => {
+                button.addEventListener('click', function() {
+                    const tailorId = this.getAttribute('data-id');
+                    deleteTailor(tailorId);
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error loading tailors:', error);
+            document.getElementById('tailorTableBody').innerHTML = '<tr><td colspan="7" class="py-4 px-4 text-center text-red-500">Error loading tailor data</td></tr>';
+        });
+    }
+    
+    function openTailorModal(tailor = null) {
+        document.getElementById('tailorModal').classList.remove('hidden');
+        document.getElementById('tailorModal').classList.add('flex');
+        
+        if (tailor) {
+            // Edit mode
+            document.getElementById('modalTitle').textContent = 'Edit Tailor';
+            document.getElementById('tailorId').value = tailor.id;
+            document.getElementById('firstName').value = tailor.user.first_name;
+            document.getElementById('lastName').value = tailor.user.last_name;
+            document.getElementById('username').value = tailor.user.username;
+            document.getElementById('phone').value = tailor.phone_number;
+            document.getElementById('email').value = tailor.user.email || '';
+            document.getElementById('specialty').value = tailor.specialty;
+            document.getElementById('commissionRate').value = tailor.commission_rate;
+            // Password field should be left empty for edit
+            document.getElementById('password').value = '';
+            document.getElementById('password').removeAttribute('required');
+        } else {
+            // Create mode
+            document.getElementById('modalTitle').textContent = 'Add Tailor';
+            document.getElementById('tailorForm').reset();
+            document.getElementById('tailorId').value = '';
+            document.getElementById('password').setAttribute('required', 'required');
+        }
+    }
+    
+    function closeTailorModal() {
+        document.getElementById('tailorModal').classList.add('hidden');
+        document.getElementById('tailorModal').classList.remove('flex');
+    }
+    
+    function saveTailor() {
+        const tailorId = document.getElementById('tailorId').value;
+        const tailorData = {
+            user: {
+                first_name: document.getElementById('firstName').value,
+                last_name: document.getElementById('lastName').value,
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value
+            },
+            phone_number: document.getElementById('phone').value,
+            specialty: document.getElementById('specialty').value,
+            commission_rate: document.getElementById('commissionRate').value
+        };
+        
+        // Only include password when creating a new tailor
+        const password = document.getElementById('password').value;
+        if (!tailorId && password) {
+            tailorData.user.password = password;
+        }
+        
+        const method = tailorId ? 'PUT' : 'POST';
+        const url = tailorId ? `/api/admin/tailors/${tailorId}/` : '/api/admin/tailors/';
+        
+        fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Token ' + localStorage.getItem('authToken'),
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(tailorData)
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error('Failed to save tailor');
+            }
+        })
+        .then(data => {
+            alert('Tailor saved successfully!');
+            closeTailorModal();
+            loadTailorData();
+        })
+        .catch(error => {
+            console.error('Error saving tailor:', error);
+            alert('Error saving tailor.');
+        });
+    }
+    
+    function editTailor(tailorId) {
+        // Fetch tailor details from API
+        fetch(`/api/admin/tailors/${tailorId}/`, {
+            headers: {
+                'Authorization': 'Token ' + localStorage.getItem('authToken'),
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(tailor => {
+            openTailorModal(tailor);
+        })
+        .catch(error => {
+            console.error('Error loading tailor:', error);
+            alert('Error loading tailor details.');
+        });
+    }
+    
+    function deleteTailor(tailorId) {
+        if (confirm('Are you sure you want to delete this tailor? This action cannot be undone.')) {
+            // Delete tailor via API
+            fetch(`/api/admin/tailors/${tailorId}/`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Token ' + localStorage.getItem('authToken'),
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Tailor deleted successfully!');
+                    loadTailorData(); // Refresh the table
+                } else {
+                    alert('Error deleting tailor.');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting tailor:', error);
+                alert('Error deleting tailor.');
+            });
+        }
+    }
+</script>
+{% endblock %}

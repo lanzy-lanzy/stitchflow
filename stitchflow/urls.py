@@ -16,9 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.contrib.auth import views as auth_views
+from django.views.generic.base import RedirectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # Redirect default Django auth URLs to our custom URLs
+    path('accounts/login/', RedirectView.as_view(pattern_name='etailoring:login', query_string=True)),
+    path('accounts/logout/', RedirectView.as_view(pattern_name='etailoring:logout', query_string=True)),
 ]
 
 from django.urls import include

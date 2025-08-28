@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Sidebar Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100">
+    <div class="flex h-screen" x-data="{ sidebarOpen: false }">
+        <!-- Mobile sidebar overlay -->
+        <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 z-20 bg-black bg-opacity-50 md:hidden"></div>
+        
+        <!-- Sidebar -->
+        <div :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="bg-green-800 text-white w-64 space-y-6 py-7 px-2 fixed inset-y-0 left-0 z-30 transform transition duration-300 ease-in-out md:translate-x-0 md:static md:inset-0">
+            <div class="flex justify-between items-center px-4">
+                <div class="text-white text-2xl font-bold">
+                    El Senior Dumingag
+                </div>
+                <button @click="sidebarOpen = false" class="md:hidden text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <nav>
+                <a href="#" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700">
+                    <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                </a>
+                <a href="#" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700">
+                    <i class="fas fa-user-plus mr-2"></i>Create Customer
+                </a>
+                <a href="#" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700">
+                    <i class="fas fa-shopping-cart mr-2"></i>Create Order
+                </a>
+                <a href="#" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-green-700">
+                    <i class="fas fa-users mr-2"></i>Manage Customers
+                </a>
+            </nav>
+        </div>
+        
+        <!-- Main Content Area -->
+        <div class="flex-1 overflow-auto flex flex-col">
+            <!-- Mobile header with toggle button -->
+            <div class="md:hidden bg-white shadow-sm p-4 flex items-center">
+                <button @click="sidebarOpen = true" class="text-gray-600 mr-4">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <div class="text-lg font-semibold text-gray-800">
+                    Admin Dashboard
+                </div>
+            </div>
+            
+            <!-- Page Content -->
+            <div class="flex-1 p-6">
+                <h1 class="text-2xl font-bold text-gray-800 mb-4">Mobile Sidebar Test</h1>
+                <p class="text-gray-600 mb-4">Resize your browser window to see the mobile sidebar toggle in action.</p>
+                <p class="text-gray-600">On mobile screens, click the hamburger menu icon to open the sidebar, and click the X icon or outside the sidebar to close it.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
