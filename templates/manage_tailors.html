@@ -3,31 +3,33 @@
 {% block title %}Manage Tailors - El Senior Dumingag{% endblock %}
 
 {% block content %}
-<div class="bg-white rounded-lg shadow-md p-6">
+<div class="bg-white rounded-xl shadow-lg p-6">
     <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">Manage Tailors</h2>
+        <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+            <i class="fas fa-user-tie text-green-600 mr-2"></i> Manage Tailors
+        </h2>
         <div class="flex space-x-2">
-            <button id="refreshBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+            <button id="refreshBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center">
                 <i class="fas fa-sync-alt mr-2"></i>Refresh
             </button>
-            <button id="addTailorBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+            <button id="addTailorBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center">
                 <i class="fas fa-user-plus mr-2"></i>Add Tailor
             </button>
         </div>
     </div>
     
     <!-- Tailor Table -->
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto rounded-lg shadow">
         <table class="min-w-full bg-white border border-gray-200">
             <thead>
-                <tr class="bg-gray-100">
-                    <th class="py-2 px-4 border-b text-left">ID</th>
-                    <th class="py-2 px-4 border-b text-left">Name</th>
-                    <th class="py-2 px-4 border-b text-left">Phone</th>
-                    <th class="py-2 px-4 border-b text-left">Email</th>
-                    <th class="py-2 px-4 border-b text-left">Specialty</th>
-                    <th class="py-2 px-4 border-b text-left">Commission Rate</th>
-                    <th class="py-2 px-4 border-b text-left">Actions</th>
+                <tr class="bg-gradient-to-r from-green-50 to-green-100">
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">ID</th>
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Name</th>
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Phone</th>
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Email</th>
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Specialty</th>
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Commission Rate</th>
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Actions</th>
                 </tr>
             </thead>
             <tbody id="tailorTableBody">
@@ -42,11 +44,11 @@
 
 <!-- Add/Edit Tailor Modal -->
 <div id="tailorModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-lg p-6 w-full max-w-2xl max-h-screen overflow-y-auto">
+    <div class="bg-white rounded-xl p-6 w-full max-w-2xl max-h-screen overflow-y-auto shadow-2xl">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold" id="modalTitle">Add Tailor</h3>
+            <h3 class="text-xl font-bold text-gray-800" id="modalTitle">Add Tailor</h3>
             <button id="closeModal" class="text-gray-500 hover:text-gray-700">
-                <i class="fas fa-times"></i>
+                <i class="fas fa-times text-xl"></i>
             </button>
         </div>
         <form id="tailorForm">
@@ -54,41 +56,41 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                     <label class="block text-gray-700 mb-2" for="firstName">First Name *</label>
-                    <input type="text" id="firstName" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    <input type="text" id="firstName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required>
                 </div>
                 <div>
                     <label class="block text-gray-700 mb-2" for="lastName">Last Name *</label>
-                    <input type="text" id="lastName" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    <input type="text" id="lastName" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required>
                 </div>
                 <div>
                     <label class="block text-gray-700 mb-2" for="username">Username *</label>
-                    <input type="text" id="username" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    <input type="text" id="username" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required>
                 </div>
                 <div>
                     <label class="block text-gray-700 mb-2" for="phone">Phone *</label>
-                    <input type="text" id="phone" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    <input type="text" id="phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required>
                 </div>
                 <div>
                     <label class="block text-gray-700 mb-2" for="email">Email</label>
-                    <input type="email" id="email" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <input type="email" id="email" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                 </div>
                 <div>
                     <label class="block text-gray-700 mb-2" for="specialty">Specialty *</label>
-                    <input type="text" id="specialty" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    <input type="text" id="specialty" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required>
                 </div>
                 <div>
                     <label class="block text-gray-700 mb-2" for="commissionRate">Commission Rate (%) *</label>
-                    <input type="number" id="commissionRate" step="0.01" min="0" max="100" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    <input type="number" id="commissionRate" step="0.01" min="0" max="100" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required>
                 </div>
                 <div>
                     <label class="block text-gray-700 mb-2" for="password">Password *</label>
-                    <input type="password" id="password" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    <input type="password" id="password" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required>
                 </div>
             </div>
             
             <div class="flex justify-end space-x-2">
-                <button type="button" id="cancelTailorBtn" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Cancel</button>
-                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Save Tailor</button>
+                <button type="button" id="cancelTailorBtn" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">Save Tailor</button>
             </div>
         </form>
     </div>

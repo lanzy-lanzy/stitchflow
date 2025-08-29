@@ -3,11 +3,13 @@
 {% block title %}Manage Commissions - El Senior Dumingag{% endblock %}
 
 {% block content %}
-<div class="bg-white rounded-lg shadow-md p-6">
+<div class="bg-white rounded-xl shadow-lg p-6">
     <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">Manage Commissions</h2>
+        <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+            <i class="fas fa-money-bill-wave text-green-600 mr-2"></i> Manage Commissions
+        </h2>
         <div class="flex space-x-2">
-            <button id="refreshBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+            <button id="refreshBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center">
                 <i class="fas fa-sync-alt mr-2"></i>Refresh
             </button>
         </div>
@@ -18,7 +20,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
                 <label class="block text-gray-700 mb-2">Status</label>
-                <select id="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                <select id="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-200 focus:border-green-500">
                     <option value="">All Statuses</option>
                     <option value="PENDING">Pending</option>
                     <option value="PAID">Paid</option>
@@ -26,7 +28,7 @@
             </div>
             <div>
                 <label class="block text-gray-700 mb-2">Tailor</label>
-                <select id="tailorFilter" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                <select id="tailorFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-200 focus:border-green-500">
                     <option value="">All Tailors</option>
                     <!-- Tailors will be loaded here -->
                 </select>
@@ -34,16 +36,16 @@
             <div>
                 <label class="block text-gray-700 mb-2">Date Range</label>
                 <div class="flex space-x-2">
-                    <input type="date" id="dateFromFilter" class="flex-1 px-3 py-2 border border-gray-300 rounded-md" placeholder="From">
-                    <input type="date" id="dateToFilter" class="flex-1 px-3 py-2 border border-gray-300 rounded-md" placeholder="To">
+                    <input type="date" id="dateFromFilter" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-200 focus:border-green-500" placeholder="From">
+                    <input type="date" id="dateToFilter" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-200 focus:border-green-500" placeholder="To">
                 </div>
             </div>
         </div>
         <div class="mt-4">
-            <button id="applyFiltersBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+            <button id="applyFiltersBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
                 Apply Filters
             </button>
-            <button id="clearFiltersBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 ml-2">
+            <button id="clearFiltersBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ml-2">
                 Clear Filters
             </button>
         </div>
@@ -51,33 +53,39 @@
     
     <!-- Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-blue-50 rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-blue-800 mb-2">Total Commissions</h3>
-            <div class="text-3xl font-bold text-blue-600" id="totalCommissions">$0.00</div>
+        <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6 shadow-md">
+            <h3 class="text-lg font-semibold text-blue-800 mb-2 flex items-center">
+                <i class="fas fa-wallet mr-2"></i> Total Commissions
+            </h3>
+            <div class="text-3xl font-bold text-blue-700" id="totalCommissions">₱0.00</div>
         </div>
-        <div class="bg-yellow-50 rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-yellow-800 mb-2">Pending Commissions</h3>
-            <div class="text-3xl font-bold text-yellow-600" id="pendingCommissions">$0.00</div>
+        <div class="bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl p-6 shadow-md">
+            <h3 class="text-lg font-semibold text-amber-800 mb-2 flex items-center">
+                <i class="fas fa-clock mr-2"></i> Pending Commissions
+            </h3>
+            <div class="text-3xl font-bold text-amber-700" id="pendingCommissions">₱0.00</div>
         </div>
-        <div class="bg-green-50 rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-green-800 mb-2">Paid Commissions</h3>
-            <div class="text-3xl font-bold text-green-600" id="paidCommissions">$0.00</div>
+        <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 shadow-md">
+            <h3 class="text-lg font-semibold text-green-800 mb-2 flex items-center">
+                <i class="fas fa-check-circle mr-2"></i> Paid Commissions
+            </h3>
+            <div class="text-3xl font-bold text-green-700" id="paidCommissions">₱0.00</div>
         </div>
     </div>
     
     <!-- Commission Table -->
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto rounded-lg shadow">
         <table class="min-w-full bg-white border border-gray-200">
             <thead>
-                <tr class="bg-gray-100">
-                    <th class="py-2 px-4 border-b text-left">ID</th>
-                    <th class="py-2 px-4 border-b text-left">Tailor</th>
-                    <th class="py-2 px-4 border-b text-left">Order</th>
-                    <th class="py-2 px-4 border-b text-left">Amount</th>
-                    <th class="py-2 px-4 border-b text-left">Status</th>
-                    <th class="py-2 px-4 border-b text-left">Created At</th>
-                    <th class="py-2 px-4 border-b text-left">Paid At</th>
-                    <th class="py-2 px-4 border-b text-left">Actions</th>
+                <tr class="bg-gradient-to-r from-green-50 to-green-100">
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">ID</th>
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Tailor</th>
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Order</th>
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Amount</th>
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Status</th>
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Created At</th>
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Paid At</th>
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Actions</th>
                 </tr>
             </thead>
             <tbody id="commissionTableBody">
@@ -95,10 +103,10 @@
             Showing <span id="startRecord">0</span> to <span id="endRecord">0</span> of <span id="totalRecords">0</span> records
         </div>
         <div class="flex space-x-2">
-            <button id="prevPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50" disabled>
+            <button id="prevPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors" disabled>
                 Previous
             </button>
-            <button id="nextPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50" disabled>
+            <button id="nextPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors" disabled>
                 Next
             </button>
         </div>
@@ -244,7 +252,7 @@
                     <td class="py-2 px-4 border-b">${commission.id}</td>
                     <td class="py-2 px-4 border-b">${commission.tailor.user.first_name} ${commission.tailor.user.last_name}</td>
                     <td class="py-2 px-4 border-b">Order #${commission.order}</td>
-                    <td class="py-2 px-4 border-b">$${commission.amount}</td>
+                    <td class="py-2 px-4 border-b">₱${commission.amount}</td>
                     <td class="py-2 px-4 border-b">
                         <span class="px-2 py-1 rounded-full text-xs ${getStatusColorClass(commission.status)}">
                             ${commission.status}
@@ -318,9 +326,9 @@
                 }
             });
             
-            document.getElementById('totalCommissions').textContent = '$' + totalAmount.toFixed(2);
-            document.getElementById('pendingCommissions').textContent = '$' + pendingAmount.toFixed(2);
-            document.getElementById('paidCommissions').textContent = '$' + paidAmount.toFixed(2);
+            document.getElementById('totalCommissions').textContent = '₱' + totalAmount.toFixed(2);
+            document.getElementById('pendingCommissions').textContent = '₱' + pendingAmount.toFixed(2);
+            document.getElementById('paidCommissions').textContent = '₱' + paidAmount.toFixed(2);
         })
         .catch(error => {
             console.error('Error loading commission summary:', error);

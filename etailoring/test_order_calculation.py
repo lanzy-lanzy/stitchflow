@@ -66,11 +66,11 @@ def test_order_calculation():
     calculated_total = order.calculate_total_amount()
     expected_total = fabric.price_per_unit + button.price_per_unit + zipper.price_per_unit
     
-    print(f"Fabric price: ${fabric.price_per_unit}")
-    print(f"Button price: ${button.price_per_unit}")
-    print(f"Zipper price: ${zipper.price_per_unit}")
-    print(f"Expected total: ${expected_total}")
-    print(f"Calculated total: ${calculated_total}")
+    print(f"Fabric price: ₱{fabric.price_per_unit}")
+    print(f"Button price: ₱{button.price_per_unit}")
+    print(f"Zipper price: ₱{zipper.price_per_unit}")
+    print(f"Expected total: ₱{expected_total}")
+    print(f"Calculated total: ₱{calculated_total}")
     
     # Verify the calculation
     assert calculated_total == expected_total, f"Expected {expected_total}, got {calculated_total}"

@@ -96,7 +96,7 @@ def test_order_creation_with_assignment():
     print(f"- Fabric: {fabric.name} (quantity: {fabric.quantity})")
     print(f"- Thread: {thread.name} (quantity: {thread.quantity})")
     print(f"- Button: {button.name} (quantity: {button.quantity})")
-    print(f"- Order total: ${order_data['total_amount']}")
+    print(f"- Order total: ₱{order_data['total_amount']}")
     
     # Clean up
     fabric.delete()

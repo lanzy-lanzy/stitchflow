@@ -3,14 +3,16 @@
 {% block title %}Inventory Management - El Senior Dumingag{% endblock %}
 
 {% block content %}
-<div class="bg-white rounded-lg shadow-md p-6">
+<div class="bg-white rounded-xl shadow-lg p-6">
     <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">Inventory Management</h2>
+        <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+            <i class="fas fa-warehouse text-green-600 mr-2"></i> Inventory Management
+        </h2>
         <div class="flex space-x-2">
-            <button id="refreshBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+            <button id="refreshBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center">
                 <i class="fas fa-sync-alt mr-2"></i>Refresh
             </button>
-            <button id="restockBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+            <button id="restockBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center">
                 <i class="fas fa-plus-circle mr-2"></i>Restock Item
             </button>
         </div>
@@ -18,39 +20,47 @@
     
     <!-- Inventory Summary -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-blue-50 rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-blue-800 mb-2">Total Fabrics</h3>
-            <div class="text-3xl font-bold text-blue-600" id="totalFabrics">0</div>
+        <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6 shadow-md">
+            <h3 class="text-lg font-semibold text-blue-800 mb-2 flex items-center">
+                <i class="fas fa-fabric mr-2"></i> Total Fabrics
+            </h3>
+            <div class="text-3xl font-bold text-blue-700" id="totalFabrics">0</div>
         </div>
-        <div class="bg-purple-50 rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-purple-800 mb-2">Total Accessories</h3>
-            <div class="text-3xl font-bold text-purple-600" id="totalAccessories">0</div>
+        <div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-6 shadow-md">
+            <h3 class="text-lg font-semibold text-purple-800 mb-2 flex items-center">
+                <i class="fas fa-puzzle-piece mr-2"></i> Total Accessories
+            </h3>
+            <div class="text-3xl font-bold text-purple-700" id="totalAccessories">0</div>
         </div>
-        <div class="bg-red-50 rounded-lg p-6">
-            <h3 class="text-lg font-semibold text-red-800 mb-2">Low Stock Items</h3>
-            <div class="text-3xl font-bold text-red-600" id="lowStockItems">0</div>
+        <div class="bg-gradient-to-r from-red-50 to-red-100 rounded-xl p-6 shadow-md">
+            <h3 class="text-lg font-semibold text-red-800 mb-2 flex items-center">
+                <i class="fas fa-exclamation-triangle mr-2"></i> Low Stock Items
+            </h3>
+            <div class="text-3xl font-bold text-red-700" id="lowStockItems">0</div>
         </div>
     </div>
     
     <!-- Fabric Inventory -->
     <div class="mb-8">
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-semibold text-gray-800">Fabric Inventory</h3>
-            <button id="addFabricBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+            <h3 class="text-xl font-semibold text-gray-800 flex items-center">
+                <i class="fas fa-tshirt text-blue-600 mr-2"></i> Fabric Inventory
+            </h3>
+            <button id="addFabricBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center">
                 <i class="fas fa-plus mr-2"></i>Add Fabric
             </button>
         </div>
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto rounded-lg shadow">
             <table class="min-w-full bg-white border border-gray-200">
                 <thead>
-                    <tr class="bg-gray-100">
-                        <th class="py-2 px-4 border-b text-left">Name</th>
-                        <th class="py-2 px-4 border-b text-left">Description</th>
-                        <th class="py-2 px-4 border-b text-left">Unit Type</th>
-                        <th class="py-2 px-4 border-b text-left">Quantity</th>
-                        <th class="py-2 px-4 border-b text-left">Price/Unit</th>
-                        <th class="py-2 px-4 border-b text-left">Status</th>
-                        <th class="py-2 px-4 border-b text-left">Actions</th>
+                    <tr class="bg-gradient-to-r from-blue-50 to-blue-100">
+                        <th class="py-3 px-4 border-b text-left text-blue-800 font-semibold">Name</th>
+                        <th class="py-3 px-4 border-b text-left text-blue-800 font-semibold">Description</th>
+                        <th class="py-3 px-4 border-b text-left text-blue-800 font-semibold">Unit Type</th>
+                        <th class="py-3 px-4 border-b text-left text-blue-800 font-semibold">Quantity</th>
+                        <th class="py-3 px-4 border-b text-left text-blue-800 font-semibold">Price/Unit</th>
+                        <th class="py-3 px-4 border-b text-left text-blue-800 font-semibold">Status</th>
+                        <th class="py-3 px-4 border-b text-left text-blue-800 font-semibold">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="fabricTableBody">
@@ -66,21 +76,23 @@
     <!-- Accessory Inventory -->
     <div>
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-semibold text-gray-800">Accessory Inventory</h3>
-            <button id="addAccessoryBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+            <h3 class="text-xl font-semibold text-gray-800 flex items-center">
+                <i class="fas fa-puzzle-piece text-purple-600 mr-2"></i> Accessory Inventory
+            </h3>
+            <button id="addAccessoryBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center">
                 <i class="fas fa-plus mr-2"></i>Add Accessory
             </button>
         </div>
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto rounded-lg shadow">
             <table class="min-w-full bg-white border border-gray-200">
                 <thead>
-                    <tr class="bg-gray-100">
-                        <th class="py-2 px-4 border-b text-left">Name</th>
-                        <th class="py-2 px-4 border-b text-left">Description</th>
-                        <th class="py-2 px-4 border-b text-left">Quantity</th>
-                        <th class="py-2 px-4 border-b text-left">Price/Unit</th>
-                        <th class="py-2 px-4 border-b text-left">Status</th>
-                        <th class="py-2 px-4 border-b text-left">Actions</th>
+                    <tr class="bg-gradient-to-r from-purple-50 to-purple-100">
+                        <th class="py-3 px-4 border-b text-left text-purple-800 font-semibold">Name</th>
+                        <th class="py-3 px-4 border-b text-left text-purple-800 font-semibold">Description</th>
+                        <th class="py-3 px-4 border-b text-left text-purple-800 font-semibold">Quantity</th>
+                        <th class="py-3 px-4 border-b text-left text-purple-800 font-semibold">Price/Unit</th>
+                        <th class="py-3 px-4 border-b text-left text-purple-800 font-semibold">Status</th>
+                        <th class="py-3 px-4 border-b text-left text-purple-800 font-semibold">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="accessoryTableBody">
@@ -430,7 +442,7 @@
                     <td class="py-2 px-4 border-b">${fabric.description || 'N/A'}</td>
                     <td class="py-2 px-4 border-b">${fabric.get_unit_type_display || fabric.unit_type}</td>
                     <td class="py-2 px-4 border-b">${fabric.quantity} ${fabric.unit_type}</td>
-                    <td class="py-2 px-4 border-b">$${fabric.price_per_unit}</td>
+                    <td class="py-2 px-4 border-b">₱${fabric.price_per_unit}</td>
                     <td class="py-2 px-4 border-b">
                         <span class="px-2 py-1 rounded-full text-xs ${isLowStock ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
                             ${isLowStock ? 'Low Stock' : 'In Stock'}
@@ -501,7 +513,7 @@
                     <td class="py-2 px-4 border-b">${accessory.name}</td>
                     <td class="py-2 px-4 border-b">${accessory.description || 'N/A'}</td>
                     <td class="py-2 px-4 border-b">${accessory.quantity} units</td>
-                    <td class="py-2 px-4 border-b">$${accessory.price_per_unit}</td>
+                    <td class="py-2 px-4 border-b">₱${accessory.price_per_unit}</td>
                     <td class="py-2 px-4 border-b">
                         <span class="px-2 py-1 rounded-full text-xs ${isLowStock ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
                             ${isLowStock ? 'Low Stock' : 'In Stock'}

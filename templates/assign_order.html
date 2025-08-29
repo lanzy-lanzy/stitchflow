@@ -4,18 +4,22 @@
 
 {% block content %}
 <div class="max-w-4xl mx-auto">
-    <div class="bg-white rounded-lg shadow-md p-8">
-        <h1 class="text-2xl font-bold text-gray-800 mb-6">Assign Order #{{ order.id }} to Tailor</h1>
+    <div class="bg-white rounded-xl shadow-lg p-8">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+            <i class="fas fa-user-tie text-green-600 mr-2"></i> Assign Order #{{ order.id }} to Tailor
+        </h1>
         
-        <div id="statusMessage" class="hidden mb-6 p-4 rounded-md"></div>
+        <div id="statusMessage" class="hidden mb-6 p-4 rounded-lg"></div>
         
-        <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-6">
-            <h2 class="text-lg font-semibold text-gray-700 mb-4">Order Details</h2>
+        <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-xl border border-gray-200 shadow-sm mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-info-circle text-blue-600 mr-2"></i> Order Details
+            </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <p class="text-gray-600"><strong>Customer:</strong> {{ order.customer.user.first_name }} {{ order.customer.user.last_name }}</p>
                     <p class="text-gray-600"><strong>Fabric:</strong> {{ order.fabric.name }} ({{ order.fabric.unit_type }})</p>
-                    <p class="text-gray-600"><strong>Total Amount:</strong> ${{ order.total_amount }}</p>
+                    <p class="text-gray-600"><strong>Total Amount:</strong> ₱{{ order.total_amount }}</p>
                 </div>
                 <div>
                     <p class="text-gray-600"><strong>Status:</strong> 
@@ -42,13 +46,15 @@
         <form id="assignOrderForm" method="post" class="space-y-6">
             {% csrf_token %}
             
-            <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                <h2 class="text-lg font-semibold text-gray-700 mb-4">Assign to Tailor</h2>
+            <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-xl border border-gray-200 shadow-sm">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fas fa-user-tie text-green-600 mr-2"></i> Assign to Tailor
+                </h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label for="tailor" class="block text-sm font-medium text-gray-700 mb-1">Select Tailor *</label>
                         <select id="tailor" name="tailor" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             <option value="">Select a tailor</option>
                             {% for tailor in tailors %}
                             <option value="{{ tailor.id }}">{{ tailor.user.first_name }} {{ tailor.user.last_name }} ({{ tailor.specialty }})</option>
@@ -60,11 +66,11 @@
             
             <div class="flex justify-end space-x-4">
                 <a href="{% url 'etailoring:manage_orders' %}" 
-                    class="px-6 py-2 bg-gray-300 text-gray-700 font-medium rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                    class="px-6 py-2 bg-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
                     Cancel
                 </a>
                 <button type="submit" 
-                    class="px-6 py-2 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                    class="px-6 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
                     Assign Order
                 </button>
             </div>

@@ -98,7 +98,7 @@ def test_tailor_dashboard_enhancement():
     # Create a commission for the task
     commission = Commission.objects.create(
         tailor=tailor,
-        amount=Decimal('4.50'),  # 15% of $30
+        amount=Decimal('4.50'),  # 15% of ₱30
         order=order,
         status='PENDING'
     )
@@ -114,8 +114,8 @@ def test_tailor_dashboard_enhancement():
     print(f"Customer Phone: {serialized_data['customer_phone']}")
     print(f"Customer Address: {serialized_data['customer_address']}")
     print(f"Fabric: {serialized_data['order_details']['fabric']}")
-    print(f"Total Amount: ${serialized_data['order_details']['total_amount']}")
-    print(f"Commission Amount: ${serialized_data['commission_amount']}")
+    print(f"Total Amount: ₱{serialized_data['order_details']['total_amount']}")
+    print(f"Commission Amount: ₱{serialized_data['commission_amount']}")
     print(f"Measurements: {serialized_data['order_measurements']}")
     
     # Verify that all the new fields are present

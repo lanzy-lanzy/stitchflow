@@ -104,7 +104,7 @@ def test_order_assignment():
         # Check if commission was created
         commission = task.order.commission_set.first()
         if commission:
-            print(f"Commission created: ${commission.amount} (status: {commission.status})")
+            print(f"Commission created: ₱{commission.amount} (status: {commission.status})")
         else:
             print("No commission found!")
             

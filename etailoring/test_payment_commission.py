@@ -68,11 +68,11 @@ def test_payment_commission_workflow():
     order = Order.objects.create(
         customer=customer,
         fabric=fabric,
-        total_amount=Decimal('100.00')  # $50 fabric + $50 for accessories (estimated)
+        total_amount=Decimal('100.00')  # ₱50 fabric + ₱50 for accessories (estimated)
     )
     order.accessories.add(accessory)
     
-    print(f"Created order #{order.id} for ${order.total_amount}")
+    print(f"Created order #{order.id} for ₱{order.total_amount}")
     
     # Assign order to tailor
     task = OrderManager.assign_order_to_tailor(order, tailor)
@@ -89,7 +89,7 @@ def test_payment_commission_workflow():
     # Verify commission was created
     commission = Commission.objects.get(order=order, tailor=tailor)
     expected_commission = (tailor.commission_rate / 100) * order.total_amount
-    print(f"Commission created. Amount: ${commission.amount} (expected: ${expected_commission})")
+    print(f"Commission created. Amount: ₱{commission.amount} (expected: ₱{expected_commission})")
     
     # Process customer payment
     order.payment_status = 'PAID'

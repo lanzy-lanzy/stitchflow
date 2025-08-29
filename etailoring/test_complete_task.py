@@ -99,7 +99,7 @@ def test_complete_task():
         print(f"Task #{started_task.id} completed successfully")
         print(f"Task status updated to: {started_task.status}")
         print(f"Order status updated to: {order.status}")
-        print(f"Commission created: ${commission.amount} (status: {commission.status})")
+        print(f"Commission created: ₱{commission.amount} (status: {commission.status})")
         
         # Verify that completed_at is set
         if started_task.completed_at:

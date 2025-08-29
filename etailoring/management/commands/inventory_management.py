@@ -68,7 +68,7 @@ class Command(BaseCommand):
             status = "LOW STOCK" if fabric.is_low_stock else "OK"
             self.stdout.write(
                 f"{fabric.name}: {fabric.quantity} {fabric.get_unit_type_display()} "
-                f"(Price: ${fabric.price_per_unit}) [{status}]"
+                f"(Price: ₱{fabric.price_per_unit}) [{status}]"
             )
         
         self.stdout.write('\n=== ACCESSORY INVENTORY ===')
@@ -77,7 +77,7 @@ class Command(BaseCommand):
             status = "LOW STOCK" if accessory.is_low_stock else "OK"
             self.stdout.write(
                 f"{accessory.name}: {accessory.quantity} units "
-                f"(Price: ${accessory.price_per_unit}) [{status}]"
+                f"(Price: ₱{accessory.price_per_unit}) [{status}]"
             )
 
     def restock_inventory(self, options):

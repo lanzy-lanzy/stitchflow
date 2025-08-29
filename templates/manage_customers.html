@@ -3,14 +3,16 @@
 {% block title %}Manage Customers - El Senior Dumingag{% endblock %}
 
 {% block content %}
-<div class="bg-white rounded-lg shadow-md p-6">
+<div class="bg-white rounded-xl shadow-lg p-6">
     <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800">Manage Customers</h2>
+        <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+            <i class="fas fa-users text-green-600 mr-2"></i> Manage Customers
+        </h2>
         <div class="flex space-x-2">
-            <button id="refreshBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+            <button id="refreshBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center">
                 <i class="fas fa-sync-alt mr-2"></i>Refresh
             </button>
-            <a href="{% url 'etailoring:create_customer' %}" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+            <a href="{% url 'etailoring:create_customer' %}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center">
                 <i class="fas fa-user-plus mr-2"></i>Create Customer
             </a>
         </div>
@@ -21,25 +23,25 @@
         <div class="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-4 md:space-y-0">
             <div class="flex-1">
                 <input type="text" id="searchInput" placeholder="Search customers by name or phone..." 
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500">
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-200 focus:border-green-500">
             </div>
-            <button id="searchBtn" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+            <button id="searchBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center">
                 <i class="fas fa-search mr-2"></i>Search
             </button>
         </div>
     </div>
     
     <!-- Customer Table -->
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto rounded-lg shadow">
         <table class="min-w-full bg-white border border-gray-200">
             <thead>
-                <tr class="bg-gray-100">
-                    <th class="py-2 px-4 border-b text-left">ID</th>
-                    <th class="py-2 px-4 border-b text-left">Name</th>
-                    <th class="py-2 px-4 border-b text-left">Phone</th>
-                    <th class="py-2 px-4 border-b text-left">Email</th>
-                    <th class="py-2 px-4 border-b text-left">Orders</th>
-                    <th class="py-2 px-4 border-b text-left">Actions</th>
+                <tr class="bg-gradient-to-r from-green-50 to-green-100">
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">ID</th>
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Name</th>
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Phone</th>
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Email</th>
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Orders</th>
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Actions</th>
                 </tr>
             </thead>
             <tbody id="customerTableBody">

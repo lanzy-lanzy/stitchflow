@@ -90,11 +90,11 @@ def test_api_order_calculation():
             expected_total = float(fabric.price_per_unit + thread.price_per_unit + button.price_per_unit)
             actual_total = float(order['total_amount'])
             
-            print(f"Fabric price: ${fabric.price_per_unit}")
-            print(f"Thread price: ${thread.price_per_unit}")
-            print(f"Button price: ${button.price_per_unit}")
-            print(f"Expected total: ${expected_total}")
-            print(f"Actual total: ${actual_total}")
+            print(f"Fabric price: ₱{fabric.price_per_unit}")
+            print(f"Thread price: ₱{thread.price_per_unit}")
+            print(f"Button price: ₱{button.price_per_unit}")
+            print(f"Expected total: ₱{expected_total}")
+            print(f"Actual total: ₱{actual_total}")
             
             if expected_total == actual_total:
                 print("API test passed! Order total amount calculation is working correctly through the API.")
