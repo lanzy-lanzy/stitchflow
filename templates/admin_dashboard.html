@@ -150,12 +150,24 @@
     // Get CSRF token
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     
+    // Function to get authentication headers
+    function getAuthHeaders() {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        const headers = {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+        };
+        
+        if (token) {
+            headers['Authorization'] = `Token ${token}`;
+        }
+        
+        return headers;
+    }
+    
     // Load recent orders
     fetch('/api/admin/orders/', {
-        headers: {
-            'Authorization': 'Token ' + (localStorage.getItem('authToken') || ''),
-            'X-CSRFToken': csrfToken
-        },
+        headers: getAuthHeaders(),
         credentials: 'include' // Include cookies
     })
     .then(response => {
@@ -168,13 +180,16 @@
         const recentOrdersElement = document.getElementById('recentOrders');
         recentOrdersElement.innerHTML = '';
         
-        if (!data || data.length === 0) {
+        // Handle paginated response structure
+        const orders = data.results || data;
+        
+        if (!orders || orders.length === 0) {
             recentOrdersElement.innerHTML = '<p class="text-gray-600">No orders yet.</p>';
             return;
         }
         
         // Display only the 5 most recent orders
-        const recentOrders = data.slice(0, 5);
+        const recentOrders = orders.slice(0, 5);
         
         recentOrders.forEach(order => {
             const orderElement = document.createElement('div');
@@ -198,10 +213,7 @@
     
     // Load pending tasks
     fetch('/api/admin/tasks/', {
-        headers: {
-            'Authorization': 'Token ' + (localStorage.getItem('authToken') || ''),
-            'X-CSRFToken': csrfToken
-        },
+        headers: getAuthHeaders(),
         credentials: 'include' // Include cookies
     })
     .then(response => {
@@ -214,13 +226,16 @@
         const pendingTasksElement = document.getElementById('pendingTasks');
         pendingTasksElement.innerHTML = '';
         
-        if (!data || data.length === 0) {
+        // Handle paginated response structure
+        const tasks = data.results || data;
+        
+        if (!tasks || tasks.length === 0) {
             pendingTasksElement.innerHTML = '<p class="text-gray-600">No pending tasks.</p>';
             return;
         }
         
         // Filter to pending tasks and take only 5
-        const pendingTasks = data.filter(task => task.status === 'PENDING').slice(0, 5);
+        const pendingTasks = tasks.filter(task => task.status === 'PENDING').slice(0, 5);
         
         if (pendingTasks.length === 0) {
             pendingTasksElement.innerHTML = '<p class="text-gray-600">No pending tasks.</p>';
@@ -247,10 +262,7 @@
     
     // Load completed tasks
     fetch('/api/admin/tasks/?status=COMPLETED', {
-        headers: {
-            'Authorization': 'Token ' + (localStorage.getItem('authToken') || ''),
-            'X-CSRFToken': csrfToken
-        },
+        headers: getAuthHeaders(),
         credentials: 'include' // Include cookies
     })
     .then(response => {
@@ -263,13 +275,16 @@
         const completedTasksElement = document.getElementById('completedTasks');
         completedTasksElement.innerHTML = '';
         
-        if (!data || data.length === 0) {
+        // Handle paginated response structure
+        const tasks = data.results || data;
+        
+        if (!tasks || tasks.length === 0) {
             completedTasksElement.innerHTML = '<p class="text-gray-600">No completed tasks yet.</p>';
             return;
         }
         
         // Display only the 5 most recent completed tasks
-        const recentCompletedTasks = data.slice(0, 5);
+        const recentCompletedTasks = tasks.slice(0, 5);
         
         recentCompletedTasks.forEach(task => {
             const taskElement = document.createElement('div');
@@ -292,10 +307,7 @@
     
     // Load pending payments
     fetch('/api/admin/orders/?payment_status=PENDING', {
-        headers: {
-            'Authorization': 'Token ' + (localStorage.getItem('authToken') || ''),
-            'X-CSRFToken': csrfToken
-        },
+        headers: getAuthHeaders(),
         credentials: 'include' // Include cookies
     })
     .then(response => {
@@ -308,13 +320,16 @@
         const pendingPaymentsElement = document.getElementById('pendingPayments');
         pendingPaymentsElement.innerHTML = '';
         
-        if (!data || data.length === 0) {
+        // Handle paginated response structure
+        const orders = data.results || data;
+        
+        if (!orders || orders.length === 0) {
             pendingPaymentsElement.innerHTML = '<p class="text-gray-600">No pending payments.</p>';
             return;
         }
         
         // Display only the 5 most recent pending payments
-        const recentPendingPayments = data.slice(0, 5);
+        const recentPendingPayments = orders.slice(0, 5);
         
         recentPendingPayments.forEach(order => {
             const orderElement = document.createElement('div');
@@ -338,10 +353,7 @@
     
     // Load commission summary
     fetch('/api/admin/commissions/', {
-        headers: {
-            'Authorization': 'Token ' + (localStorage.getItem('authToken') || ''),
-            'X-CSRFToken': csrfToken
-        },
+        headers: getAuthHeaders(),
         credentials: 'include' // Include cookies
     })
     .then(response => {
@@ -350,7 +362,10 @@
         }
         return response.json();
     })
-    .then(commissions => {
+    .then(data => {
+        // Handle paginated response structure
+        const commissions = data.results || data;
+        
         let totalAmount = 0;
         let pendingAmount = 0;
         let paidAmount = 0;

@@ -22,7 +22,7 @@
     <div class="mb-6">
         <div class="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-4 md:space-y-0">
             <div class="flex-1">
-                <input type="text" id="searchInput" placeholder="Search customers by name or phone..." 
+                <input type="text" id="searchInput" placeholder="Search customers by name, email or phone..." 
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-200 focus:border-green-500">
             </div>
             <button id="searchBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center">
@@ -52,11 +52,93 @@
             </tbody>
         </table>
     </div>
+    
+    <!-- Pagination -->
+    <div class="flex justify-between items-center mt-6">
+        <div class="text-gray-600">
+            Showing <span id="startRecord">0</span> to <span id="endRecord">0</span> of <span id="totalRecords">0</span> records
+        </div>
+        <div class="flex space-x-2">
+            <button id="prevPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors" disabled>
+                Previous
+            </button>
+            <button id="nextPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors" disabled>
+                Next
+            </button>
+        </div>
+    </div>
+    
+    <!-- Customer Detail Modal -->
+    <div id="customerDetailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-full max-w-3xl max-h-screen overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold" id="customerModalTitle">Customer Details</h3>
+                <button id="closeCustomerModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="customerDetailContent">
+                <!-- Customer details will be loaded here -->
+                <div class="animate-pulse">
+                    <div class="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                    <div class="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+                    <div class="h-4 bg-gray-200 rounded w-2/3 mb-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Customer Modal -->
+    <div id="editCustomerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-full max-w-2xl max-h-screen overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">Edit Customer</h3>
+                <button id="closeEditModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="editCustomerForm">
+                <input type="hidden" id="editCustomerId">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-gray-700 mb-2" for="editFirstName">First Name *</label>
+                        <input type="text" id="editFirstName" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2" for="editLastName">Last Name *</label>
+                        <input type="text" id="editLastName" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2" for="editEmail">Email</label>
+                        <input type="email" id="editEmail" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2" for="editPhone">Phone Number *</label>
+                        <input type="tel" id="editPhone" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-gray-700 mb-2" for="editAddress">Address *</label>
+                        <textarea id="editAddress" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md" required></textarea>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-2">
+                    <button type="button" id="cancelEditBtn" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <script>
     // Get CSRF token
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    // Current page and pagination info
+    let currentPage = 1;
+    let totalPages = 1;
+    let totalRecords = 0;
     
     // Load customer data when page loads
     document.addEventListener('DOMContentLoaded', function() {
@@ -65,38 +147,82 @@
     
     // Refresh button
     document.getElementById('refreshBtn').addEventListener('click', function() {
+        currentPage = 1;
         loadCustomerData();
     });
     
     // Search button
     document.getElementById('searchBtn').addEventListener('click', function() {
+        currentPage = 1;
         loadCustomerData();
     });
     
     // Search input enter key
     document.getElementById('searchInput').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
+            currentPage = 1;
             loadCustomerData();
         }
+    });
+    
+    // Pagination buttons
+    document.getElementById('prevPage').addEventListener('click', function() {
+        if (currentPage > 1) {
+            currentPage--;
+            loadCustomerData();
+        }
+    });
+    
+    document.getElementById('nextPage').addEventListener('click', function() {
+        if (currentPage < totalPages) {
+            currentPage++;
+            loadCustomerData();
+        }
+    });
+    
+    // Close customer detail modal
+    document.getElementById('closeCustomerModal').addEventListener('click', function() {
+        document.getElementById('customerDetailModal').classList.add('hidden');
+        document.getElementById('customerDetailModal').classList.remove('flex');
+    });
+    
+    // Close edit customer modal
+    document.getElementById('closeEditModal').addEventListener('click', function() {
+        closeEditModal();
+    });
+    
+    document.getElementById('cancelEditBtn').addEventListener('click', function() {
+        closeEditModal();
+    });
+    
+    // Edit customer form submission
+    document.getElementById('editCustomerForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveCustomer();
     });
     
     function loadCustomerData() {
         const searchQuery = document.getElementById('searchInput').value;
         
-        // Fetch customer data from API
-        fetch('/api/admin/customers/', {
+        // Show loading state
+        const customerTableBody = document.getElementById('customerTableBody');
+        customerTableBody.innerHTML = '<tr><td colspan="6" class="py-4 px-4 text-center text-gray-500">Loading customer data...</td></tr>';
+        
+        // Fetch customer data from API with pagination
+        fetch(`/api/admin/customers/?page=${currentPage}`, {
             headers: {
                 'Authorization': 'Token ' + localStorage.getItem('authToken'),
                 'X-CSRFToken': csrfToken
             }
         })
         .then(response => response.json())
-        .then(customers => {
-            const customerTableBody = document.getElementById('customerTableBody');
+        .then(data => {
+            const customers = data.results || data;
             customerTableBody.innerHTML = '';
             
             if (customers.length === 0) {
                 customerTableBody.innerHTML = '<tr><td colspan="6" class="py-4 px-4 text-center text-gray-500">No customers found</td></tr>';
+                updatePagination(0, 1, 0);
                 return;
             }
             
@@ -104,16 +230,25 @@
             let filteredCustomers = customers;
             if (searchQuery) {
                 filteredCustomers = customers.filter(customer => 
-                    customer.user.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    customer.user.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    customer.phone_number.includes(searchQuery)
+                    (customer.user.first_name && customer.user.first_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                    (customer.user.last_name && customer.user.last_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                    (customer.user.email && customer.user.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                    (customer.phone_number && customer.phone_number.includes(searchQuery))
                 );
             }
             
             if (filteredCustomers.length === 0) {
                 customerTableBody.innerHTML = '<tr><td colspan="6" class="py-4 px-4 text-center text-gray-500">No customers match your search</td></tr>';
+                updatePagination(0, 1, 0);
                 return;
             }
+            
+            // Sort customers alphabetically by name
+            filteredCustomers.sort((a, b) => {
+                const nameA = `${a.user.first_name} ${a.user.last_name}`.toLowerCase();
+                const nameB = `${b.user.first_name} ${b.user.last_name}`.toLowerCase();
+                return nameA.localeCompare(nameB);
+            });
             
             filteredCustomers.forEach(customer => {
                 const row = document.createElement('tr');
@@ -123,8 +258,15 @@
                     <td class="py-2 px-4 border-b">${customer.user.first_name} ${customer.user.last_name}</td>
                     <td class="py-2 px-4 border-b">${customer.phone_number}</td>
                     <td class="py-2 px-4 border-b">${customer.user.email || 'N/A'}</td>
-                    <td class="py-2 px-4 border-b">0</td>
                     <td class="py-2 px-4 border-b">
+                        <span class="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                            <i class="fas fa-shopping-bag mr-1"></i><span class="order-count">...</span>
+                        </span>
+                    </td>
+                    <td class="py-2 px-4 border-b">
+                        <button class="text-blue-600 hover:text-blue-900 mr-2 view-customer" data-id="${customer.id}" title="View Details">
+                            <i class="fas fa-eye"></i>
+                        </button>
                         <button class="text-indigo-600 hover:text-indigo-900 mr-2 edit-customer" data-id="${customer.id}" title="Edit">
                             <i class="fas fa-edit"></i>
                         </button>
@@ -137,9 +279,26 @@
                     </td>
                 `;
                 customerTableBody.appendChild(row);
+                
+                // Fetch order count for this customer
+                fetchOrderCount(customer.id);
             });
             
+            // Update pagination info
+            if (data.count !== undefined) {
+                updatePagination(data.count, currentPage, 10);
+            } else {
+                updatePagination(filteredCustomers.length, 1, filteredCustomers.length);
+            }
+            
             // Add event listeners to action buttons
+            document.querySelectorAll('.view-customer').forEach(button => {
+                button.addEventListener('click', function() {
+                    const customerId = this.getAttribute('data-id');
+                    viewCustomer(customerId);
+                });
+            });
+            
             document.querySelectorAll('.edit-customer').forEach(button => {
                 button.addEventListener('click', function() {
                     const customerId = this.getAttribute('data-id');
@@ -167,9 +326,225 @@
         });
     }
     
+    function updatePagination(total, current, perPage) {
+        totalRecords = total;
+        currentPage = current;
+        totalPages = Math.ceil(total / perPage);
+        
+        document.getElementById('startRecord').textContent = ((current - 1) * perPage) + 1;
+        document.getElementById('endRecord').textContent = Math.min(current * perPage, total);
+        document.getElementById('totalRecords').textContent = total;
+        
+        document.getElementById('prevPage').disabled = current === 1;
+        document.getElementById('nextPage').disabled = current === totalPages;
+    }
+    
+    function fetchOrderCount(customerId) {
+        // Fetch the actual order count from the API
+        fetch('/api/admin/customers/orders/', {
+            headers: {
+                'Authorization': 'Token ' + localStorage.getItem('authToken'),
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update all customer order counts at once
+            const counts = data.customer_order_counts || {};
+            document.querySelectorAll('.order-count').forEach(countElement => {
+                const row = countElement.closest('tr');
+                const viewButton = row.querySelector('.view-customer');
+                if (viewButton) {
+                    const id = viewButton.getAttribute('data-id');
+                    countElement.textContent = counts[id] || 0;
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching order counts:', error);
+        });
+    }
+    
+    function viewCustomer(customerId) {
+        // Fetch customer details from API
+        fetch(`/api/admin/customers/${customerId}/`, {
+            headers: {
+                'Authorization': 'Token ' + localStorage.getItem('authToken'),
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(customer => {
+            // Populate the customer detail modal
+            const detailContent = document.getElementById('customerDetailContent');
+            
+            // Format measurements
+            let measurementsHtml = '<p class="text-gray-500">No measurements recorded</p>';
+            if (customer.measurements && Object.keys(customer.measurements).length > 0) {
+                measurementsHtml = '<div class="grid grid-cols-2 md:grid-cols-3 gap-4">';
+                for (const [key, value] of Object.entries(customer.measurements)) {
+                    measurementsHtml += `
+                        <div class="bg-gray-50 p-3 rounded-lg">
+                            <span class="text-gray-600 font-medium capitalize">${key}:</span>
+                            <span class="text-gray-800">${value} inches</span>
+                        </div>
+                    `;
+                }
+                measurementsHtml += '</div>';
+            }
+            
+            detailContent.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-500">Full Name</h4>
+                        <p class="text-lg font-medium">${customer.user.first_name} ${customer.user.last_name}</p>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-500">Email</h4>
+                        <p class="text-lg font-medium">${customer.user.email || 'N/A'}</p>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-500">Phone</h4>
+                        <p class="text-lg font-medium">${customer.phone_number}</p>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-semibold text-gray-500">ID</h4>
+                        <p class="text-lg font-medium">#${customer.id}</p>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h4 class="text-sm font-semibold text-gray-500 mb-1">Address</h4>
+                    <p class="p-3 bg-gray-50 rounded-lg">${customer.address}</p>
+                </div>
+                
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-500 mb-3">Measurements</h4>
+                    ${measurementsHtml}
+                </div>
+                
+                <div class="flex justify-end mt-6 space-x-3">
+                    <button class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 edit-from-detail" data-id="${customer.id}">
+                        <i class="fas fa-edit mr-1"></i> Edit
+                    </button>
+                    <button class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 create-order-from-detail" data-id="${customer.id}">
+                        <i class="fas fa-shopping-cart mr-1"></i> Create Order
+                    </button>
+                </div>
+            `;
+            
+            // Show the modal
+            document.getElementById('customerDetailModal').classList.remove('hidden');
+            document.getElementById('customerDetailModal').classList.add('flex');
+            
+            // Add event listeners to the buttons in the detail view
+            document.querySelector('.edit-from-detail').addEventListener('click', function() {
+                closeDetailModal();
+                editCustomer(this.getAttribute('data-id'));
+            });
+            
+            document.querySelector('.create-order-from-detail').addEventListener('click', function() {
+                const customerId = this.getAttribute('data-id');
+                window.location.href = `/create-order/?customer=${customerId}`;
+            });
+        })
+        .catch(error => {
+            console.error('Error loading customer details:', error);
+            alert('Error loading customer details.');
+        });
+    }
+    
+    function closeDetailModal() {
+        document.getElementById('customerDetailModal').classList.add('hidden');
+        document.getElementById('customerDetailModal').classList.remove('flex');
+    }
+    
     function editCustomer(customerId) {
-        // Redirect to customer edit page (would need to be implemented)
-        alert('Edit customer functionality would be implemented here. Customer ID: ' + customerId);
+        // Fetch customer details from API
+        fetch(`/api/admin/customers/${customerId}/`, {
+            headers: {
+                'Authorization': 'Token ' + localStorage.getItem('authToken'),
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(customer => {
+            // Populate the edit form
+            document.getElementById('editCustomerId').value = customer.id;
+            document.getElementById('editFirstName').value = customer.user.first_name || '';
+            document.getElementById('editLastName').value = customer.user.last_name || '';
+            document.getElementById('editEmail').value = customer.user.email || '';
+            document.getElementById('editPhone').value = customer.phone_number || '';
+            document.getElementById('editAddress').value = customer.address || '';
+            
+            // Show the modal
+            document.getElementById('editCustomerModal').classList.remove('hidden');
+            document.getElementById('editCustomerModal').classList.add('flex');
+        })
+        .catch(error => {
+            console.error('Error loading customer for editing:', error);
+            alert('Error loading customer details for editing.');
+        });
+    }
+    
+    function closeEditModal() {
+        document.getElementById('editCustomerModal').classList.add('hidden');
+        document.getElementById('editCustomerModal').classList.remove('flex');
+    }
+    
+    function saveCustomer() {
+        const customerId = document.getElementById('editCustomerId').value;
+        
+        // Get current customer data first to preserve fields we're not updating
+        fetch(`/api/admin/customers/${customerId}/`, {
+            headers: {
+                'Authorization': 'Token ' + localStorage.getItem('authToken'),
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(customer => {
+            // Create the updated customer data
+            const updatedData = {
+                user: {
+                    id: customer.user.id,
+                    username: customer.user.username, // Preserve username
+                    email: document.getElementById('editEmail').value,
+                    first_name: document.getElementById('editFirstName').value,
+                    last_name: document.getElementById('editLastName').value
+                },
+                phone_number: document.getElementById('editPhone').value,
+                address: document.getElementById('editAddress').value,
+                measurements: customer.measurements // Preserve measurements
+            };
+            
+            // Send the update request
+            return fetch(`/api/admin/customers/${customerId}/`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Token ' + localStorage.getItem('authToken'),
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(updatedData)
+            });
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error('Failed to update customer');
+            }
+        })
+        .then(data => {
+            alert('Customer updated successfully!');
+            closeEditModal();
+            loadCustomerData(); // Refresh the table
+        })
+        .catch(error => {
+            console.error('Error updating customer:', error);
+            alert('Error updating customer.');
+        });
     }
     
     function deleteCustomer(customerId) {

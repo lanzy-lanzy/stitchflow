@@ -38,6 +38,21 @@
             </tbody>
         </table>
     </div>
+    
+    <!-- Pagination -->
+    <div class="flex justify-between items-center mt-6">
+        <div class="text-gray-600">
+            Showing <span id="startRecord">0</span> to <span id="endRecord">0</span> of <span id="totalRecords">0</span> records
+        </div>
+        <div class="flex space-x-2">
+            <button id="prevPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50" disabled>
+                Previous
+            </button>
+            <button id="nextPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50" disabled>
+                Next
+            </button>
+        </div>
+    </div>
 </div>
 
 <!-- Add/Edit Accessory Modal -->
@@ -86,6 +101,11 @@
     // Get CSRF token
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     
+    // Current page and pagination info
+    let currentPage = 1;
+    let totalPages = 1;
+    let totalRecords = 0;
+    
     // Load accessory data when page loads
     document.addEventListener('DOMContentLoaded', function() {
         loadAccessoryData();
@@ -93,6 +113,7 @@
     
     // Refresh button
     document.getElementById('refreshBtn').addEventListener('click', function() {
+        currentPage = 1;
         loadAccessoryData();
     });
     
@@ -105,6 +126,21 @@
     document.getElementById('closeModal').addEventListener('click', closeAccessoryModal);
     document.getElementById('cancelAccessoryBtn').addEventListener('click', closeAccessoryModal);
     
+    // Pagination buttons
+    document.getElementById('prevPage').addEventListener('click', function() {
+        if (currentPage > 1) {
+            currentPage--;
+            loadAccessoryData();
+        }
+    });
+    
+    document.getElementById('nextPage').addEventListener('click', function() {
+        if (currentPage < totalPages) {
+            currentPage++;
+            loadAccessoryData();
+        }
+    });
+    
     // Accessory form submission
     document.getElementById('accessoryForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -112,20 +148,22 @@
     });
     
     function loadAccessoryData() {
-        // Fetch accessory data from API
-        fetch('/api/admin/accessories/', {
+        // Fetch accessory data from API with pagination
+        fetch(`/api/admin/accessories/?page=${currentPage}`, {
             headers: {
                 'Authorization': 'Token ' + localStorage.getItem('authToken'),
                 'X-CSRFToken': csrfToken
             }
         })
         .then(response => response.json())
-        .then(accessories => {
+        .then(data => {
+            const accessories = data.results || data;
             const accessoryTableBody = document.getElementById('accessoryTableBody');
             accessoryTableBody.innerHTML = '';
             
             if (accessories.length === 0) {
                 accessoryTableBody.innerHTML = '<tr><td colspan="7" class="py-4 px-4 text-center text-gray-500">No accessories found</td></tr>';
+                updatePagination(0, 1, 0);
                 return;
             }
             
@@ -157,6 +195,13 @@
                 accessoryTableBody.appendChild(row);
             });
             
+            // Update pagination info
+            if (data.count !== undefined) {
+                updatePagination(data.count, currentPage, 10);
+            } else {
+                updatePagination(accessories.length, 1, accessories.length);
+            }
+            
             // Add event listeners to action buttons
             document.querySelectorAll('.edit-accessory').forEach(button => {
                 button.addEventListener('click', function() {
@@ -176,6 +221,19 @@
             console.error('Error loading accessories:', error);
             document.getElementById('accessoryTableBody').innerHTML = '<tr><td colspan="7" class="py-4 px-4 text-center text-red-500">Error loading accessory data</td></tr>';
         });
+    }
+    
+    function updatePagination(total, current, perPage) {
+        totalRecords = total;
+        currentPage = current;
+        totalPages = Math.ceil(total / perPage);
+        
+        document.getElementById('startRecord').textContent = ((current - 1) * perPage) + 1;
+        document.getElementById('endRecord').textContent = Math.min(current * perPage, total);
+        document.getElementById('totalRecords').textContent = total;
+        
+        document.getElementById('prevPage').disabled = current === 1;
+        document.getElementById('nextPage').disabled = current === totalPages;
     }
     
     function openAccessoryModal(accessory = null) {

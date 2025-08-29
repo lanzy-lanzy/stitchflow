@@ -10,8 +10,6 @@ class OrderManager:
         """
         Assign an order to a tailor, deduct inventory, and create a task.
         """
-        from .business_logic import InventoryManager, CommissionManager
-        
         # Check inventory first
         has_inventory, message = InventoryManager.check_inventory(order)
         if not has_inventory:
@@ -40,8 +38,6 @@ class OrderManager:
         """
         Start a task and update related objects.
         """
-        from django.utils import timezone
-        
         # Update task
         task.status = 'IN_PROGRESS'
         task.started_at = timezone.now()
@@ -58,9 +54,6 @@ class OrderManager:
         """
         Complete a task and update related objects.
         """
-        from .business_logic import CommissionManager
-        from django.utils import timezone
-        
         # Update task
         task.status = 'COMPLETED'
         task.completed_at = timezone.now()

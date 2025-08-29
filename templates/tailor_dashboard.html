@@ -303,22 +303,38 @@
         });
     }
     
+    // Function to get auth headers
+    function getAuthHeaders() {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+        
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        };
+        
+        if (authToken) {
+            headers['Authorization'] = `Token ${authToken}`;
+        }
+        
+        return headers;
+    }
+
     // Load tailor tasks
     function loadTailorTasks() {
-        // Get token from storage
-        let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        
         fetch('/api/tailor/tasks/', {
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken,
-                ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
-            },
+            headers: getAuthHeaders(),
             credentials: 'include'
         })
-        .then(response => response.json())
-        .then(tasks => {
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch tasks: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Handle paginated responses
+            const tasks = data.results || data;
             const tasksList = document.getElementById('tasksList');
             tasksList.innerHTML = '';
             
@@ -327,7 +343,7 @@
             let inProgressCount = 0;
             let completedCount = 0;
             
-            if (tasks.length === 0) {
+            if (!tasks || tasks.length === 0) {
                 tasksList.innerHTML = '<div class="p-6 text-center text-gray-500">You have no tasks assigned yet.</div>';
                 updateTaskCounters(0, 0, 0);
                 updatePerformanceMetrics(0, 0, 0);
@@ -525,19 +541,22 @@
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         
         fetch('/api/tailor/commissions/', {
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken,
-                ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
-            },
+            headers: getAuthHeaders(),
             credentials: 'include'
         })
-        .then(response => response.json())
-        .then(commissions => {
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to fetch commissions: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Handle paginated responses
+            const commissions = data.results || data;
             const commissionsList = document.getElementById('commissionsList');
             commissionsList.innerHTML = '';
             
-            if (commissions.length === 0) {
+            if (!commissions || commissions.length === 0) {
                 commissionsList.innerHTML = '<p class="text-center text-gray-500 py-4">You have no commissions yet.</p>';
                 document.getElementById('totalEarned').textContent = '$0.00';
                 document.getElementById('pendingPayment').textContent = '$0.00';
@@ -635,75 +654,83 @@
 
     // Function to start a task
     function startTask(taskId) {
-        // Get CSRF token
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+        if (!taskId) {
+            showNotification('error', 'Invalid task ID');
+            return;
+        }
+        
+        // Show loading indicator
+        showNotification('info', 'Starting task...');
         
         fetch(`/api/tailor/tasks/${taskId}/start/`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken,
-                ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
-            },
-            credentials: 'include'
+            headers: getAuthHeaders(),
+            credentials: 'include',
+            body: JSON.stringify({}) // Send empty body to avoid potential issues
         })
         .then(response => {
-            if (response.ok) {
-                return response.json();
-            } else {
-                return response.json().then(error => {
-                    throw new Error(error.detail || 'Failed to start task');
-                });
+            if (!response.ok) {
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    return response.json().then(err => {
+                        throw new Error(err.detail || 'Failed to start task');
+                    });
+                } else {
+                    throw new Error('Failed to start task. Server responded with status: ' + response.status);
+                }
             }
+            return response.json();
         })
         .then(data => {
             // Show success notification
-            showNotification('success', data.detail);
+            showNotification('success', data.detail || 'Task started successfully');
             
             // Reload the data to reflect changes
             loadDashboardData();
         })
         .catch(error => {
             console.error('Error starting task:', error);
-            showNotification('error', error.message);
+            showNotification('error', error.message || 'An error occurred while starting the task');
         });
     }
     
     // Function to complete a task
     function completeTask(taskId) {
-        // Get CSRF token
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+        if (!taskId) {
+            showNotification('error', 'Invalid task ID');
+            return;
+        }
+        
+        // Show loading indicator
+        showNotification('info', 'Completing task...');
         
         fetch(`/api/tailor/tasks/${taskId}/complete/`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken,
-                ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
-            },
-            credentials: 'include'
+            headers: getAuthHeaders(),
+            credentials: 'include',
+            body: JSON.stringify({}) // Send empty body to avoid potential issues
         })
         .then(response => {
-            if (response.ok) {
-                return response.json();
-            } else {
-                return response.json().then(error => {
-                    throw new Error(error.detail || 'Failed to complete task');
-                });
+            if (!response.ok) {
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    return response.json().then(err => {
+                        throw new Error(err.detail || 'Failed to complete task');
+                    });
+                } else {
+                    throw new Error('Failed to complete task. Server responded with status: ' + response.status);
+                }
             }
+            return response.json();
         })
         .then(data => {
             // Show success notification
-            showNotification('success', data.detail);
+            showNotification('success', data.detail || 'Task completed successfully');
             
             // Reload the data to reflect changes
             loadDashboardData();
         })
         .catch(error => {
             console.error('Error completing task:', error);
-            showNotification('error', error.message);
+            showNotification('error', error.message || 'An error occurred while completing the task');
         });
     }
     
@@ -733,6 +760,14 @@
                     <p>${message}</p>
                 </div>
             `;
+        } else if (type === 'info') {
+            notification.classList.add('bg-blue-100', 'border-l-4', 'border-blue-500', 'text-blue-700');
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    <p>${message}</p>
+                </div>
+            `;
         } else {
             notification.classList.add('bg-red-100', 'border-l-4', 'border-red-500', 'text-red-700');
             notification.innerHTML = `
@@ -745,13 +780,15 @@
         
         document.body.appendChild(notification);
         
-        // Remove notification after 3 seconds
-        setTimeout(() => {
-            notification.style.opacity = '0';
+        // Only auto-remove success and info notifications
+        if (type === 'success' || type === 'info') {
             setTimeout(() => {
-                notification.remove();
-            }, 300);
-        }, 3000);
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
     }
 </script>
 {% endblock %}

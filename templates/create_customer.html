@@ -222,7 +222,7 @@
         const customerId = localStorage.getItem('lastCreatedCustomerId');
         if (customerId) {
             // Redirect to order creation page for this customer
-            window.location.href = '{% url "etailoring:create_order" %}';
+            window.location.href = `/create-order/?customer=${customerId}`;
         }
     });
     

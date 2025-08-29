@@ -71,6 +71,21 @@
                 </tbody>
             </table>
         </div>
+        
+        <!-- Fabric Pagination -->
+        <div class="flex justify-between items-center mt-4">
+            <div class="text-gray-600">
+                Showing <span id="fabricStartRecord">0</span> to <span id="fabricEndRecord">0</span> of <span id="fabricTotalRecords">0</span> records
+            </div>
+            <div class="flex space-x-2">
+                <button id="fabricPrevPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors" disabled>
+                    Previous
+                </button>
+                <button id="fabricNextPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors" disabled>
+                    Next
+                </button>
+            </div>
+        </div>
     </div>
     
     <!-- Accessory Inventory -->
@@ -102,6 +117,21 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+        
+        <!-- Accessory Pagination -->
+        <div class="flex justify-between items-center mt-4">
+            <div class="text-gray-600">
+                Showing <span id="accessoryStartRecord">0</span> to <span id="accessoryEndRecord">0</span> of <span id="accessoryTotalRecords">0</span> records
+            </div>
+            <div class="flex space-x-2">
+                <button id="accessoryPrevPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors" disabled>
+                    Previous
+                </button>
+                <button id="accessoryNextPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors" disabled>
+                    Next
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -231,203 +261,277 @@
 
 <script>
     // Get CSRF token
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    
+    // Get auth headers function
+    function getAuthHeaders() {
+        const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        const headers = {};
+        
+        if (token) {
+            headers['Authorization'] = `Token ${token}`;
+        }
+        
+        if (csrfToken) {
+            headers['X-CSRFToken'] = csrfToken;
+        }
+        
+        return headers;
+    }
+    
+    // Pagination info for fabrics and accessories
+    let fabricCurrentPage = 1;
+    let fabricTotalPages = 1;
+    let fabricTotalRecords = 0;
+    
+    let accessoryCurrentPage = 1;
+    let accessoryTotalPages = 1;
+    let accessoryTotalRecords = 0;
     
     // Load inventory data when page loads
     document.addEventListener('DOMContentLoaded', function() {
         loadInventoryData();
-    });
-    
-    // Refresh button
-    document.getElementById('refreshBtn').addEventListener('click', function() {
-        loadInventoryData();
-    });
-    
-    // Restock button
-    document.getElementById('restockBtn').addEventListener('click', function() {
-        // Populate item dropdowns
-        populateItemDropdowns();
-        document.getElementById('restockModal').classList.remove('hidden');
-        document.getElementById('restockModal').classList.add('flex');
-    });
-    
-    // Cancel restock button
-    document.getElementById('cancelRestockBtn').addEventListener('click', function() {
-        document.getElementById('restockModal').classList.add('hidden');
-        document.getElementById('restockModal').classList.remove('flex');
-    });
-    
-    // Restock form submission
-    document.getElementById('restockForm').addEventListener('submit', function(e) {
-        e.preventDefault();
         
-        const itemType = document.getElementById('itemType').value;
-        const itemId = document.getElementById('itemId').value;
-        const quantity = parseFloat(document.getElementById('restockQuantity').value);
+        // Add event listeners to buttons
+        document.getElementById('refreshBtn').addEventListener('click', function() {
+            loadInventoryData();
+        });
         
-        if (!itemType || !itemId || !quantity || quantity <= 0) {
-            alert('Please fill in all fields with valid values');
-            return;
-        }
+        // Restock button
+        document.getElementById('restockBtn').addEventListener('click', function() {
+            // Populate item dropdowns
+            populateItemDropdowns();
+            document.getElementById('restockModal').classList.remove('hidden');
+            document.getElementById('restockModal').classList.add('flex');
+        });
         
-        // Determine if it's fabric or accessory
-        const [type, id] = itemId.split('-');
+        // Cancel restock button
+        document.getElementById('cancelRestockBtn').addEventListener('click', function() {
+            document.getElementById('restockModal').classList.add('hidden');
+            document.getElementById('restockModal').classList.remove('flex');
+        });
         
-        // Prepare the data for updating
-        let updateData = {};
-        let url = '';
+        // Add fabric button
+        document.getElementById('addFabricBtn').addEventListener('click', function() {
+            openFabricModal();
+        });
         
-        if (type === 'fabric') {
-            // Get current fabric data first
-            fetch(`/api/admin/fabrics/${id}/`, {
-                headers: {
-                    'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                    'X-CSRFToken': csrfToken
-                }
-            })
-            .then(response => response.json())
-            .then(fabric => {
-                // Update the quantity
-                updateData = {
-                    name: fabric.name,
-                    unit_type: fabric.unit_type,
-                    quantity: parseFloat(fabric.quantity) + quantity,
-                    price_per_unit: fabric.price_per_unit,
-                    description: fabric.description || '',
-                    low_stock_threshold: fabric.low_stock_threshold
-                };
-                
-                url = `/api/admin/fabrics/${id}/`;
-                
-                // Update the fabric
-                return fetch(url, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: JSON.stringify(updateData)
+        // Add accessory button
+        document.getElementById('addAccessoryBtn').addEventListener('click', function() {
+            openAccessoryModal();
+        });
+        
+        // Close modal buttons
+        document.getElementById('closeFabricModal').addEventListener('click', closeFabricModal);
+        document.getElementById('cancelFabricBtn').addEventListener('click', closeFabricModal);
+        
+        document.getElementById('closeAccessoryModal').addEventListener('click', closeAccessoryModal);
+        document.getElementById('cancelAccessoryBtn').addEventListener('click', closeAccessoryModal);
+        
+        // Fabric form submission
+        document.getElementById('fabricForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveFabric();
+        });
+        
+        // Accessory form submission
+        document.getElementById('accessoryForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveAccessory();
+        });
+        
+        // Restock form submission
+        document.getElementById('restockForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const itemType = document.getElementById('itemType').value;
+            const itemId = document.getElementById('itemId').value;
+            const quantity = parseFloat(document.getElementById('restockQuantity').value);
+            
+            if (!itemType || !itemId || !quantity || quantity <= 0) {
+                alert('Please fill in all fields with valid values');
+                return;
+            }
+            
+            // Determine if it's fabric or accessory
+            const [type, id] = itemId.split('-');
+            
+            // Prepare the data for updating
+            let updateData = {};
+            let url = '';
+            
+            if (type === 'fabric') {
+                // Get current fabric data first
+                fetch(`/api/admin/fabrics/${id}/`, {
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
+                })
+                .then(response => response.json())
+                .then(fabric => {
+                    // Update the quantity
+                    updateData = {
+                        name: fabric.name,
+                        unit_type: fabric.unit_type,
+                        quantity: parseFloat(fabric.quantity) + quantity,
+                        price_per_unit: fabric.price_per_unit,
+                        description: fabric.description || '',
+                        low_stock_threshold: fabric.low_stock_threshold
+                    };
+                    
+                    url = `/api/admin/fabrics/${id}/`;
+                    
+                    // Update the fabric
+                    return fetch(url, {
+                        method: 'PUT',
+                        headers: {
+                            ...getAuthHeaders(),
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify(updateData)
+                    });
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert(`Successfully restocked fabric with ${quantity} units!`);
+                        // Close modal and refresh data
+                        document.getElementById('restockModal').classList.add('hidden');
+                        document.getElementById('restockModal').classList.remove('flex');
+                        document.getElementById('restockForm').reset();
+                        loadInventoryData();
+                    } else {
+                        throw new Error('Failed to restock fabric');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error restocking fabric:', error);
+                    alert('Error restocking fabric.');
                 });
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert(`Successfully restocked fabric with ${quantity} units!`);
-                    // Close modal and refresh data
-                    document.getElementById('restockModal').classList.add('hidden');
-                    document.getElementById('restockModal').classList.remove('flex');
-                    document.getElementById('restockForm').reset();
-                    loadInventoryData();
-                } else {
-                    throw new Error('Failed to restock fabric');
-                }
-            })
-            .catch(error => {
-                console.error('Error restocking fabric:', error);
-                alert('Error restocking fabric.');
-            });
-        } else if (type === 'accessory') {
-            // Get current accessory data first
-            fetch(`/api/admin/accessories/${id}/`, {
-                headers: {
-                    'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                    'X-CSRFToken': csrfToken
-                }
-            })
-            .then(response => response.json())
-            .then(accessory => {
-                // Update the quantity
-                updateData = {
-                    name: accessory.name,
-                    quantity: parseInt(accessory.quantity) + quantity,
-                    price_per_unit: accessory.price_per_unit,
-                    description: accessory.description || '',
-                    low_stock_threshold: accessory.low_stock_threshold
-                };
-                
-                url = `/api/admin/accessories/${id}/`;
-                
-                // Update the accessory
-                return fetch(url, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: JSON.stringify(updateData)
+            } else if (type === 'accessory') {
+                // Get current accessory data first
+                fetch(`/api/admin/accessories/${id}/`, {
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
+                })
+                .then(response => response.json())
+                .then(accessory => {
+                    // Update the quantity
+                    updateData = {
+                        name: accessory.name,
+                        quantity: parseInt(accessory.quantity) + quantity,
+                        price_per_unit: accessory.price_per_unit,
+                        description: accessory.description || '',
+                        low_stock_threshold: accessory.low_stock_threshold
+                    };
+                    
+                    url = `/api/admin/accessories/${id}/`;
+                    
+                    // Update the accessory
+                    return fetch(url, {
+                        method: 'PUT',
+                        headers: {
+                            ...getAuthHeaders(),
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify(updateData)
+                    });
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert(`Successfully restocked accessory with ${quantity} units!`);
+                        // Close modal and refresh data
+                        document.getElementById('restockModal').classList.add('hidden');
+                        document.getElementById('restockModal').classList.remove('flex');
+                        document.getElementById('restockForm').reset();
+                        loadInventoryData();
+                    } else {
+                        throw new Error('Failed to restock accessory');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error restocking accessory:', error);
+                    alert('Error restocking accessory.');
                 });
-            })
-            .then(response => {
-                if (response.ok) {
-                    alert(`Successfully restocked accessory with ${quantity} units!`);
-                    // Close modal and refresh data
-                    document.getElementById('restockModal').classList.add('hidden');
-                    document.getElementById('restockModal').classList.remove('flex');
-                    document.getElementById('restockForm').reset();
-                    loadInventoryData();
-                } else {
-                    throw new Error('Failed to restock accessory');
-                }
-            })
-            .catch(error => {
-                console.error('Error restocking accessory:', error);
-                alert('Error restocking accessory.');
-            });
-        }
+            }
+        });
+        
+        // Fabric pagination buttons
+        document.getElementById('fabricPrevPage').addEventListener('click', function() {
+            if (fabricCurrentPage > 1) {
+                fabricCurrentPage--;
+                loadFabricData();
+            }
+        });
+        
+        document.getElementById('fabricNextPage').addEventListener('click', function() {
+            if (fabricCurrentPage < fabricTotalPages) {
+                fabricCurrentPage++;
+                loadFabricData();
+            }
+        });
+        
+        // Accessory pagination buttons
+        document.getElementById('accessoryPrevPage').addEventListener('click', function() {
+            if (accessoryCurrentPage > 1) {
+                accessoryCurrentPage--;
+                loadAccessoryData();
+            }
+        });
+        
+        document.getElementById('accessoryNextPage').addEventListener('click', function() {
+            if (accessoryCurrentPage < accessoryTotalPages) {
+                accessoryCurrentPage++;
+                loadAccessoryData();
+            }
+        });
     });
     
-    // Add fabric button
-    document.getElementById('addFabricBtn').addEventListener('click', function() {
-        openFabricModal();
-    });
-    
-    // Add accessory button
-    document.getElementById('addAccessoryBtn').addEventListener('click', function() {
-        openAccessoryModal();
-    });
-    
-    // Close modal buttons
-    document.getElementById('closeFabricModal').addEventListener('click', closeFabricModal);
-    document.getElementById('cancelFabricBtn').addEventListener('click', closeFabricModal);
-    
-    document.getElementById('closeAccessoryModal').addEventListener('click', closeAccessoryModal);
-    document.getElementById('cancelAccessoryBtn').addEventListener('click', closeAccessoryModal);
-    
-    // Fabric form submission
-    document.getElementById('fabricForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        saveFabric();
-    });
-    
-    // Accessory form submission
-    document.getElementById('accessoryForm').addEventListener('submit', function(e) {
+    // Fix for duplicate event listener registration
+    document.removeEventListener('submit', document.getElementById('accessoryForm')._submitHandler);
+    document.getElementById('accessoryForm')._submitHandler = function(e) {
         e.preventDefault();
         saveAccessory();
-    });
+    };
+    document.getElementById('accessoryForm').addEventListener('submit', document.getElementById('accessoryForm')._submitHandler);
     
     function loadInventoryData() {
-        // Load fabric data
-        fetch('/api/admin/fabrics/', {
-            headers: {
-                'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                'X-CSRFToken': csrfToken
-            }
+        console.log('Loading inventory data...');
+        loadFabricData();
+        loadAccessoryData();
+        updateLowStockCount();
+    }
+    
+    function loadFabricData() {
+        console.log('Loading fabric data...');
+        // Load fabric data with pagination
+        fetch(`/api/admin/fabrics/?page=${fabricCurrentPage}`, {
+            headers: getAuthHeaders(),
+            credentials: 'include'
         })
-        .then(response => response.json())
-        .then(fabrics => {
+        .then(response => {
+            console.log('Fabric API response status:', response.status);
+            if (!response.ok) {
+                console.error('Fabric API error:', response.status, response.statusText);
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const fabrics = data.results || data;
+            console.log('Received fabrics data:', fabrics);
             const fabricTableBody = document.getElementById('fabricTableBody');
             fabricTableBody.innerHTML = '';
             
             if (fabrics.length === 0) {
                 fabricTableBody.innerHTML = '<tr><td colspan="7" class="py-4 px-4 text-center text-gray-500">No fabrics found</td></tr>';
                 document.getElementById('totalFabrics').textContent = '0';
-                updateLowStockCount();
+                updateFabricPagination(0, 1, 0);
                 return;
             }
             
             // Update total fabrics count
-            document.getElementById('totalFabrics').textContent = fabrics.length;
+            document.getElementById('totalFabrics').textContent = data.count !== undefined ? data.count : fabrics.length;
             
             let lowStockCount = parseInt(document.getElementById('lowStockItems').textContent) || 0;
             
@@ -460,6 +564,13 @@
                 fabricTableBody.appendChild(row);
             });
             
+            // Update pagination info
+            if (data.count !== undefined) {
+                updateFabricPagination(data.count, fabricCurrentPage, 10);
+            } else {
+                updateFabricPagination(fabrics.length, 1, fabrics.length);
+            }
+            
             // Add event listeners to fabric action buttons
             document.querySelectorAll('.edit-fabric').forEach(button => {
                 button.addEventListener('click', function() {
@@ -474,35 +585,43 @@
                     deleteFabric(fabricId);
                 });
             });
-            
-            updateLowStockCount();
         })
         .catch(error => {
             console.error('Error loading fabrics:', error);
-            document.getElementById('fabricTableBody').innerHTML = '<tr><td colspan="7" class="py-4 px-4 text-center text-red-500">Error loading fabric data</td></tr>';
+            document.getElementById('fabricTableBody').innerHTML = '<tr><td colspan="7" class="py-4 px-4 text-center text-red-500">Error loading fabric data: ' + error.message + '</td></tr>';
         });
-        
-        // Load accessory data
-        fetch('/api/admin/accessories/', {
-            headers: {
-                'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                'X-CSRFToken': csrfToken
-            }
+    }
+    
+    function loadAccessoryData() {
+        console.log('Loading accessory data...');
+        // Load accessory data with pagination
+        fetch(`/api/admin/accessories/?page=${accessoryCurrentPage}`, {
+            headers: getAuthHeaders(),
+            credentials: 'include'
         })
-        .then(response => response.json())
-        .then(accessories => {
+        .then(response => {
+            console.log('Accessory API response status:', response.status);
+            if (!response.ok) {
+                console.error('Accessory API error:', response.status, response.statusText);
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const accessories = data.results || data;
+            console.log('Received accessories data:', accessories);
             const accessoryTableBody = document.getElementById('accessoryTableBody');
             accessoryTableBody.innerHTML = '';
             
             if (accessories.length === 0) {
                 accessoryTableBody.innerHTML = '<tr><td colspan="6" class="py-4 px-4 text-center text-gray-500">No accessories found</td></tr>';
                 document.getElementById('totalAccessories').textContent = '0';
-                updateLowStockCount();
+                updateAccessoryPagination(0, 1, 0);
                 return;
             }
             
             // Update total accessories count
-            document.getElementById('totalAccessories').textContent = accessories.length;
+            document.getElementById('totalAccessories').textContent = data.count !== undefined ? data.count : accessories.length;
             
             accessories.forEach(accessory => {
                 const isLowStock = accessory.quantity <= accessory.low_stock_threshold;
@@ -531,6 +650,13 @@
                 accessoryTableBody.appendChild(row);
             });
             
+            // Update pagination info
+            if (data.count !== undefined) {
+                updateAccessoryPagination(data.count, accessoryCurrentPage, 10);
+            } else {
+                updateAccessoryPagination(accessories.length, 1, accessories.length);
+            }
+            
             // Add event listeners to accessory action buttons
             document.querySelectorAll('.edit-accessory').forEach(button => {
                 button.addEventListener('click', function() {
@@ -545,13 +671,37 @@
                     deleteAccessory(accessoryId);
                 });
             });
-            
-            updateLowStockCount();
         })
         .catch(error => {
             console.error('Error loading accessories:', error);
-            document.getElementById('accessoryTableBody').innerHTML = '<tr><td colspan="6" class="py-4 px-4 text-center text-red-500">Error loading accessory data</td></tr>';
+            document.getElementById('accessoryTableBody').innerHTML = '<tr><td colspan="6" class="py-4 px-4 text-center text-red-500">Error loading accessory data: ' + error.message + '</td></tr>';
         });
+    }
+    
+    function updateFabricPagination(total, current, perPage) {
+        fabricTotalRecords = total;
+        fabricCurrentPage = current;
+        fabricTotalPages = Math.ceil(total / perPage);
+        
+        document.getElementById('fabricStartRecord').textContent = ((current - 1) * perPage) + 1;
+        document.getElementById('fabricEndRecord').textContent = Math.min(current * perPage, total);
+        document.getElementById('fabricTotalRecords').textContent = total;
+        
+        document.getElementById('fabricPrevPage').disabled = current === 1;
+        document.getElementById('fabricNextPage').disabled = current === fabricTotalPages;
+    }
+    
+    function updateAccessoryPagination(total, current, perPage) {
+        accessoryTotalRecords = total;
+        accessoryCurrentPage = current;
+        accessoryTotalPages = Math.ceil(total / perPage);
+        
+        document.getElementById('accessoryStartRecord').textContent = ((current - 1) * perPage) + 1;
+        document.getElementById('accessoryEndRecord').textContent = Math.min(current * perPage, total);
+        document.getElementById('accessoryTotalRecords').textContent = total;
+        
+        document.getElementById('accessoryPrevPage').disabled = current === 1;
+        document.getElementById('accessoryNextPage').disabled = current === accessoryTotalPages;
     }
     
     function populateItemDropdowns() {
@@ -560,10 +710,8 @@
         
         // Populate fabric dropdown
         fetch('/api/admin/fabrics/', {
-            headers: {
-                'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                'X-CSRFToken': csrfToken
-            }
+            headers: getAuthHeaders(),
+            credentials: 'include'
         })
         .then(response => response.json())
         .then(fabrics => {
@@ -579,10 +727,8 @@
         
         // Populate accessory dropdown
         fetch('/api/admin/accessories/', {
-            headers: {
-                'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                'X-CSRFToken': csrfToken
-            }
+            headers: getAuthHeaders(),
+            credentials: 'include'
         })
         .then(response => response.json())
         .then(accessories => {
@@ -603,10 +749,8 @@
         
         // Count low stock fabrics
         fetch('/api/admin/fabrics/', {
-            headers: {
-                'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                'X-CSRFToken': csrfToken
-            }
+            headers: getAuthHeaders(),
+            credentials: 'include'
         })
         .then(response => response.json())
         .then(fabrics => {
@@ -618,10 +762,8 @@
             
             // Count low stock accessories
             return fetch('/api/admin/accessories/', {
-                headers: {
-                    'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                    'X-CSRFToken': csrfToken
-                }
+                headers: getAuthHeaders(),
+                credentials: 'include'
             });
         })
         .then(response => response.json())
@@ -691,10 +833,10 @@
         fetch(url, {
             method: method,
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                'X-CSRFToken': csrfToken
+                ...getAuthHeaders(),
+                'Content-Type': 'application/json'
             },
+            credentials: 'include',
             body: JSON.stringify(fabricData)
         })
         .then(response => {
@@ -718,10 +860,8 @@
     function editFabric(fabricId) {
         // Fetch fabric details from API
         fetch(`/api/admin/fabrics/${fabricId}/`, {
-            headers: {
-                'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                'X-CSRFToken': csrfToken
-            }
+            headers: getAuthHeaders(),
+            credentials: 'include'
         })
         .then(response => response.json())
         .then(fabric => {
@@ -738,10 +878,8 @@
             // Delete fabric via API
             fetch(`/api/admin/fabrics/${fabricId}/`, {
                 method: 'DELETE',
-                headers: {
-                    'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                    'X-CSRFToken': csrfToken
-                }
+                headers: getAuthHeaders(),
+                credentials: 'include'
             })
             .then(response => {
                 if (response.ok) {
@@ -807,10 +945,10 @@
         fetch(url, {
             method: method,
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                'X-CSRFToken': csrfToken
+                ...getAuthHeaders(),
+                'Content-Type': 'application/json'
             },
+            credentials: 'include',
             body: JSON.stringify(accessoryData)
         })
         .then(response => {
@@ -834,10 +972,8 @@
     function editAccessory(accessoryId) {
         // Fetch accessory details from API
         fetch(`/api/admin/accessories/${accessoryId}/`, {
-            headers: {
-                'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                'X-CSRFToken': csrfToken
-            }
+            headers: getAuthHeaders(),
+            credentials: 'include'
         })
         .then(response => response.json())
         .then(accessory => {
@@ -854,10 +990,8 @@
             // Delete accessory via API
             fetch(`/api/admin/accessories/${accessoryId}/`, {
                 method: 'DELETE',
-                headers: {
-                    'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                    'X-CSRFToken': csrfToken
-                }
+                headers: getAuthHeaders(),
+                credentials: 'include'
             })
             .then(response => {
                 if (response.ok) {

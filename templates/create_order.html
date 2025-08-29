@@ -86,8 +86,14 @@
 </div>
 
 <script>
-    // Get CSRF token
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    // Get CSRF token from the form and store in session
+    const csrfTokenElement = document.querySelector('[name="csrfmiddlewaretoken"]');
+    const csrfToken = csrfTokenElement ? csrfTokenElement.value : '';
+    
+    // Store token in sessionStorage for other requests
+    if (csrfToken) {
+        sessionStorage.setItem('csrfToken', csrfToken);
+    }
     
     // Load customers, fabrics, and accessories when page loads
     document.addEventListener('DOMContentLoaded', function() {
@@ -108,6 +114,9 @@
     
     // Handle customer selection to load measurements
     document.getElementById('customer').addEventListener('change', function() {
+        // Clear error styling
+        this.classList.remove('border-red-500');
+        
         const customerId = this.value;
         if (customerId) {
             loadCustomerMeasurements(customerId);
@@ -118,11 +127,17 @@
     
     // Handle fabric selection to update total amount
     document.getElementById('fabric').addEventListener('change', function() {
+        // Clear error styling
+        this.classList.remove('border-red-500');
+        
         updateTotalAmount();
     });
     
     // Handle accessories selection to update total amount
     document.getElementById('accessories').addEventListener('change', function() {
+        // Clear error styling
+        this.classList.remove('border-red-500');
+        
         updateTotalAmount();
     });
     
@@ -130,14 +145,38 @@
     document.getElementById('orderForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
+        // Validate form fields
+        const customer = document.getElementById('customer').value;
+        const fabric = document.getElementById('fabric').value;
+        const totalAmount = document.getElementById('total_amount').value;
+        
+        // Validate required fields
+        if (!customer) {
+            showStatusMessage('Please select a customer', 'error');
+            return;
+        }
+        
+        if (!fabric) {
+            showStatusMessage('Please select a fabric', 'error');
+            return;
+        }
+        
+        if (!totalAmount || totalAmount <= 0) {
+            showStatusMessage('Total amount must be greater than zero', 'error');
+            return;
+        }
+        
         // Collect form data
         const orderData = {
-            customer: document.getElementById('customer').value,
-            fabric: document.getElementById('fabric').value,
-            accessories: Array.from(document.getElementById('accessories').selectedOptions).map(option => option.value),
-            total_amount: document.getElementById('total_amount').value,
+            customer_id: customer,
+            fabric_id: fabric,
+            accessories_ids: Array.from(document.getElementById('accessories').selectedOptions).map(option => option.value),
+            total_amount: totalAmount,
             status: 'PENDING'
         };
+        
+        // Debug log
+        console.log('Submitting order data:', orderData);
         
         // Get selected tailor (if any)
         const tailorId = document.getElementById('tailor').value;
@@ -147,36 +186,56 @@
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Token ' + localStorage.getItem('authToken'),
+                'Authorization': 'Token ' + (localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || ''),
                 'X-CSRFToken': csrfToken
             },
+            credentials: 'include',
             body: JSON.stringify(orderData)
         })
         .then(response => {
+            // Debug logging
+            console.log('Server response status:', response.status);
+            console.log('Response headers:', response.headers);
+            
             if (!response.ok) {
+                if (response.headers.get('content-type')?.includes('text/html')) {
+                    // Server returned HTML instead of JSON (likely a login page)
+                    console.error('Authentication error - received HTML response');
+                    throw new Error('Authentication error. Please refresh the page and try again.');
+                }
                 return response.json().then(errors => {
+                    console.error('Error response JSON:', errors);
                     throw new Error(JSON.stringify(errors));
                 });
             }
             return response.json();
         })
         .then(data => {
+            // Handle both paginated and non-paginated responses
+            const order = data.results || data;
+            
             // If a tailor was selected, assign the order to that tailor
             if (tailorId) {
                 return fetch('/api/admin/assign-order/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Token ' + localStorage.getItem('authToken'),
+                        'Authorization': 'Token ' + (localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || ''),
                         'X-CSRFToken': csrfToken
                     },
+                    credentials: 'include',
                     body: JSON.stringify({
-                        order_id: data.id,
+                        order_id: order.id,
                         tailor_id: tailorId
                     })
                 })
                 .then(response => {
                     if (!response.ok) {
+                        if (response.headers.get('content-type')?.includes('text/html')) {
+                            // Server returned HTML instead of JSON (likely a login page)
+                            console.error('Authentication error - received HTML response');
+                            throw new Error('Authentication error. Please refresh the page and try again.');
+                        }
                         return response.json().then(errors => {
                             throw new Error(JSON.stringify(errors));
                         });
@@ -185,14 +244,14 @@
                 })
                 .then(assignData => {
                     showStatusMessage('Order created and assigned to tailor successfully!', 'success');
-                    return data; // Return original order data
+                    return order; // Return original order data
                 });
             } else {
                 showStatusMessage('Order created successfully!', 'success');
-                return data;
+                return order;
             }
         })
-        .then(data => {
+        .then(order => {
             // Reset the form
             document.getElementById('orderForm').reset();
             document.getElementById('measurementsDisplay').innerHTML = '<p>Select a customer to view their measurements</p>';
@@ -204,7 +263,69 @@
         })
         .catch(error => {
             console.error('Error:', error);
-            showStatusMessage('Error creating order: ' + error.message, 'error');
+            
+            // Better error handling with debugging information
+            let errorMessage = 'Error creating order';
+            if (error.message) {
+                try {
+                    // Try to parse the error message as JSON
+                    const errorObj = JSON.parse(error.message);
+                    
+                    // Format field-specific errors nicely
+                    if (typeof errorObj === 'object') {
+                        const fieldErrors = [];
+                        for (const [field, errors] of Object.entries(errorObj)) {
+                            // Format field name nicer
+                            let fieldName = field.replace('_', ' ');
+                            fieldName = fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
+                            
+                            if (Array.isArray(errors)) {
+                                fieldErrors.push(`${fieldName}: ${errors.join(', ')}`);
+                            } else {
+                                fieldErrors.push(`${fieldName}: ${errors}`);
+                            }
+                        }
+                        
+                        if (fieldErrors.length > 0) {
+                            errorMessage = fieldErrors.join('\n');
+                        } else {
+                            errorMessage = JSON.stringify(errorObj);
+                        }
+                    } else {
+                        errorMessage = JSON.stringify(errorObj);
+                    }
+                } catch (e) {
+                    // If not JSON, use the error message directly
+                    errorMessage = error.message;
+                    
+                    // Check specifically for customer_id errors
+                    if (error.message.includes('customer_id') || error.message.includes('NOT NULL constraint failed')) {
+                        errorMessage = 'Please select a customer';
+                        document.getElementById('customer').classList.add('border-red-500');
+                    }
+                    
+                    // Check for fabric_id errors
+                    if (error.message.includes('fabric_id')) {
+                        errorMessage = 'Please select a fabric';
+                        document.getElementById('fabric').classList.add('border-red-500');
+                    }
+                    
+                    // Check for many-to-many errors with accessories
+                    if (error.message.includes('many-to-many') || error.message.includes('accessories')) {
+                        errorMessage = 'Error with accessories selection. Please try again.';
+                        document.getElementById('accessories').classList.add('border-red-500');
+                        console.error('Many-to-many error details:', error.message);
+                    }
+                }
+            }
+            
+            // Check for authentication issues
+            if (error.message && error.message.includes('<!DOCTYPE')) {
+                errorMessage = 'Authentication error. Please refresh the page and try again.';
+                console.log('Received HTML instead of JSON. This usually indicates an authentication or session issue.');
+            }
+            
+            showStatusMessage(errorMessage, 'error');
         });
     });
     
@@ -219,12 +340,20 @@
     function loadCustomers() {
         fetch('/api/admin/customers/', {
             headers: {
-                'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                'X-CSRFToken': csrfToken
-            }
+                'Authorization': 'Token ' + (localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || ''),
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
         })
-        .then(response => response.json())
-        .then(customers => {
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load customers: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const customers = data.results || data; // Handle both paginated and non-paginated responses
             const customerSelect = document.getElementById('customer');
             // Clear existing options except the first one
             customerSelect.innerHTML = '<option value="">Select a customer</option>';
@@ -238,6 +367,7 @@
         })
         .catch(error => {
             console.error('Error loading customers:', error);
+            showStatusMessage('Error loading customers. Please refresh the page.', 'error');
         });
     }
     
@@ -245,12 +375,20 @@
     function loadFabrics() {
         fetch('/api/admin/fabrics/', {
             headers: {
-                'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                'X-CSRFToken': csrfToken
-            }
+                'Authorization': 'Token ' + (localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || ''),
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
         })
-        .then(response => response.json())
-        .then(fabrics => {
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load fabrics: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const fabrics = data.results || data; // Handle both paginated and non-paginated responses
             const fabricSelect = document.getElementById('fabric');
             // Clear existing options except the first one
             fabricSelect.innerHTML = '<option value="">Select a fabric</option>';
@@ -258,13 +396,14 @@
             fabrics.forEach(fabric => {
                 const option = document.createElement('option');
                 option.value = fabric.id;
-                option.textContent = `${fabric.name} (${fabric.unit_type}) - $${fabric.price_per_unit} per unit`;
+                option.textContent = `${fabric.name} (${fabric.unit_type}) - ₱${fabric.price_per_unit} per unit`;
                 option.dataset.price = fabric.price_per_unit;
                 fabricSelect.appendChild(option);
             });
         })
         .catch(error => {
             console.error('Error loading fabrics:', error);
+            showStatusMessage('Error loading fabrics. Please refresh the page.', 'error');
         });
     }
     
@@ -272,12 +411,20 @@
     function loadAccessories() {
         fetch('/api/admin/accessories/', {
             headers: {
-                'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                'X-CSRFToken': csrfToken
-            }
+                'Authorization': 'Token ' + (localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || ''),
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
         })
-        .then(response => response.json())
-        .then(accessories => {
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load accessories: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const accessories = data.results || data; // Handle both paginated and non-paginated responses
             const accessoriesSelect = document.getElementById('accessories');
             // Clear existing options
             accessoriesSelect.innerHTML = '';
@@ -285,13 +432,14 @@
             accessories.forEach(accessory => {
                 const option = document.createElement('option');
                 option.value = accessory.id;
-                option.textContent = `${accessory.name} - $${accessory.price_per_unit} per unit`;
+                option.textContent = `${accessory.name} - ₱${accessory.price_per_unit} per unit`;
                 option.dataset.price = accessory.price_per_unit;
                 accessoriesSelect.appendChild(option);
             });
         })
         .catch(error => {
             console.error('Error loading accessories:', error);
+            showStatusMessage('Error loading accessories. Please refresh the page.', 'error');
         });
     }
     
@@ -299,12 +447,20 @@
     function loadTailors() {
         fetch('/api/admin/tailors/', {
             headers: {
-                'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                'X-CSRFToken': csrfToken
-            }
+                'Authorization': 'Token ' + (localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || ''),
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
         })
-        .then(response => response.json())
-        .then(tailors => {
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load tailors: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const tailors = data.results || data; // Handle both paginated and non-paginated responses
             const tailorSelect = document.getElementById('tailor');
             // Clear existing options except the first one
             tailorSelect.innerHTML = '<option value="">Do not assign (create pending order)</option>';
@@ -318,6 +474,7 @@
         })
         .catch(error => {
             console.error('Error loading tailors:', error);
+            showStatusMessage('Error loading tailors. Please refresh the page.', 'error');
         });
     }
     
@@ -351,12 +508,22 @@
     function loadCustomerMeasurements(customerId) {
         fetch(`/api/admin/customers/${customerId}/`, {
             headers: {
-                'Authorization': 'Token ' + localStorage.getItem('authToken'),
-                'X-CSRFToken': csrfToken
-            }
+                'Authorization': 'Token ' + (localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || ''),
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
         })
-        .then(response => response.json())
-        .then(customer => {
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load customer measurements: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Handle both paginated and non-paginated responses
+            const customer = data.results || data;
+            
             const measurementsDisplay = document.getElementById('measurementsDisplay');
             if (customer.measurements && Object.keys(customer.measurements).length > 0) {
                 let measurementsHtml = '<div class="grid grid-cols-2 md:grid-cols-3 gap-4">';
@@ -382,7 +549,16 @@
     
     function showStatusMessage(message, type) {
         const statusElement = document.getElementById('statusMessage');
-        statusElement.textContent = message;
+        
+        // Handle multiline messages
+        if (message.includes('\n')) {
+            const messageLines = message.split('\n');
+            const messageHTML = messageLines.map(line => `<p>${line}</p>`).join('');
+            statusElement.innerHTML = messageHTML;
+        } else {
+            statusElement.textContent = message;
+        }
+        
         statusElement.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
         
         if (type === 'success') {

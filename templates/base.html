@@ -238,14 +238,32 @@
     </div>
 
     <script>
+        // Global error handler to catch authentication errors
+        window.addEventListener('error', function(event) {
+            if (event.message && event.message.includes('Authentication error')) {
+                console.log('Authentication error detected, redirecting to login page');
+                // Optionally show a message to the user
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'bg-red-100 text-red-800 p-4 fixed top-0 left-0 right-0 z-50 text-center';
+                errorMessage.textContent = 'Session expired. Redirecting to login page...';
+                document.body.prepend(errorMessage);
+                
+                // Redirect to login after a short delay
+                setTimeout(() => {
+                    window.location.href = '{% url "etailoring:login" %}';
+                }, 2000);
+            }
+        });
+
         // Handle logout - clear tokens from storage
         document.addEventListener('DOMContentLoaded', function() {
             const logoutLinks = document.querySelectorAll("a[href=\"{% url 'etailoring:logout' %}\"]");
             logoutLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
-                    // Clear tokens from storage
+                    // Clear tokens from all storage
                     sessionStorage.removeItem('authToken');
                     localStorage.removeItem('authToken');
+                    sessionStorage.removeItem('csrfToken');
                     console.log('Authentication tokens cleared');
                 });
             });

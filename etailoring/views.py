@@ -559,6 +559,10 @@ def start_task(request, task_id):
     except Task.DoesNotExist:
         return Response({'detail': 'Task not found.'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
+        # Enhanced error logging
+        import traceback
+        print(f"Error in start_task for task_id {task_id}: {str(e)}")
+        print(traceback.format_exc())
         return Response({'detail': f'An error occurred: {str(e)}'}, 
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -601,6 +605,10 @@ def complete_task(request, task_id):
     except Task.DoesNotExist:
         return Response({'detail': 'Task not found.'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
+        # Enhanced error logging
+        import traceback
+        print(f"Error in complete_task for task_id {task_id}: {str(e)}")
+        print(traceback.format_exc())
         return Response({'detail': f'An error occurred: {str(e)}'}, 
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

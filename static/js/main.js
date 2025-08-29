@@ -21,8 +21,9 @@ function showToast(message, type = 'success') {
 function formatCurrency(amount) {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: 'PHP'
-    }).format(amount);
+        currency: 'PHP',
+        currencyDisplay: 'symbol'
+    }).format(amount).replace(/PHP/, '₱');
 }
 
 // Format date
@@ -42,28 +43,44 @@ function toggleLoading(element, isLoading) {
     }
 }
 
-// Get auth token from localStorage
+// Get auth token from localStorage or sessionStorage
 function getAuthToken() {
-    return localStorage.getItem('authToken');
+    return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
 }
 
 // Set up authentication headers
 function getAuthHeaders() {
     const token = getAuthToken();
-    if (token) {
-        return {
-            'Authorization': `Token ${token}`,
-            'Content-Type': 'application/json'
-        };
-    }
-    return {
+    const headers = {
         'Content-Type': 'application/json'
     };
+    
+    // Add auth token if available
+    if (token) {
+        headers['Authorization'] = `Token ${token}`;
+    }
+    
+    // Try to get CSRF token from the page, or from sessionStorage as fallback
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (csrfInput) {
+        headers['X-CSRFToken'] = csrfInput.value;
+        // Store in sessionStorage for other pages
+        sessionStorage.setItem('csrfToken', csrfInput.value);
+    } else if (sessionStorage.getItem('csrfToken')) {
+        headers['X-CSRFToken'] = sessionStorage.getItem('csrfToken');
+    }
+    
+    return headers;
 }
 
 // Handle API errors
 function handleApiError(response) {
     if (!response.ok) {
+        // Check if response is HTML (likely a login page)
+        if (response.headers.get('content-type')?.includes('text/html')) {
+            console.error('Authentication error - received HTML response');
+            throw new Error('Authentication error. Please refresh the page and try again.');
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
     }
     return response;
@@ -90,11 +107,15 @@ document.addEventListener('DOMContentLoaded', function() {
             
             fetch('/api/logout/', {
                 method: 'POST',
-                headers: getAuthHeaders()
+                headers: getAuthHeaders(),
+                credentials: 'include'
             })
             .then(response => {
                 if (response.ok) {
+                    // Clear all tokens
                     localStorage.removeItem('authToken');
+                    sessionStorage.removeItem('authToken');
+                    sessionStorage.removeItem('csrfToken');
                     window.location.href = '/login/';
                 } else {
                     throw new Error('Logout failed');
@@ -102,7 +123,10 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Logout error:', error);
+                // Clear all tokens on error too
                 localStorage.removeItem('authToken');
+                sessionStorage.removeItem('authToken');
+                sessionStorage.removeItem('csrfToken');
                 window.location.href = '/login/';
             });
         });

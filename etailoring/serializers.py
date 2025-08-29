@@ -79,80 +79,79 @@ class AccessorySerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     total_amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
     customer = CustomerSerializer(read_only=True)
+    customer_id = serializers.PrimaryKeyRelatedField(
+        queryset=Customer.objects.all(),
+        source='customer',
+        write_only=True
+    )
     fabric = FabricSerializer(read_only=True)
+    fabric_id = serializers.PrimaryKeyRelatedField(
+        queryset=Fabric.objects.all(),
+        source='fabric',
+        write_only=True
+    )
     accessories = AccessorySerializer(many=True, read_only=True)
+    accessories_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Accessory.objects.all(), 
+        many=True, 
+        required=False, 
+        source='accessories',
+        write_only=True
+    )
     
     class Meta:
         model = Order
         fields = [
-            'id', 'customer', 'fabric', 'accessories',
+            'id', 'customer', 'customer_id', 'fabric', 'fabric_id', 'accessories', 'accessories_ids',
             'total_amount', 'status', 'payment_status', 'paid_at', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'paid_at']
     
     def create(self, validated_data):
-        # Extract accessories data before creating the order
-        accessories_data = validated_data.pop('accessories', [])
+        # Extract accessories data before creating order to avoid direct assignment
+        accessories = validated_data.pop('accessories', [])
         
-        # Get customer and fabric IDs
-        customer_id = validated_data.pop('customer') if 'customer' in validated_data else None
-        fabric_id = validated_data.pop('fabric') if 'fabric' in validated_data else None
-        
-        # Retrieve the actual customer and fabric objects
-        if customer_id is not None:
-            validated_data['customer'] = Customer.objects.get(id=customer_id)
-            
-        if fabric_id is not None:
-            validated_data['fabric'] = Fabric.objects.get(id=fabric_id)
-            
         # Calculate total_amount if not provided
-        if 'total_amount' not in validated_data or not validated_data['total_amount']:
-            # We need to calculate the total based on fabric and accessories
+        if 'total_amount' not in validated_data or not validated_data.get('total_amount'):
+            # Calculate from fabric and accessories
             fabric = validated_data.get('fabric')
-            total = fabric.price_per_unit if fabric else 0
-            
-            # For accessories, we need to fetch them from the database
-            for accessory_id in accessories_data:
-                accessory = Accessory.objects.get(id=accessory_id.id if hasattr(accessory_id, 'id') else accessory_id)
-                total += accessory.price_per_unit
+            if fabric:
+                total = fabric.price_per_unit
                 
-            validated_data['total_amount'] = total
+                # Add accessories prices
+                for accessory in accessories:
+                    total += accessory.price_per_unit
+                    
+                validated_data['total_amount'] = total
         
-        # Create the order instance
+        # Create the order instance without accessories
         order = Order.objects.create(**validated_data)
         
-        # Add accessories to the order
-        if accessories_data:
-            order.accessories.set(accessories_data)
-            
+        # Add accessories using set() method to handle many-to-many relationship
+        if accessories:
+            order.accessories.set(accessories)
+        
         return order
     
     def update(self, instance, validated_data):
-        # Extract accessories data if provided
-        accessories_data = validated_data.pop('accessories', None)
+        # Extract accessories before updating other fields
+        accessories = validated_data.pop('accessories', None)
         
-        # Handle customer and fabric if provided as IDs
-        if 'customer' in validated_data:
-            customer_id = validated_data.pop('customer')
-            validated_data['customer'] = Customer.objects.get(id=customer_id)
-            
-        if 'fabric' in validated_data:
-            fabric_id = validated_data.pop('fabric')
-            validated_data['fabric'] = Fabric.objects.get(id=fabric_id)
-        
-        # Update the order instance
+        # Update the order instance with other fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
-        
-        # Update accessories if provided
-        if accessories_data is not None:
-            instance.accessories.set(accessories_data)
         
         # If total_amount wasn't provided or was set to 0, calculate it
         if 'total_amount' not in validated_data or not instance.total_amount:
             instance.total_amount = instance.calculate_total_amount()
-            
+        
+        # Save the instance
         instance.save()
+        
+        # Update accessories using set() if provided
+        if accessories is not None:
+            instance.accessories.set(accessories)
+        
         return instance
 
 

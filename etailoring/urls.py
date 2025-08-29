@@ -1,5 +1,7 @@
 from django.urls import path
 from . import views
+from . import inventory_views
+from . import customer_views
 
 app_name = 'etailoring'
 
@@ -38,6 +40,8 @@ urlpatterns = [
     # Admin URLs
     path('api/admin/customers/', views.CustomerListCreateView.as_view(), name='admin_customer_list'),
     path('api/admin/customers/<int:pk>/', views.CustomerDetailView.as_view(), name='admin_customer_detail'),
+    path('api/admin/customers/orders/', customer_views.get_customer_orders, name='admin_customer_orders'),
+    path('api/admin/customers/<int:customer_id>/orders/', customer_views.get_customer_orders, name='admin_customer_orders_detail'),
     
     path('api/admin/tailors/', views.TailorListCreateView.as_view(), name='admin_tailor_list'),
     path('api/admin/tailors/<int:pk>/', views.TailorDetailView.as_view(), name='admin_tailor_detail'),
@@ -59,8 +63,13 @@ urlpatterns = [
     path('api/admin/orders/<int:order_id>/process-payment/', views.process_customer_payment, name='admin_process_payment'),
     path('api/admin/tasks/<int:task_id>/pay-commission/', views.pay_commission_for_task, name='admin_pay_commission_for_task'),
     path('api/admin/assign-order/', views.assign_order_to_tailor, name='admin_assign_order'),
-    path('api/admin/fabrics/<int:fabric_id>/restock/', views.restock_fabric, name='admin_restock_fabric'),
-    path('api/admin/accessories/<int:accessory_id>/restock/', views.restock_accessory, name='admin_restock_accessory'),
+    path('api/admin/fabrics/<int:fabric_id>/restock/', inventory_views.restock_fabric, name='admin_restock_fabric'),
+    path('api/admin/accessories/<int:accessory_id>/restock/', inventory_views.restock_accessory, name='admin_restock_accessory'),
+    path('api/admin/inventory/low-stock/', inventory_views.get_low_stock_items, name='admin_low_stock'),
+    path('api/admin/inventory/summary/', inventory_views.get_inventory_summary, name='admin_inventory_summary'),
+    path('api/admin/inventory/bulk-restock/', inventory_views.bulk_restock, name='admin_bulk_restock'),
+    path('api/admin/inventory/deduct/', inventory_views.deduct_inventory, name='admin_deduct_inventory'),
+    path('api/admin/inventory/deduct/<int:order_id>/', inventory_views.deduct_inventory, name='admin_deduct_inventory_for_order'),
     
     # Tailor URLs
     path('api/tailor/tasks/', views.TailorTaskListView.as_view(), name='tailor_task_list'),

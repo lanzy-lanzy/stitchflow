@@ -40,6 +40,21 @@
             </tbody>
         </table>
     </div>
+    
+    <!-- Pagination -->
+    <div class="flex justify-between items-center mt-6">
+        <div class="text-gray-600">
+            Showing <span id="startRecord">0</span> to <span id="endRecord">0</span> of <span id="totalRecords">0</span> records
+        </div>
+        <div class="flex space-x-2">
+            <button id="prevPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors" disabled>
+                Previous
+            </button>
+            <button id="nextPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors" disabled>
+                Next
+            </button>
+        </div>
+    </div>
 </div>
 
 <!-- Add/Edit Tailor Modal -->
@@ -100,6 +115,11 @@
     // Get CSRF token
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     
+    // Current page and pagination info
+    let currentPage = 1;
+    let totalPages = 1;
+    let totalRecords = 0;
+    
     // Load tailor data when page loads
     document.addEventListener('DOMContentLoaded', function() {
         loadTailorData();
@@ -107,6 +127,7 @@
     
     // Refresh button
     document.getElementById('refreshBtn').addEventListener('click', function() {
+        currentPage = 1;
         loadTailorData();
     });
     
@@ -119,6 +140,21 @@
     document.getElementById('closeModal').addEventListener('click', closeTailorModal);
     document.getElementById('cancelTailorBtn').addEventListener('click', closeTailorModal);
     
+    // Pagination buttons
+    document.getElementById('prevPage').addEventListener('click', function() {
+        if (currentPage > 1) {
+            currentPage--;
+            loadTailorData();
+        }
+    });
+    
+    document.getElementById('nextPage').addEventListener('click', function() {
+        if (currentPage < totalPages) {
+            currentPage++;
+            loadTailorData();
+        }
+    });
+    
     // Tailor form submission
     document.getElementById('tailorForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -126,20 +162,22 @@
     });
     
     function loadTailorData() {
-        // Fetch tailor data from API
-        fetch('/api/admin/tailors/', {
+        // Fetch tailor data from API with pagination
+        fetch(`/api/admin/tailors/?page=${currentPage}`, {
             headers: {
                 'Authorization': 'Token ' + localStorage.getItem('authToken'),
                 'X-CSRFToken': csrfToken
             }
         })
         .then(response => response.json())
-        .then(tailors => {
+        .then(data => {
+            const tailors = data.results || data;
             const tailorTableBody = document.getElementById('tailorTableBody');
             tailorTableBody.innerHTML = '';
             
             if (tailors.length === 0) {
                 tailorTableBody.innerHTML = '<tr><td colspan="7" class="py-4 px-4 text-center text-gray-500">No tailors found</td></tr>';
+                updatePagination(0, 1, 0);
                 return;
             }
             
@@ -165,6 +203,13 @@
                 tailorTableBody.appendChild(row);
             });
             
+            // Update pagination info
+            if (data.count !== undefined) {
+                updatePagination(data.count, currentPage, 10);
+            } else {
+                updatePagination(tailors.length, 1, tailors.length);
+            }
+            
             // Add event listeners to action buttons
             document.querySelectorAll('.edit-tailor').forEach(button => {
                 button.addEventListener('click', function() {
@@ -186,6 +231,19 @@
         });
     }
     
+    function updatePagination(total, current, perPage) {
+        totalRecords = total;
+        currentPage = current;
+        totalPages = Math.ceil(total / perPage);
+        
+        document.getElementById('startRecord').textContent = ((current - 1) * perPage) + 1;
+        document.getElementById('endRecord').textContent = Math.min(current * perPage, total);
+        document.getElementById('totalRecords').textContent = total;
+        
+        document.getElementById('prevPage').disabled = current === 1;
+        document.getElementById('nextPage').disabled = current === totalPages;
+    }
+    
     function openTailorModal(tailor = null) {
         document.getElementById('tailorModal').classList.remove('hidden');
         document.getElementById('tailorModal').classList.add('flex');
@@ -201,15 +259,13 @@
             document.getElementById('email').value = tailor.user.email || '';
             document.getElementById('specialty').value = tailor.specialty;
             document.getElementById('commissionRate').value = tailor.commission_rate;
-            // Password field should be left empty for edit
+            // Clear password field for security
             document.getElementById('password').value = '';
-            document.getElementById('password').removeAttribute('required');
         } else {
             // Create mode
             document.getElementById('modalTitle').textContent = 'Add Tailor';
             document.getElementById('tailorForm').reset();
             document.getElementById('tailorId').value = '';
-            document.getElementById('password').setAttribute('required', 'required');
         }
     }
     
@@ -232,14 +288,19 @@
             commission_rate: document.getElementById('commissionRate').value
         };
         
-        // Only include password when creating a new tailor
+        // Only include password if it's provided (for creating new tailors)
         const password = document.getElementById('password').value;
-        if (!tailorId && password) {
+        if (password) {
             tailorData.user.password = password;
         }
         
         const method = tailorId ? 'PUT' : 'POST';
         const url = tailorId ? `/api/admin/tailors/${tailorId}/` : '/api/admin/tailors/';
+        
+        // For PUT requests, we need to include all fields
+        if (tailorId) {
+            tailorData.id = tailorId;
+        }
         
         fetch(url, {
             method: method,
