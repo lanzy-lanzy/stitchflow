@@ -1,11 +1,55 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Login - El Senior Dumingag{% endblock %}
 
+{% block extra_css %}
+<style>
+    .login-background {
+        background-color: #A0522D; /* Fallback color */
+        background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)),
+                         url('{% static "images/login-bg.jpg" %}');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        min-height: 100vh;
+    }
+
+    .glass-card {
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        background: rgba(255, 248, 240, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .floating-animation {
+        animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+    }
+
+    /* Enhanced background overlay for better contrast */
+    .login-background::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(139, 69, 19, 0.1) 0%, rgba(160, 82, 45, 0.1) 50%, rgba(205, 133, 63, 0.1) 100%);
+        pointer-events: none;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-cream to-primary-peach py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 login-background">
   <div class="max-w-md w-full space-y-8">
-    <div class="bg-primary-cream rounded-3xl shadow-2xl p-8 transition-all duration-300 hover:shadow-2xl border border-primary-beige">
+    <div class="glass-card rounded-3xl shadow-2xl p-8 transition-all duration-300 hover:shadow-2xl floating-animation">
       <div class="text-center">
         <div class="mx-auto h-24 w-24 rounded-full bg-gradient-to-r from-primary-rose to-primary-peach flex items-center justify-center mb-6">
           <i class="fas fa-cut text-text-dark text-3xl"></i>

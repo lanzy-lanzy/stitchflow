@@ -1,12 +1,45 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}El Senior Dumingag - Premium Tailoring Services{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-background {
+        background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), url('{% static "images/homepage-bg.png" %}') no-repeat center center;
+        background-size: cover;
+        min-height: 500px;
+    }
+
+    .hero-text-shadow {
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+
+    .glass-effect {
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+    /* Enhanced background overlay for better text readability */
+    .hero-background::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(139, 69, 19, 0.1) 0%, rgba(160, 82, 45, 0.1) 50%, rgba(205, 133, 63, 0.1) 100%);
+        pointer-events: none;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <!-- Hero Section -->
-    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary-rose to-primary-peach my-8 shadow-2xl">
-        <div class="absolute inset-0 bg-black opacity-10"></div>
+    <div class="relative overflow-hidden rounded-3xl my-8 shadow-2xl hero-background" style="background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), url('{% static "images/homepage-bg.png" %}') no-repeat center center; background-size: cover; min-height: 500px;">
+        <div class="absolute inset-0 bg-gradient-to-r from-primary-rose/20 to-primary-peach/20"></div>
         <div class="relative max-w-7xl mx-auto py-20 px-4 sm:py-28 sm:px-6 lg:px-8">
             <div class="text-center">
                 <!-- Scissors Icon Above Heading -->
@@ -21,17 +54,17 @@
                         </svg>
                     </div>
                 </div>
-                <h1 class="text-5xl font-extrabold tracking-tight text-text-dark sm:text-6xl lg:text-7xl">
+                <h1 class="text-5xl font-extrabold tracking-tight text-white hero-text-shadow sm:text-6xl lg:text-7xl">
                     El Senior Dumingag
                 </h1>
-                <p class="mt-8 max-w-2xl mx-auto text-2xl text-text-medium sm:max-w-3xl">
+                <p class="mt-8 max-w-2xl mx-auto text-2xl text-white/90 hero-text-shadow sm:max-w-3xl">
                     Premium tailoring services in the heart of Zamboanga del Sur, combining traditional craftsmanship with organic fabrics
                 </p>
                 <div class="mt-12 flex justify-center gap-6">
-                    <a href="{% url 'etailoring:login' %}" class="inline-flex items-center px-8 py-4 border border-transparent text-xl font-bold rounded-xl text-text-dark bg-primary-cream hover:bg-primary-peach transition-all duration-300 transform hover:-translate-y-1 shadow-lg">
+                    <a href="{% url 'etailoring:login' %}" class="inline-flex items-center px-8 py-4 border border-transparent text-xl font-bold rounded-xl text-text-dark bg-primary-cream hover:bg-primary-peach transition-all duration-300 transform hover:-translate-y-1 shadow-lg glass-effect">
                         Get Started
                     </a>
-                    <a href="#features" class="inline-flex items-center px-8 py-4 border-2 border-primary-cream text-xl font-bold rounded-xl text-text-dark bg-transparent hover:bg-primary-cream hover:text-text-dark transition-all duration-300 shadow-lg">
+                    <a href="#features" class="inline-flex items-center px-8 py-4 border-2 border-white/80 text-xl font-bold rounded-xl text-white bg-white/10 hover:bg-white/20 hover:text-white transition-all duration-300 shadow-lg glass-effect">
                         Our Services
                     </a>
                 </div>
