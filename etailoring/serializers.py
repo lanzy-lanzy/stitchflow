@@ -25,25 +25,35 @@ class UserExtensionSerializer(serializers.ModelSerializer):
 class CustomerSerializer(serializers.ModelSerializer):
     user = UserSerializer()
     full_name = serializers.CharField(source='get_full_name', read_only=True)
-    measurements = serializers.SerializerMethodField()
+    measurements = serializers.JSONField(required=False, allow_null=True)
 
     class Meta:
         model = Customer
         fields = ['id', 'user', 'full_name', 'phone_number', 'address', 'measurements']
         read_only_fields = ['id', 'full_name']
 
-    def get_measurements(self, obj):
-        """Return measurements as a dictionary."""
-        return obj.get_measurements()
+    def to_representation(self, instance):
+        """Convert the instance to a dictionary for serialization."""
+        data = super().to_representation(instance)
+        # Convert measurements from JSON string to dictionary for output
+        data['measurements'] = instance.get_measurements()
+        return data
 
     def create(self, validated_data):
         measurements_data = validated_data.pop('measurements', {})
         user_data = validated_data.pop('user')
+
+        # Create user
         user = User.objects.create_user(**user_data)
+
+        # Create customer
         customer = Customer.objects.create(user=user, **validated_data)
+
+        # Set measurements if provided
         if measurements_data:
             customer.set_measurements(measurements_data)
             customer.save()
+
         return customer
 
     def update(self, instance, validated_data):
@@ -147,6 +157,14 @@ class OrderSerializer(serializers.ModelSerializer):
     # New preference fields for static pricing model
     accessories_preference = serializers.CharField(max_length=500, required=False, allow_blank=True)
 
+    # Payment option field (not stored in model, used for processing)
+    payment_option = serializers.ChoiceField(
+        choices=[('DOWN_PAYMENT', 'Down Payment'), ('FULL_PAYMENT', 'Full Payment')],
+        required=False,
+        default='DOWN_PAYMENT',
+        write_only=True
+    )
+
     # Add display fields for choices
     category_display = serializers.CharField(source='get_category_display', read_only=True)
     garment_type_display = serializers.CharField(source='get_garment_type_display', read_only=True)
@@ -157,7 +175,7 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'customer', 'customer_id', 'fabric', 'fabric_id', 'accessories', 'accessories_ids',
             'category', 'category_display', 'garment_type', 'garment_type_display', 'quantity',
-            'fabric_type', 'color_design_preference', 'order_date', 'due_date',
+            'fabric_type', 'color_design_preference', 'accessories_preference', 'payment_option', 'order_date', 'due_date',
             'total_amount', 'status', 'payment_status', 'paid_at', 'created_at', 'updated_at',
             # Measurement fields
             'neck_circumference', 'shoulder_width', 'chest_bust_circumference',
@@ -176,8 +194,9 @@ class OrderSerializer(serializers.ModelSerializer):
         from datetime import timedelta
         from .business_logic import OrderManager, PricingManager
 
-        # Extract accessories data before creating order to avoid direct assignment
+        # Extract accessories data and payment option before creating order
         accessories = validated_data.pop('accessories', [])
+        payment_option = validated_data.pop('payment_option', 'DOWN_PAYMENT')
 
         # Set default due_date if not provided (7 days from now)
         if 'due_date' not in validated_data or not validated_data.get('due_date'):
@@ -195,6 +214,18 @@ class OrderSerializer(serializers.ModelSerializer):
         down_payment_amount = PricingManager.calculate_down_payment(total_amount)
         validated_data['down_payment_amount'] = down_payment_amount
         validated_data['remaining_balance'] = total_amount - down_payment_amount
+
+        # Handle payment option
+        if payment_option == 'FULL_PAYMENT':
+            # Customer is paying in full
+            validated_data['payment_status'] = 'PAID'
+            validated_data['paid_at'] = timezone.now()
+            validated_data['down_payment_status'] = 'PAID'
+            validated_data['down_payment_paid_at'] = timezone.now()
+        else:
+            # Customer is paying down payment only
+            validated_data['payment_status'] = 'PENDING'
+            validated_data['down_payment_status'] = 'PENDING'
 
         # For static pricing model, we need to assign default fabric and accessories
         # if not provided, based on availability
@@ -377,18 +408,41 @@ class TaskSerializer(serializers.ModelSerializer):
                 # Get order-specific measurements
                 order_measurements = obj.order.get_measurements_for_garment_type()
 
+                # Format order measurements as readable strings
+                order_measurements_formatted = {}
+                for key, value in order_measurements.items():
+                    if value is not None and value != '':
+                        # Convert field names to readable format
+                        readable_key = key.replace('_', ' ').title()
+                        # Format numeric values with units
+                        if isinstance(value, (int, float)) or (isinstance(value, str) and value.replace('.', '').isdigit()):
+                            order_measurements_formatted[readable_key] = f"{value} cm"
+                        else:
+                            order_measurements_formatted[readable_key] = str(value)
+
                 # Get customer's basic measurements
-                customer_measurements = {}
+                customer_measurements_formatted = {}
                 if obj.order.customer:
                     customer_measurements = obj.order.customer.get_measurements()
+                    for key, value in customer_measurements.items():
+                        if value is not None and value != '':
+                            # Convert field names to readable format
+                            readable_key = key.replace('_', ' ').title()
+                            customer_measurements_formatted[readable_key] = f"{value} cm" if isinstance(value, (int, float)) else str(value)
 
                 return {
-                    'order_measurements': order_measurements,
-                    'customer_measurements': customer_measurements
+                    'order_measurements': order_measurements_formatted,
+                    'customer_measurements': customer_measurements_formatted
                 }
-            return {}
+            return {
+                'order_measurements': {},
+                'customer_measurements': {}
+            }
         except AttributeError:
-            return {}
+            return {
+                'order_measurements': {},
+                'customer_measurements': {}
+            }
 
 
 class CommissionSerializer(serializers.ModelSerializer):

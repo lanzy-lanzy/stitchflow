@@ -15,9 +15,14 @@
                 <i class="far fa-calendar-alt mr-2"></i>
                 <span id="currentDate">{{ now|date:"l, F j, Y" }}</span>
             </div>
-            <button id="refreshBtn" class="flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm">
-                <i class="fas fa-sync-alt mr-2"></i> Refresh
-            </button>
+            <div class="flex gap-2">
+                <button id="refreshBtn" class="flex items-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm">
+                    <i class="fas fa-sync-alt mr-2"></i> Refresh
+                </button>
+                <button id="printReportBtn" class="flex items-center bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm">
+                    <i class="fas fa-file-pdf mr-2"></i> Print Report
+                </button>
+            </div>
         </div>
     </div>
     
@@ -71,7 +76,7 @@
         <div class="bg-white rounded-xl shadow-md p-5 border-l-4 border-yellow-500 transition-all hover:shadow-lg">
             <div class="flex items-center justify-between">
                 <div>
-                    <h3 class="text-sm font-medium text-gray-500">Total Earnings</h3>
+                    <h3 class="text-sm font-medium text-gray-500">Total Paid Earnings</h3>
                     <p class="text-2xl font-bold text-yellow-600 mt-1" id="totalEarnings">₱0.00</p>
                 </div>
                 <div class="rounded-full bg-yellow-100 p-3">
@@ -161,11 +166,11 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div class="bg-white rounded-lg p-3 border border-green-100">
                                 <p class="text-xs text-gray-500">Total Earned</p>
-                                <p class="font-bold text-lg text-green-600" id="totalEarned">$0.00</p>
+                                <p class="font-bold text-lg text-green-600" id="totalEarned">₱0.00</p>
                             </div>
                             <div class="bg-white rounded-lg p-3 border border-yellow-100">
                                 <p class="text-xs text-gray-500">Pending Payment</p>
-                                <p class="font-bold text-lg text-yellow-600" id="pendingPayment">$0.00</p>
+                                <p class="font-bold text-lg text-yellow-600" id="pendingPayment">₱0.00</p>
                             </div>
                         </div>
                     </div>
@@ -260,11 +265,19 @@
     
     // Initialize the dashboard when the page loads
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize global tasks array
+        window.currentTasks = [];
+
         loadDashboardData();
-        
+
         // Set up refresh button
         document.getElementById('refreshBtn').addEventListener('click', function() {
             loadDashboardData();
+        });
+
+        // Set up print report button
+        document.getElementById('printReportBtn').addEventListener('click', function() {
+            showReportOptionsModal();
         });
     });
     
@@ -322,7 +335,9 @@
 
     // Load tailor tasks
     function loadTailorTasks() {
-        fetch('/api/tailor/tasks/', {
+        // Add cache-busting parameter
+        const cacheBuster = new Date().getTime();
+        return fetch(`/api/tailor/tasks/?_=${cacheBuster}`, {
             headers: getAuthHeaders(),
             credentials: 'include'
         })
@@ -335,18 +350,23 @@
         .then(data => {
             // Handle paginated responses
             const tasks = data.results || data;
+
+            // Store tasks globally for modal access
+            window.currentTasks = tasks;
+
             const tasksList = document.getElementById('tasksList');
             tasksList.innerHTML = '';
-            
+
             // Count tasks by status
             let assignedCount = 0;
             let inProgressCount = 0;
             let completedCount = 0;
-            
+            let approvedCount = 0;
+
             if (!tasks || tasks.length === 0) {
                 tasksList.innerHTML = '<div class="p-6 text-center text-gray-500">You have no tasks assigned yet.</div>';
-                updateTaskCounters(0, 0, 0);
-                updatePerformanceMetrics(0, 0, 0);
+                updateTaskCounters(0, 0, 0, 0);
+                updatePerformanceMetrics(0, 0, 0, 0);
                 return;
             }
             
@@ -355,6 +375,7 @@
                 if (task.status === 'ASSIGNED') assignedCount++;
                 if (task.status === 'IN_PROGRESS') inProgressCount++;
                 if (task.status === 'COMPLETED') completedCount++;
+                if (task.status === 'APPROVED') approvedCount++;
                 
                 const taskElement = document.createElement('div');
                 taskElement.className = 'p-5 task-item hover:bg-gray-50 transition-colors';
@@ -371,6 +392,8 @@
                 } else if (task.status === 'IN_PROGRESS') {
                     statusBadgeClass = 'bg-purple-100 text-purple-800';
                 } else if (task.status === 'COMPLETED') {
+                    statusBadgeClass = 'bg-amber-100 text-amber-800';
+                } else if (task.status === 'APPROVED') {
                     statusBadgeClass = 'bg-green-100 text-green-800';
                 }
                 
@@ -384,14 +407,90 @@
                     accessoriesHtml += '</div></div>';
                 }
                 
-                // Format measurements
+                // Format measurements - collapsible section
                 let measurementsHtml = '';
-                if (task.order_measurements && Object.keys(task.order_measurements).length > 0) {
-                    measurementsHtml = '<div class="mt-3 border-t border-gray-100 pt-3"><p class="text-xs font-medium text-gray-500">Customer Measurements:</p><div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2 text-sm text-gray-600">';
-                    for (const [key, value] of Object.entries(task.order_measurements)) {
-                        measurementsHtml += `<div class="bg-gray-50 p-2 rounded"><span class="font-medium block">${key}:</span> <span class="text-gray-800">${value}"</span></div>`;
+
+                // Function to safely render measurements
+                function renderMeasurements(measurements, title, bgColor = 'bg-gray-50', textColor = '') {
+                    if (!measurements || typeof measurements !== 'object' || Object.keys(measurements).length === 0) {
+                        return '';
                     }
-                    measurementsHtml += '</div></div>';
+
+                    let html = `<p class="text-xs font-medium text-gray-500 mb-2">${title}:</p>`;
+                    html += `<div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3 text-sm text-gray-600">`;
+
+                    for (const [key, value] of Object.entries(measurements)) {
+                        if (value && String(value).trim() !== '') {
+                            html += `<div class="${bgColor} p-2 rounded">`;
+                            html += `<span class="font-medium block ${textColor}">${key}:</span>`;
+                            html += `<span class="text-gray-800">${value}</span>`;
+                            html += `</div>`;
+                        }
+                    }
+
+                    html += '</div>';
+                    return html;
+                }
+
+                // Count total measurements for display
+                let totalMeasurements = 0;
+                let measurementsContent = '';
+
+                if (task.order_measurements) {
+                    // Check if it's the new nested structure
+                    if (task.order_measurements.order_measurements || task.order_measurements.customer_measurements) {
+                        // New structure with nested objects
+                        if (task.order_measurements.order_measurements) {
+                            totalMeasurements += Object.keys(task.order_measurements.order_measurements).length;
+                            measurementsContent += renderMeasurements(
+                                task.order_measurements.order_measurements,
+                                'Order Measurements',
+                                'bg-blue-50',
+                                'text-blue-700'
+                            );
+                        }
+                        if (task.order_measurements.customer_measurements) {
+                            totalMeasurements += Object.keys(task.order_measurements.customer_measurements).length;
+                            measurementsContent += renderMeasurements(
+                                task.order_measurements.customer_measurements,
+                                'Customer Measurements'
+                            );
+                        }
+                    } else {
+                        // Old structure - direct measurements object
+                        totalMeasurements = Object.keys(task.order_measurements).length;
+                        measurementsContent += renderMeasurements(
+                            task.order_measurements,
+                            'Customer Measurements'
+                        );
+                    }
+
+                    // Create collapsible measurements section
+                    if (totalMeasurements > 0) {
+                        const taskId = task.id;
+                        measurementsHtml = `
+                            <div class="mt-3 border-t border-gray-100 pt-3">
+                                <button
+                                    class="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 measurements-toggle rounded-lg p-2 -m-2"
+                                    data-task-id="${taskId}"
+                                    onclick="toggleMeasurements(${taskId})"
+                                >
+                                    <span class="flex items-center">
+                                        <i class="fas fa-ruler-combined mr-2 text-blue-500"></i>
+                                        <span id="measurements-text-${taskId}">View Measurements</span>
+                                        <span class="ml-1 text-xs text-gray-500">(${totalMeasurements} items)</span>
+                                    </span>
+                                    <i class="fas fa-chevron-down transition-transform duration-200 text-gray-400" id="chevron-${taskId}"></i>
+                                </button>
+                                <div
+                                    id="measurements-${taskId}"
+                                    class="measurements-content hidden mt-3 animate-fadeIn"
+                                >
+                                    ${measurementsContent}
+                                </div>
+                            </div>
+                        `;
+                    }
                 }
                 
                 taskElement.innerHTML = `
@@ -428,7 +527,14 @@
                                     </div>
                                     <div>
                                         <p class="text-xs font-medium text-gray-500">Commission</p>
-                                        <p class="text-gray-800 font-semibold text-green-600">₱${task.commission_amount}</p>
+                                        ${task.status === 'APPROVED' ?
+                                            `<p class="text-gray-800 font-semibold text-green-600">${PricingManager.formatCurrency(task.commission_amount || 0)}</p>` :
+                                            task.status === 'COMPLETED' ?
+                                            `<p class="text-amber-600 font-medium text-sm">
+                                                <i class="fas fa-clock mr-1"></i>Pending Admin Approval
+                                            </p>` :
+                                            `<p class="text-gray-500 font-medium">Not Available</p>`
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -446,15 +552,30 @@
                             </button>` : ''}
                             
                             ${task.status === 'IN_PROGRESS' ? `
-                            <button 
-                                class="w-full px-3 py-2 text-sm bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 complete-task-btn shadow-sm" 
+                            <button
+                                class="w-full px-3 py-2 text-sm bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 complete-task-btn shadow-sm"
                                 data-task-id="${task.id}">
                                 <i class="fas fa-check mr-2"></i> Complete Task
                             </button>` : ''}
+
+                            ${task.status === 'COMPLETED' ? `
+                            <div class="w-full px-3 py-2 text-sm bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-center">
+                                <i class="fas fa-hourglass-half mr-2"></i>
+                                <div class="font-medium">Awaiting Approval</div>
+                                <div class="text-xs mt-1">Admin will review and approve</div>
+                            </div>` : ''}
+
+                            ${task.status === 'APPROVED' ? `
+                            <div class="w-full px-3 py-2 text-sm bg-green-50 border border-green-200 text-green-800 rounded-lg text-center">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                <div class="font-medium">Task Approved</div>
+                                <div class="text-xs mt-1">Commission created</div>
+                            </div>` : ''}
                             
-                            <button 
-                                class="w-full px-3 py-2 text-sm bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 view-details-btn shadow-sm" 
-                                data-task-id="${task.id}">
+                            <button
+                                class="w-full px-3 py-2 text-sm bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 view-details-btn shadow-sm"
+                                data-task-id="${task.id}"
+                                onclick="showTaskDetailsModal(${task.id})">
                                 <i class="fas fa-eye mr-2"></i> View Details
                             </button>
                         </div>
@@ -464,10 +585,10 @@
             });
             
             // Update task counters
-            updateTaskCounters(assignedCount, inProgressCount, completedCount);
-            
+            updateTaskCounters(assignedCount, inProgressCount, completedCount, approvedCount);
+
             // Update performance metrics
-            updatePerformanceMetrics(assignedCount, inProgressCount, completedCount);
+            updatePerformanceMetrics(assignedCount, inProgressCount, completedCount, approvedCount);
             
             // Add event listeners for task buttons
             document.querySelectorAll('.start-task-btn').forEach(btn => {
@@ -495,23 +616,24 @@
     }
     
     // Update task counters in the dashboard
-    function updateTaskCounters(assignedCount, inProgressCount, completedCount) {
+    function updateTaskCounters(assignedCount, inProgressCount, completedCount, approvedCount) {
         document.getElementById('assignedTasksCount').textContent = assignedCount;
         document.getElementById('inProgressTasksCount').textContent = inProgressCount;
-        document.getElementById('completedTasksCount').textContent = completedCount;
+        document.getElementById('completedTasksCount').textContent = completedCount + approvedCount; // Show total completed + approved
     }
     
     // Update performance metrics
-    function updatePerformanceMetrics(assignedCount, inProgressCount, completedCount) {
-        const totalTasks = assignedCount + inProgressCount + completedCount;
-        
+    function updatePerformanceMetrics(assignedCount, inProgressCount, completedCount, approvedCount) {
+        const totalTasks = assignedCount + inProgressCount + completedCount + approvedCount;
+        const totalCompleted = completedCount + approvedCount; // Combined completed and approved
+
         // Update counts
         document.getElementById('assignedCount').textContent = assignedCount;
         document.getElementById('inProgressCount').textContent = inProgressCount;
-        document.getElementById('completedCount').textContent = completedCount;
+        document.getElementById('completedCount').textContent = totalCompleted;
         
         // Calculate completion rate
-        const completionRate = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
+        const completionRate = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
         document.getElementById('completionRate').textContent = completionRate;
         document.getElementById('completionRateBar').style.width = `${completionRate}%`;
         
@@ -519,7 +641,7 @@
         if (totalTasks > 0) {
             const assignedPercentage = Math.round((assignedCount / totalTasks) * 100);
             const inProgressPercentage = Math.round((inProgressCount / totalTasks) * 100);
-            const completedPercentage = Math.round((completedCount / totalTasks) * 100);
+            const completedPercentage = Math.round((totalCompleted / totalTasks) * 100);
             
             document.getElementById('assignedBar').style.width = `${assignedPercentage}%`;
             document.getElementById('inProgressBar').style.width = `${inProgressPercentage}%`;
@@ -531,7 +653,7 @@
         }
         
         // Update tasks this week (simplified for demo)
-        document.getElementById('tasksThisWeek').textContent = completedCount;
+        document.getElementById('tasksThisWeek').textContent = totalCompleted;
     }
 
     // Load tailor commissions
@@ -558,9 +680,9 @@
             
             if (!commissions || commissions.length === 0) {
                 commissionsList.innerHTML = '<p class="text-center text-gray-500 py-4">You have no commissions yet.</p>';
-                document.getElementById('totalEarned').textContent = '$0.00';
-                document.getElementById('pendingPayment').textContent = '$0.00';
-                document.getElementById('totalEarnings').textContent = '$0.00';
+                document.getElementById('totalEarned').textContent = PricingManager.formatCurrency(0);
+                document.getElementById('pendingPayment').textContent = PricingManager.formatCurrency(0);
+                document.getElementById('totalEarnings').textContent = PricingManager.formatCurrency(0);
                 return;
             }
             
@@ -585,8 +707,8 @@
                 const amount = parseFloat(commission.amount) || 0;
                 if (commission.status === 'PAID') {
                     totalEarned += amount;
-                } else {
-                    pendingPayment += amount;
+                } else if (commission.status === 'APPROVED') {
+                    pendingPayment += amount;  // APPROVED commissions are ready for payment
                 }
             });
             
@@ -600,8 +722,10 @@
                 const commissionElement = document.createElement('div');
                 commissionElement.className = 'border border-gray-200 rounded-lg p-3 transition-all hover:bg-gray-50 hover:border-gray-300';
                 
-                const statusBadgeClass = commission.status === 'PAID' 
-                    ? 'bg-green-100 text-green-800' 
+                const statusBadgeClass = commission.status === 'PAID'
+                    ? 'bg-green-100 text-green-800'
+                    : commission.status === 'APPROVED'
+                    ? 'bg-blue-100 text-blue-800'
                     : 'bg-yellow-100 text-yellow-800';
                 
                 // Format dates
@@ -626,7 +750,7 @@
                         </div>
                         <div class="text-right">
                             <span class="px-2 py-1 text-xs rounded-full ${statusBadgeClass}">${commission.status || 'Unknown'}</span>
-                            <p class="font-bold text-lg mt-1 ${commission.status === 'PAID' ? 'text-green-600' : 'text-yellow-600'}">₱${formattedAmount}</p>
+                            <p class="font-bold text-lg mt-1 ${commission.status === 'PAID' ? 'text-green-600' : commission.status === 'APPROVED' ? 'text-blue-600' : 'text-yellow-600'}">${PricingManager.formatCurrency(amount)}</p>
                         </div>
                     </div>
                 `;
@@ -642,9 +766,10 @@
             }
             
             // Update summary
-            document.getElementById('totalEarned').textContent = `₱${totalEarned.toFixed(2)}`;
-            document.getElementById('pendingPayment').textContent = `₱${pendingPayment.toFixed(2)}`;
-            document.getElementById('totalEarnings').textContent = `₱${(totalEarned + pendingPayment).toFixed(2)}`;
+            document.getElementById('totalEarned').textContent = PricingManager.formatCurrency(totalEarned);
+            document.getElementById('pendingPayment').textContent = PricingManager.formatCurrency(pendingPayment);
+            // Only show actually PAID earnings in total earnings card (not pending)
+            document.getElementById('totalEarnings').textContent = PricingManager.formatCurrency(totalEarned);
         })
         .catch(error => {
             console.error('Error loading commissions:', error);
@@ -736,8 +861,8 @@
     
     // Function to view task details
     function viewTaskDetails(taskId) {
-        // In a real implementation, this would show a modal with detailed task information
-        alert(`Task details for Task #${taskId} would be displayed in a modal.`);
+        // Show the task details modal
+        showTaskDetailsModal(taskId);
     }
     
     // Function to show notifications
@@ -790,5 +915,584 @@
             }, 3000);
         }
     }
+
+    // Report generation functions
+    function showReportOptionsModal() {
+        // Create modal HTML
+        const modalHTML = `
+            <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white rounded-xl p-6 w-96 max-w-md mx-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Generate Performance Report</h3>
+                        <button onclick="closeReportModal()" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <form id="reportForm">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Report Period</label>
+                            <select id="reportPeriod" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500">
+                                <option value="last_week">Last Week</option>
+                                <option value="last_month" selected>Last Month</option>
+                                <option value="last_quarter">Last Quarter</option>
+                                <option value="ytd">Year to Date</option>
+                                <option value="all_time">All Time</option>
+                                <option value="custom">Custom Date Range</option>
+                            </select>
+                        </div>
+
+                        <div id="customDateRange" class="mb-4 hidden">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+                                    <input type="date" id="dateFrom" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+                                    <input type="date" id="dateTo" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end space-x-3">
+                            <button type="button" onclick="closeReportModal()" class="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                                Cancel
+                            </button>
+                            <button type="button" onclick="generateReport()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                                <i class="fas fa-file-pdf mr-2"></i> Generate PDF
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        // Add modal to page
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        // Add event listener for period selection
+        document.getElementById('reportPeriod').addEventListener('change', function() {
+            const customRange = document.getElementById('customDateRange');
+            if (this.value === 'custom') {
+                customRange.classList.remove('hidden');
+                // Set default dates
+                const today = new Date();
+                const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+                document.getElementById('dateFrom').value = lastMonth.toISOString().split('T')[0];
+                document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+            } else {
+                customRange.classList.add('hidden');
+            }
+        });
+    }
+
+    function closeReportModal() {
+        const modal = document.getElementById('reportModal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+    function generateReport() {
+        const period = document.getElementById('reportPeriod').value;
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+
+        // Validate custom date range
+        if (period === 'custom') {
+            if (!dateFrom || !dateTo) {
+                alert('Please select both from and to dates for custom range.');
+                return;
+            }
+            if (new Date(dateFrom) > new Date(dateTo)) {
+                alert('From date cannot be later than to date.');
+                return;
+            }
+        }
+
+        // Show loading state
+        const generateBtn = document.querySelector('#reportModal button[onclick="generateReport()"]');
+        const originalText = generateBtn.innerHTML;
+        generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generating...';
+        generateBtn.disabled = true;
+
+        // Build URL parameters
+        let url = '/api/generate-report/';
+        const params = new URLSearchParams();
+
+        if (period === 'custom') {
+            params.append('date_from', dateFrom);
+            params.append('date_to', dateTo);
+        } else {
+            params.append('period', period);
+        }
+
+        if (params.toString()) {
+            url += '?' + params.toString();
+        }
+
+        // Make API call
+        fetch(url, {
+            headers: getAuthHeaders(),
+            credentials: 'include'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to generate report: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Convert base64 to blob and download
+                const binaryString = atob(data.pdf_data);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                const blob = new Blob([bytes], { type: 'application/pdf' });
+
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = data.filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                // Close modal
+                closeReportModal();
+
+                // Show success message
+                showNotification('success', 'Report generated successfully!');
+            } else {
+                throw new Error(data.error || 'Unknown error occurred');
+            }
+        })
+        .catch(error => {
+            console.error('Error generating report:', error);
+            alert('Error generating report: ' + error.message);
+        })
+        .finally(() => {
+            // Reset button state
+            generateBtn.innerHTML = originalText;
+            generateBtn.disabled = false;
+        });
+    }
+
+    // Toggle measurements visibility
+    function toggleMeasurements(taskId) {
+        const measurementsDiv = document.getElementById(`measurements-${taskId}`);
+        const chevron = document.getElementById(`chevron-${taskId}`);
+        const textSpan = document.getElementById(`measurements-text-${taskId}`);
+
+        if (measurementsDiv.classList.contains('hidden')) {
+            // Show measurements
+            measurementsDiv.classList.remove('hidden');
+            measurementsDiv.classList.add('animate-slideDown');
+            chevron.classList.add('rotate-180');
+            if (textSpan) textSpan.textContent = 'Hide Measurements';
+        } else {
+            // Hide measurements
+            measurementsDiv.classList.add('hidden');
+            measurementsDiv.classList.remove('animate-slideDown');
+            chevron.classList.remove('rotate-180');
+            if (textSpan) textSpan.textContent = 'View Measurements';
+        }
+    }
+
+    // Task Details Modal Functions
+    function showTaskDetailsModal(taskId) {
+        // Find the task data from the loaded tasks (handle both string and number IDs)
+        let taskData = window.currentTasks?.find(task => task.id == taskId || task.id === parseInt(taskId));
+
+        if (!taskData) {
+            // Show loading modal first
+            showLoadingModal();
+
+            // Try to get task data from API directly
+            fetch(`/api/tailor/tasks/?_=${new Date().getTime()}`, {
+                headers: getAuthHeaders(),
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                const tasks = data.results || data;
+                window.currentTasks = tasks; // Update global tasks
+                const foundTask = tasks.find(task => task.id == taskId || task.id === parseInt(taskId));
+
+                if (foundTask) {
+                    openTaskModal(foundTask);
+                } else {
+                    // Show modal with error message instead of alert
+                    showErrorModal('Task not found', 'The task may have been removed or you may not have access to it.');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching task data:', error);
+                // Show modal with error message instead of alert
+                showErrorModal('Unable to load task details', 'Please refresh the page and try again.');
+            });
+            return;
+        }
+
+        openTaskModal(taskData);
+    }
+
+    function openTaskModal(taskData) {
+        // Generate detailed task content
+        const modalContent = generateTaskDetailsContent(taskData);
+        document.getElementById('taskDetailsContent').innerHTML = modalContent;
+        document.getElementById('taskDetailsModal').classList.remove('hidden');
+
+        // Prevent body scroll when modal is open
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeTaskDetailsModal() {
+        document.getElementById('taskDetailsModal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    function showLoadingModal() {
+        const loadingContent = `
+            <div class="text-center py-8">
+                <i class="fas fa-spinner fa-spin text-4xl text-blue-500 mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Loading Task Details</h3>
+                <p class="text-gray-600">Please wait while we fetch the task information...</p>
+            </div>
+        `;
+
+        document.getElementById('taskDetailsContent').innerHTML = loadingContent;
+        document.getElementById('taskDetailsModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function showErrorModal(title, message) {
+        const errorContent = `
+            <div class="text-center py-8">
+                <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">${title}</h3>
+                <p class="text-gray-600 mb-6">${message}</p>
+                <button onclick="closeTaskDetailsModal()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    Close
+                </button>
+            </div>
+        `;
+
+        document.getElementById('taskDetailsContent').innerHTML = errorContent;
+        document.getElementById('taskDetailsModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    // Close modal when clicking outside
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('taskDetailsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeTaskDetailsModal();
+            }
+        });
+    });
+
+    function generateTaskDetailsContent(task) {
+        const statusColors = {
+            'ASSIGNED': 'bg-blue-100 text-blue-800',
+            'IN_PROGRESS': 'bg-yellow-100 text-yellow-800',
+            'COMPLETED': 'bg-green-100 text-green-800',
+            'APPROVED': 'bg-purple-100 text-purple-800'
+        };
+
+        const statusColor = statusColors[task.status] || 'bg-gray-100 text-gray-800';
+
+        // Format dates
+        const assignedDate = new Date(task.assigned_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        const completedDate = task.completed_at ? new Date(task.completed_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }) : 'Not completed yet';
+
+        // Generate measurements HTML
+        let measurementsHtml = '';
+        if (task.order_measurements) {
+            measurementsHtml = '<div class="mt-6">';
+
+            // Order measurements
+            if (task.order_measurements.order_measurements && Object.keys(task.order_measurements.order_measurements).length > 0) {
+                measurementsHtml += `
+                    <h4 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                        <i class="fas fa-ruler-combined text-blue-500 mr-2"></i>
+                        Order Measurements
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+                `;
+
+                for (const [key, value] of Object.entries(task.order_measurements.order_measurements)) {
+                    if (value && String(value).trim() !== '') {
+                        measurementsHtml += `
+                            <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                <span class="font-medium text-blue-700 block text-sm">${key}</span>
+                                <span class="text-gray-800 text-lg">${value}</span>
+                            </div>
+                        `;
+                    }
+                }
+
+                measurementsHtml += '</div>';
+            }
+
+            // Customer measurements
+            if (task.order_measurements.customer_measurements && Object.keys(task.order_measurements.customer_measurements).length > 0) {
+                measurementsHtml += `
+                    <h4 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                        <i class="fas fa-user-tie text-gray-500 mr-2"></i>
+                        Customer Measurements
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                `;
+
+                for (const [key, value] of Object.entries(task.order_measurements.customer_measurements)) {
+                    if (value && String(value).trim() !== '') {
+                        measurementsHtml += `
+                            <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                <span class="font-medium text-gray-700 block text-sm">${key}</span>
+                                <span class="text-gray-800 text-lg">${value}</span>
+                            </div>
+                        `;
+                    }
+                }
+
+                measurementsHtml += '</div>';
+            }
+
+            measurementsHtml += '</div>';
+        }
+
+        return `
+            <div class="space-y-6">
+                <!-- Task Header -->
+                <div class="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-xl border border-gray-200">
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800 mb-2">Order #${task.order_details.id}</h2>
+                            <div class="flex items-center gap-3">
+                                <span class="px-3 py-1 rounded-full text-sm font-medium ${statusColor}">${task.status}</span>
+                                <span class="text-gray-600">Task #${task.id}</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-gray-500">Commission</p>
+                            <p class="text-2xl font-bold text-green-600">₱${task.commission_amount}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer & Order Info -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Customer Information -->
+                    <div class="bg-white p-6 rounded-xl border border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-user text-blue-500 mr-2"></i>
+                            Customer Information
+                        </h3>
+                        <div class="space-y-3">
+                            <div>
+                                <span class="text-sm text-gray-500">Name</span>
+                                <p class="font-medium text-gray-800">${task.customer_name}</p>
+                            </div>
+                            <div>
+                                <span class="text-sm text-gray-500">Contact</span>
+                                <p class="font-medium text-gray-800">${task.customer_phone}</p>
+                            </div>
+                            <div>
+                                <span class="text-sm text-gray-500">Address</span>
+                                <p class="font-medium text-gray-800">${task.customer_address}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order Information -->
+                    <div class="bg-white p-6 rounded-xl border border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-shopping-bag text-green-500 mr-2"></i>
+                            Order Information
+                        </h3>
+                        <div class="space-y-3">
+                            <div>
+                                <span class="text-sm text-gray-500">Garment Type</span>
+                                <p class="font-medium text-gray-800">${task.order_details.garment_type}</p>
+                            </div>
+                            <div>
+                                <span class="text-sm text-gray-500">Category</span>
+                                <p class="font-medium text-gray-800">${task.order_details.category}</p>
+                            </div>
+                            <div>
+                                <span class="text-sm text-gray-500">Quantity</span>
+                                <p class="font-medium text-gray-800">${task.order_details.quantity}</p>
+                            </div>
+                            <div>
+                                <span class="text-sm text-gray-500">Fabric</span>
+                                <p class="font-medium text-gray-800">${task.order_details.fabric} (${task.order_details.fabric_type})</p>
+                            </div>
+                            <div>
+                                <span class="text-sm text-gray-500">Due Date</span>
+                                <p class="font-medium text-gray-800">${new Date(task.order_details.due_date).toLocaleDateString()}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task Timeline -->
+                <div class="bg-white p-6 rounded-xl border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-clock text-purple-500 mr-2"></i>
+                        Task Timeline
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                            <div>
+                                <span class="text-sm text-gray-500">Assigned</span>
+                                <p class="font-medium text-gray-800">${assignedDate}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 ${task.completed_at ? 'bg-green-500' : 'bg-gray-300'} rounded-full mr-3"></div>
+                            <div>
+                                <span class="text-sm text-gray-500">Completed</span>
+                                <p class="font-medium text-gray-800">${completedDate}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                ${measurementsHtml}
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                    <button onclick="closeTaskDetailsModal()" class="px-6 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                        Close
+                    </button>
+                    ${task.status === 'ASSIGNED' ? `
+                        <button onclick="startTask(${task.id})" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-play mr-2"></i> Start Task
+                        </button>
+                    ` : ''}
+                    ${task.status === 'IN_PROGRESS' ? `
+                        <button onclick="completeTask(${task.id})" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                            <i class="fas fa-check mr-2"></i> Mark Complete
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }
 </script>
+
+<style>
+    /* Custom animations for measurements toggle */
+    .animate-fadeIn {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .animate-slideDown {
+        animation: slideDown 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            max-height: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            max-height: 1000px;
+            transform: translateY(0);
+        }
+    }
+
+    /* Smooth chevron rotation */
+    .transition-transform {
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .rotate-180 {
+        transform: rotate(180deg);
+    }
+
+    /* Measurements toggle button styling */
+    .measurements-toggle {
+        transition: all 0.2s ease-in-out;
+    }
+
+    .measurements-toggle:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Task Details Modal Styling */
+    #taskDetailsModal {
+        backdrop-filter: blur(4px);
+    }
+
+    #taskDetailsModal .bg-white {
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Modal animations */
+    @keyframes modalFadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    #taskDetailsModal:not(.hidden) .bg-white {
+        animation: modalFadeIn 0.3s ease-out;
+    }
+</style>
+
+<!-- Task Details Modal -->
+<div id="taskDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-xl p-6 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold text-gray-800">Task Details</h3>
+            <button onclick="closeTaskDetailsModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div id="taskDetailsContent">
+            <!-- Task details will be loaded here -->
+        </div>
+    </div>
+</div>
 {% endblock %}

@@ -165,15 +165,35 @@
                                 </div>
                             </div>
 
-                            <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                                <div class="flex items-center">
-                                    <svg class="w-4 h-4 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    <span class="text-sm text-yellow-800">
-                                        <strong>Payment Policy:</strong> A 50% down payment is required before the order can be processed.
-                                        The remaining balance will be due upon completion.
-                                    </span>
+                            <!-- Payment Options -->
+                            <div class="mt-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-3">Payment Option</label>
+                                <div class="space-y-3">
+                                    <div class="flex items-center">
+                                        <input type="radio" id="down_payment_option" name="payment_option" value="DOWN_PAYMENT" class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300" checked>
+                                        <label for="down_payment_option" class="ml-3 block text-sm text-gray-700">
+                                            <span class="font-medium">Down Payment (50%)</span>
+                                            <div class="text-xs text-gray-500">Pay 50% now, remaining balance upon completion</div>
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <input type="radio" id="full_payment_option" name="payment_option" value="FULL_PAYMENT" class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300">
+                                        <label for="full_payment_option" class="ml-3 block text-sm text-gray-700">
+                                            <span class="font-medium">Full Payment</span>
+                                            <div class="text-xs text-gray-500">Pay the complete amount now</div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Payment Amount Display -->
+                            <div id="payment_amount_display" class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm font-medium text-blue-800">Amount to Pay:</span>
+                                    <span id="payment_amount_value" class="text-lg font-bold text-blue-600">₱0.00</span>
+                                </div>
+                                <div id="payment_note" class="text-xs text-blue-600 mt-1">
+                                    50% down payment required before processing
                                 </div>
                             </div>
 
@@ -475,6 +495,25 @@
         sessionStorage.setItem('csrfToken', csrfToken);
     }
     
+    // Update payment amount display based on selected option
+    function updatePaymentAmountDisplay() {
+        const totalAmountText = document.getElementById('total_amount_display').textContent;
+        const totalAmount = parseFloat(totalAmountText.replace('₱', '').replace(',', '')) || 0;
+        const paymentOption = document.querySelector('input[name="payment_option"]:checked')?.value || 'DOWN_PAYMENT';
+
+        const paymentAmountElement = document.getElementById('payment_amount_value');
+        const paymentNoteElement = document.getElementById('payment_note');
+
+        if (paymentOption === 'FULL_PAYMENT') {
+            paymentAmountElement.textContent = PricingManager.formatCurrency(totalAmount);
+            paymentNoteElement.textContent = 'Full payment - order will be processed immediately';
+        } else {
+            const downPayment = PricingManager.calculateDownPayment(totalAmount);
+            paymentAmountElement.textContent = PricingManager.formatCurrency(downPayment);
+            paymentNoteElement.textContent = '50% down payment required before processing';
+        }
+    }
+
     // Load customers and tailors when page loads
     document.addEventListener('DOMContentLoaded', function() {
         loadCustomers();
@@ -497,6 +536,24 @@
         // Initialize pricing display
         updatePricingDisplay();
 
+        // Initialize payment amount display
+        updatePaymentAmountDisplay();
+
+        // Add event listeners for payment option changes
+        document.querySelectorAll('input[name="payment_option"]').forEach(radio => {
+            radio.addEventListener('change', updatePaymentAmountDisplay);
+        });
+
+        // Add event listeners for pricing updates
+        document.getElementById('garment_type').addEventListener('change', function() {
+            updatePricingDisplay();
+            updatePaymentAmountDisplay();
+        });
+        document.getElementById('quantity').addEventListener('change', function() {
+            updatePricingDisplay();
+            updatePaymentAmountDisplay();
+        });
+
         // Check if we're creating an order for a specific customer
         const customerId = localStorage.getItem('lastCreatedCustomerId');
         if (customerId) {
@@ -515,29 +572,43 @@
         const customerId = this.value;
         if (customerId) {
             loadCustomerMeasurements(customerId);
+
+            // Auto-populate measurements if garment type is already selected
+            const garmentType = document.getElementById('garment_type').value;
+            if (garmentType) {
+                // Small delay to ensure measurements are loaded first
+                setTimeout(() => {
+                    if (window.customerMeasurements && Object.keys(window.customerMeasurements).length > 0) {
+                        autoPopulateOrderMeasurements();
+                    }
+                }, 500);
+            }
         } else {
             const basicMeasurementsEl = document.getElementById('basicMeasurements');
             if (basicMeasurementsEl) {
                 basicMeasurementsEl.innerHTML = '<p>Select a customer to view their basic measurements</p>';
             }
+            window.customerMeasurements = {};
         }
     });
 
-    // Handle garment type selection to show relevant measurement fields
+    // Handle garment type selection to show relevant measurement fields and update pricing
     document.getElementById('garment_type').addEventListener('change', function() {
         // Clear error styling
         this.classList.remove('border-red-500');
 
         const garmentType = this.value;
         showMeasurementFields(garmentType);
-    });
-
-    // Handle garment type change to update pricing
-    document.getElementById('garment_type').addEventListener('change', function() {
-        // Clear error styling
-        this.classList.remove('border-red-500');
-
         updatePricingDisplay();
+
+        // Auto-populate measurements if customer is selected and has measurements
+        const customerId = document.getElementById('customer').value;
+        if (customerId && window.customerMeasurements && Object.keys(window.customerMeasurements).length > 0) {
+            // Small delay to ensure measurement fields are shown first
+            setTimeout(() => {
+                autoPopulateOrderMeasurements();
+            }, 100);
+        }
     });
 
     // Handle quantity change to update total amount
@@ -610,6 +681,9 @@
         // Collect measurement data based on garment type
         const measurementData = collectMeasurementData(garmentType);
 
+        // Get payment option
+        const paymentOption = document.querySelector('input[name="payment_option"]:checked').value;
+
         // Collect form data
         const orderData = {
             customer_id: customerId,
@@ -622,6 +696,7 @@
             due_date: dueDate,
             total_amount: totalAmount,
             status: 'PENDING',
+            payment_option: paymentOption,
             ...measurementData
         };
         
@@ -1185,56 +1260,22 @@
         });
     }
     
-    // Static pricing configuration
-    const GARMENT_PRICES = {
-        'BLOUSE': 550.00,
-        'PANTS': 650.00,
-        'SKIRT': 500.00,
-        'DRESS': 800.00,
-        'JACKET': 750.00,
-        'OTHERS': 600.00
-    };
-
-    // Update pricing display based on garment type and quantity
+    // Use shared pricing logic from pricing.js
     function updatePricingDisplay() {
-        const garmentTypeSelect = document.getElementById('garment_type');
-        const quantityInput = document.getElementById('quantity');
-        const garmentPriceDisplay = document.getElementById('garment_price_display');
-        const totalAmountDisplay = document.getElementById('total_amount_display');
-        const downPaymentDisplay = document.getElementById('down_payment_display');
-        const totalAmountInput = document.getElementById('total_amount');
+        PricingManager.updatePricingDisplay({
+            garmentTypeSelector: '#garment_type',
+            quantitySelector: '#quantity',
+            garmentPriceSelector: '#garment_price_display',
+            totalAmountSelector: '#total_amount_display',
+            downPaymentSelector: '#down_payment_display',
+            totalAmountInputSelector: '#total_amount'
+        });
 
-        const garmentType = garmentTypeSelect.value || 'OTHERS';
-        const quantity = parseInt(quantityInput.value) || 1;
-
-        // Get garment price
-        const garmentPrice = GARMENT_PRICES[garmentType] || GARMENT_PRICES['OTHERS'];
-
-        // Calculate total amount
-        const totalAmount = garmentPrice * quantity;
-
-        // Calculate down payment (50%)
-        const downPayment = totalAmount * 0.5;
-
-        // Update displays
-        if (garmentPriceDisplay) {
-            garmentPriceDisplay.textContent = `₱${garmentPrice.toFixed(2)}`;
-        }
-
-        if (totalAmountDisplay) {
-            totalAmountDisplay.textContent = `₱${totalAmount.toFixed(2)}`;
-        }
-
-        if (downPaymentDisplay) {
-            downPaymentDisplay.textContent = `₱${downPayment.toFixed(2)}`;
-        }
-
-        if (totalAmountInput) {
-            totalAmountInput.value = totalAmount.toFixed(2);
-        }
+        // Update payment amount display
+        updatePaymentAmountDisplay();
     }
     
-    // Load customer measurements
+    // Load customer measurements and auto-populate order fields
     function loadCustomerMeasurements(customerId) {
         fetch(`/api/admin/customers/${customerId}/`, {
             headers: {
@@ -1254,21 +1295,44 @@
             // Handle both paginated and non-paginated responses
             const customer = data.results || data;
 
+            // Display basic measurements
             const basicMeasurements = document.getElementById('basicMeasurements');
             if (customer.measurements && Object.keys(customer.measurements).length > 0) {
                 let measurementsHtml = '<div class="grid grid-cols-2 md:grid-cols-3 gap-4">';
                 for (const [key, value] of Object.entries(customer.measurements)) {
+                    const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                     measurementsHtml += `
                         <div class="bg-white p-3 rounded border">
-                            <div class="text-xs text-gray-500 uppercase">${key}</div>
+                            <div class="text-xs text-gray-500 uppercase">${displayKey}</div>
                             <div class="font-medium">${value} inches</div>
                         </div>
                     `;
                 }
                 measurementsHtml += '</div>';
+
+                // Add auto-populate button
+                measurementsHtml += `
+                    <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-medium text-blue-800">Auto-populate Order Measurements</h4>
+                                <p class="text-xs text-blue-600 mt-1">Click to automatically fill order measurement fields with customer's measurements</p>
+                            </div>
+                            <button type="button" id="autoPopulateBtn" onclick="autoPopulateOrderMeasurements()"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                <i class="fas fa-magic mr-2"></i>Auto-Fill
+                            </button>
+                        </div>
+                    </div>
+                `;
+
                 basicMeasurements.innerHTML = measurementsHtml;
+
+                // Store customer measurements globally for auto-population
+                window.customerMeasurements = customer.measurements;
             } else {
                 basicMeasurements.innerHTML = '<p class="text-gray-500">No basic measurements recorded for this customer</p>';
+                window.customerMeasurements = {};
             }
         })
         .catch(error => {
@@ -1277,7 +1341,95 @@
             if (basicMeasurementsEl) {
                 basicMeasurementsEl.innerHTML = '<p class="text-red-500">Error loading measurements</p>';
             }
+            window.customerMeasurements = {};
         });
+    }
+
+    // Auto-populate order measurement fields with customer measurements
+    function autoPopulateOrderMeasurements() {
+        if (!window.customerMeasurements || Object.keys(window.customerMeasurements).length === 0) {
+            showStatusMessage('No customer measurements available to populate', 'error');
+            return;
+        }
+
+        const garmentType = document.getElementById('garment_type').value;
+        if (!garmentType) {
+            showStatusMessage('Please select a garment type first', 'error');
+            return;
+        }
+
+        let populatedCount = 0;
+
+        // Helper function to populate field if it exists and customer has the measurement
+        function populateField(fieldId, measurementKey) {
+            const field = document.getElementById(fieldId);
+            const value = window.customerMeasurements[measurementKey];
+
+            if (field && value !== undefined && value !== null) {
+                field.value = value;
+                field.classList.add('bg-green-50', 'border-green-300');
+                populatedCount++;
+
+                // Remove highlight after 2 seconds
+                setTimeout(() => {
+                    field.classList.remove('bg-green-50', 'border-green-300');
+                }, 2000);
+            }
+        }
+
+        // Populate fields based on garment type
+        if (garmentType === 'BLOUSE' || garmentType === 'DRESS') {
+            populateField('neck_circumference', 'neck_circumference');
+            populateField('shoulder_width', 'shoulder_width');
+            populateField('chest_bust_circumference', 'chest_bust_circumference');
+            populateField('upper_bust_circumference', 'upper_bust_circumference');
+            populateField('under_bust_circumference', 'under_bust_circumference');
+            populateField('waist_circumference', 'waist_circumference');
+            populateField('armhole_circumference', 'armhole_circumference');
+            populateField('bicep_circumference', 'bicep_circumference');
+            populateField('wrist_circumference', 'wrist_circumference');
+            populateField('back_length_nape_to_waist', 'back_length_nape_to_waist');
+            populateField('blouse_length_shoulder_to_hem', 'blouse_length_shoulder_to_hem');
+        }
+
+        if (garmentType === 'PANTS') {
+            populateField('waist_circumference_pants', 'waist_circumference');
+            populateField('high_hip_circumference', 'high_hip_circumference');
+            populateField('full_hip_circumference', 'full_hip_circumference');
+            populateField('thigh_circumference', 'thigh_circumference');
+            populateField('knee_circumference', 'knee_circumference');
+            populateField('calf_circumference', 'calf_circumference');
+            populateField('ankle_circumference', 'ankle_circumference');
+            populateField('inseam_crotch_to_ankle', 'inseam_crotch_to_ankle');
+            populateField('outseam_waist_to_ankle', 'outseam_waist_to_ankle');
+            populateField('front_rise', 'front_rise');
+            populateField('back_rise', 'back_rise');
+        }
+
+        if (garmentType === 'SKIRT' || garmentType === 'DRESS') {
+            populateField('waist_circumference_skirt', 'waist_circumference');
+            populateField('high_hip_circumference_skirt', 'high_hip_circumference');
+            populateField('full_hip_circumference_skirt', 'full_hip_circumference');
+            populateField('skirt_dress_length', 'skirt_dress_length');
+            populateField('hem_circumference', 'hem_circumference');
+        }
+
+        if (garmentType === 'JACKET') {
+            populateField('neck_circumference_jacket', 'neck_circumference');
+            populateField('shoulder_width_jacket', 'shoulder_width');
+            populateField('chest_bust_circumference_jacket', 'chest_bust_circumference');
+            populateField('waist_circumference_jacket', 'waist_circumference');
+            populateField('full_hip_circumference_jacket', 'full_hip_circumference');
+            populateField('bicep_circumference_jacket', 'bicep_circumference');
+            populateField('wrist_circumference_jacket', 'wrist_circumference');
+            populateField('jacket_length_shoulder_to_hem', 'jacket_length_shoulder_to_hem');
+        }
+
+        if (populatedCount > 0) {
+            showStatusMessage(`Successfully auto-populated ${populatedCount} measurement fields from customer profile`, 'success');
+        } else {
+            showStatusMessage('No matching measurements found to populate for this garment type', 'warning');
+        }
     }
     
     function showStatusMessage(message, type) {

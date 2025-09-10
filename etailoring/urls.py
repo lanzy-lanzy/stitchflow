@@ -62,7 +62,12 @@ urlpatterns = [
     path('api/admin/commissions/', views.CommissionListView.as_view(), name='admin_commission_list'),
     path('api/admin/commissions/<int:commission_id>/pay/', views.pay_commission, name='admin_pay_commission'),
     path('api/admin/orders/<int:order_id>/process-payment/', views.process_customer_payment, name='admin_process_payment'),
+    path('api/admin/tasks/<int:task_id>/approve/', views.approve_task, name='admin_approve_task'),
     path('api/admin/tasks/<int:task_id>/pay-commission/', views.pay_commission_for_task, name='admin_pay_commission_for_task'),
+
+    # Payment management
+    path('manage-payments/', views.manage_payments, name='manage_payments'),
+    path('api/admin/payment-summary/', views.payment_summary, name='admin_payment_summary'),
     path('api/admin/assign-order/', views.assign_order_to_tailor, name='admin_assign_order'),
     path('api/admin/fabrics/<int:fabric_id>/restock/', inventory_views.restock_fabric, name='admin_restock_fabric'),
     path('api/admin/accessories/<int:accessory_id>/restock/', inventory_views.restock_accessory, name='admin_restock_accessory'),
@@ -82,4 +87,10 @@ urlpatterns = [
     # Customer URLs
     path('api/customer/orders/', views.CustomerOrderListView.as_view(), name='customer_order_list'),
     path('api/customer/orders/<int:pk>/', views.CustomerOrderDetailView.as_view(), name='customer_order_detail'),
+
+    # Report URLs
+    path('generate-report/', views.generate_tailor_report, name='generate_tailor_report'),
+    path('generate-report/<int:tailor_id>/', views.generate_tailor_report, name='generate_tailor_report_for_tailor'),
+    path('api/generate-report/', views.tailor_report_api, name='tailor_report_api'),
+    path('api/generate-report/<int:tailor_id>/', views.tailor_report_api, name='tailor_report_api_for_tailor'),
 ]

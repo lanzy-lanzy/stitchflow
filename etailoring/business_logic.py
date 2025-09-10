@@ -76,7 +76,7 @@ class OrderManager:
     def assign_order_to_tailor(order, tailor):
         """
         Assign an order to a tailor and create a task.
-        Note: Inventory is now deducted during order creation, not assignment.
+        Note: Commission is NOT created here - only when admin approves the completed task.
         """
         # Update order status
         order.status = 'ASSIGNED'
@@ -88,9 +88,7 @@ class OrderManager:
             tailor=tailor
         )
 
-        # Create commission
-        CommissionManager.create_commission(task)
-
+        # Do NOT create commission here - only when task is approved
         return task
     
     @staticmethod
@@ -113,22 +111,43 @@ class OrderManager:
     def complete_task(task):
         """
         Complete a task and update related objects.
+        Note: Commission is NOT created here - only when admin approves the task.
         """
         # Update task
         task.status = 'COMPLETED'
         task.completed_at = timezone.now()
         task.save()
-        
+
         # Update order
         task.order.status = 'COMPLETED'
         task.order.save()
-        
-        # Get or create commission
+
+        return task
+
+    @staticmethod
+    def approve_task(task):
+        """
+        Approve a completed task and create commission.
+        Only admin can approve tasks.
+        """
+        if task.status != 'COMPLETED':
+            raise ValueError("Task must be completed before it can be approved")
+
+        # Update task
+        task.status = 'APPROVED'
+        task.approved_at = timezone.now()
+        task.save()
+
+        # Update order
+        task.order.status = 'APPROVED'
+        task.order.save()
+
+        # Create commission only when approved
         try:
             commission = Commission.objects.get(order=task.order)
         except Commission.DoesNotExist:
             commission = CommissionManager.create_commission(task)
-        
+
         return commission
 
 
@@ -146,12 +165,14 @@ class CommissionManager:
     def create_commission(task):
         """
         Create a commission record for a task.
+        Commission is created with APPROVED status when task is approved by admin.
         """
         amount = CommissionManager.calculate_commission(task)
         commission = Commission.objects.create(
             tailor=task.tailor,
             amount=amount,
-            order=task.order
+            order=task.order,
+            status='APPROVED'  # Commission is approved when created (after task approval)
         )
         return commission
 

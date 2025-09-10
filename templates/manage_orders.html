@@ -20,7 +20,7 @@
     
     <!-- Filter Options -->
     <div class="mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
                 <label class="block text-text-dark mb-2">Status</label>
                 <select id="statusFilter" class="w-full px-3 py-2 border border-primary-beige rounded-lg focus:ring-2 focus:ring-primary-rose focus:border-primary-rose bg-primary-cream text-text-dark">
@@ -29,7 +29,17 @@
                     <option value="ASSIGNED">Assigned</option>
                     <option value="IN_PROGRESS">In Progress</option>
                     <option value="COMPLETED">Completed</option>
+                    <option value="APPROVED">Approved</option>
                     <option value="CANCELLED">Cancelled</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-text-dark mb-2">Payment Status</label>
+                <select id="paymentStatusFilter" class="w-full px-3 py-2 border border-primary-beige rounded-lg focus:ring-2 focus:ring-primary-rose focus:border-primary-rose bg-primary-cream text-text-dark">
+                    <option value="">All Payment Status</option>
+                    <option value="PENDING">Payment Pending</option>
+                    <option value="DOWN_PAYMENT_PAID">Down Payment Paid</option>
+                    <option value="PAID">Fully Paid</option>
                 </select>
             </div>
             <div>
@@ -68,6 +78,7 @@
                     <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Fabric</th>
                     <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Total Amount (₱)</th>
                     <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Status</th>
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Payment Status</th>
                     <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Created At</th>
                     <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Actions</th>
                 </tr>
@@ -75,7 +86,7 @@
             <tbody id="orderTableBody">
                 <!-- Order data will be loaded here -->
                 <tr>
-                    <td colspan="7" class="py-4 px-4 text-center text-gray-500">Loading order data...</td>
+                    <td colspan="8" class="py-4 px-4 text-center text-gray-500">Loading order data...</td>
                 </tr>
             </tbody>
         </table>
@@ -143,6 +154,7 @@
     // Clear filters button
     document.getElementById('clearFiltersBtn').addEventListener('click', function() {
         document.getElementById('statusFilter').value = '';
+        document.getElementById('paymentStatusFilter').value = '';
         document.getElementById('customerFilter').value = '';
         document.getElementById('dateFromFilter').value = '';
         document.getElementById('dateToFilter').value = '';
@@ -174,7 +186,12 @@
         if (statusFilter) {
             params.append('status', statusFilter);
         }
-        
+
+        const paymentStatusFilter = document.getElementById('paymentStatusFilter').value;
+        if (paymentStatusFilter) {
+            params.append('payment_status', paymentStatusFilter);
+        }
+
         const customerFilter = document.getElementById('customerFilter').value;
         if (customerFilter) {
             params.append('customer', customerFilter);
@@ -232,10 +249,15 @@
                     <td class="py-2 px-4 border-b">${order.id}</td>
                     <td class="py-2 px-4 border-b">${order.customer && order.customer.user ? `${order.customer.user.first_name} ${order.customer.user.last_name}` : 'Unknown Customer'}</td>
                     <td class="py-2 px-4 border-b">${order.fabric && order.fabric.name ? order.fabric.name : 'Unknown Fabric'}</td>
-                    <td class="py-2 px-4 border-b">₱${order.total_amount || '0.00'}</td>
+                    <td class="py-2 px-4 border-b">${PricingManager.formatCurrency(order.total_amount || 0)}</td>
                     <td class="py-2 px-4 border-b">
                         <span class="px-2 py-1 rounded-full text-xs ${getStatusColorClass(order.status)}">
                             ${order.status || 'UNKNOWN'}
+                        </span>
+                    </td>
+                    <td class="py-2 px-4 border-b">
+                        <span class="px-2 py-1 rounded-full text-xs ${getPaymentStatusColorClass(order.payment_status)}">
+                            ${getPaymentStatusDisplay(order.payment_status)}
                         </span>
                     </td>
                     <td class="py-2 px-4 border-b">${order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}</td>
@@ -349,10 +371,38 @@
                 return 'bg-indigo-100 text-indigo-800';
             case 'COMPLETED':
                 return 'bg-green-100 text-green-800';
+            case 'APPROVED':
+                return 'bg-emerald-100 text-emerald-800';
             case 'CANCELLED':
                 return 'bg-red-100 text-red-800';
             default:
                 return 'bg-gray-100 text-gray-800';
+        }
+    }
+
+    function getPaymentStatusColorClass(paymentStatus) {
+        switch(paymentStatus) {
+            case 'PENDING':
+                return 'bg-red-100 text-red-800';
+            case 'DOWN_PAYMENT_PAID':
+                return 'bg-yellow-100 text-yellow-800';
+            case 'PAID':
+                return 'bg-green-100 text-green-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    }
+
+    function getPaymentStatusDisplay(paymentStatus) {
+        switch(paymentStatus) {
+            case 'PENDING':
+                return 'Payment Pending';
+            case 'DOWN_PAYMENT_PAID':
+                return 'Down Payment Paid';
+            case 'PAID':
+                return 'Fully Paid';
+            default:
+                return 'Unknown';
         }
     }
     
@@ -382,7 +432,9 @@
                             <div>
                                 <p><strong>Customer:</strong> ${order.customer && order.customer.user ? `${order.customer.user.first_name} ${order.customer.user.last_name}` : 'Unknown Customer'}</p>
                                 <p><strong>Fabric:</strong> ${order.fabric ? `${order.fabric.name} (${order.fabric.unit_type || 'N/A'})` : 'Unknown Fabric'}</p>
-                                <p><strong>Total Amount:</strong> ₱${order.total_amount || '0.00'}</p>
+                                <p><strong>Total Amount:</strong> ${PricingManager.formatCurrency(order.total_amount || 0)}</p>
+                                <p><strong>Down Payment (50%):</strong> ${PricingManager.formatCurrency(PricingManager.calculateDownPayment(order.total_amount || 0))}</p>
+                                <p><strong>Remaining Balance:</strong> ${PricingManager.formatCurrency(PricingManager.calculateRemainingBalance(order.total_amount || 0, PricingManager.calculateDownPayment(order.total_amount || 0)))}</p>
                             </div>
                             <div>
                                 <p><strong>Status:</strong> 

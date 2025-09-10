@@ -67,7 +67,7 @@
             <!-- Measurements Section -->
             <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-xl border border-gray-200 shadow-sm">
                 <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <i class="fas fa-ruler-vertical text-purple-600 mr-2"></i> Basic Measurements (Optional)
+                    <i class="fas fa-ruler-vertical text-purple-600 mr-2"></i> Full Body Measurements (Optional)
                 </h2>
                 <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 rounded-r-lg">
                     <div class="flex">
@@ -78,41 +78,149 @@
                         </div>
                         <div class="ml-3">
                             <p class="text-sm text-blue-700">
-                                <strong>Note:</strong> These are basic measurements. Detailed measurements for specific garments will be taken during order creation.
+                                <strong>Note:</strong> These are comprehensive full body measurements. All measurements are optional but having complete measurements will speed up future order creation.
                             </p>
                         </div>
                     </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                        <label for="measurement_chest" class="block text-sm font-medium text-gray-700 mb-1">Chest/Bust (inches)</label>
-                        <input type="number" id="measurement_chest" name="measurement_chest" step="0.1"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                <!-- Upper Body Measurements -->
+                <div class="mb-6">
+                    <h3 class="text-md font-medium text-gray-700 mb-3">Upper Body Measurements</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="neck_circumference" class="block text-sm font-medium text-gray-700 mb-1">Neck Circumference</label>
+                            <input type="number" id="neck_circumference" name="neck_circumference" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="shoulder_width" class="block text-sm font-medium text-gray-700 mb-1">Shoulder Width</label>
+                            <input type="number" id="shoulder_width" name="shoulder_width" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="chest_bust_circumference" class="block text-sm font-medium text-gray-700 mb-1">Chest/Bust Circumference</label>
+                            <input type="number" id="chest_bust_circumference" name="chest_bust_circumference" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="upper_bust_circumference" class="block text-sm font-medium text-gray-700 mb-1">Upper Bust Circumference</label>
+                            <input type="number" id="upper_bust_circumference" name="upper_bust_circumference" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="under_bust_circumference" class="block text-sm font-medium text-gray-700 mb-1">Under Bust Circumference</label>
+                            <input type="number" id="under_bust_circumference" name="under_bust_circumference" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="waist_circumference" class="block text-sm font-medium text-gray-700 mb-1">Waist Circumference</label>
+                            <input type="number" id="waist_circumference" name="waist_circumference" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="armhole_circumference" class="block text-sm font-medium text-gray-700 mb-1">Armhole Circumference</label>
+                            <input type="number" id="armhole_circumference" name="armhole_circumference" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="bicep_circumference" class="block text-sm font-medium text-gray-700 mb-1">Bicep Circumference</label>
+                            <input type="number" id="bicep_circumference" name="bicep_circumference" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="wrist_circumference" class="block text-sm font-medium text-gray-700 mb-1">Wrist Circumference</label>
+                            <input type="number" id="wrist_circumference" name="wrist_circumference" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="back_length_nape_to_waist" class="block text-sm font-medium text-gray-700 mb-1">Back Length (Nape to Waist)</label>
+                            <input type="number" id="back_length_nape_to_waist" name="back_length_nape_to_waist" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="blouse_length_shoulder_to_hem" class="block text-sm font-medium text-gray-700 mb-1">Blouse Length (Shoulder to Hem)</label>
+                            <input type="number" id="blouse_length_shoulder_to_hem" name="blouse_length_shoulder_to_hem" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
                     </div>
-                    <div>
-                        <label for="measurement_waist" class="block text-sm font-medium text-gray-700 mb-1">Waist (inches)</label>
-                        <input type="number" id="measurement_waist" name="measurement_waist" step="0.1"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+
+                <!-- Lower Body Measurements -->
+                <div class="mb-6">
+                    <h3 class="text-md font-medium text-gray-700 mb-3">Lower Body Measurements</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="high_hip_circumference" class="block text-sm font-medium text-gray-700 mb-1">High Hip Circumference</label>
+                            <input type="number" id="high_hip_circumference" name="high_hip_circumference" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="full_hip_circumference" class="block text-sm font-medium text-gray-700 mb-1">Full Hip Circumference</label>
+                            <input type="number" id="full_hip_circumference" name="full_hip_circumference" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="thigh_circumference" class="block text-sm font-medium text-gray-700 mb-1">Thigh Circumference</label>
+                            <input type="number" id="thigh_circumference" name="thigh_circumference" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="knee_circumference" class="block text-sm font-medium text-gray-700 mb-1">Knee Circumference</label>
+                            <input type="number" id="knee_circumference" name="knee_circumference" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="calf_circumference" class="block text-sm font-medium text-gray-700 mb-1">Calf Circumference</label>
+                            <input type="number" id="calf_circumference" name="calf_circumference" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="ankle_circumference" class="block text-sm font-medium text-gray-700 mb-1">Ankle Circumference</label>
+                            <input type="number" id="ankle_circumference" name="ankle_circumference" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="inseam_crotch_to_ankle" class="block text-sm font-medium text-gray-700 mb-1">Inseam (Crotch to Ankle)</label>
+                            <input type="number" id="inseam_crotch_to_ankle" name="inseam_crotch_to_ankle" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="outseam_waist_to_ankle" class="block text-sm font-medium text-gray-700 mb-1">Outseam (Waist to Ankle)</label>
+                            <input type="number" id="outseam_waist_to_ankle" name="outseam_waist_to_ankle" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="front_rise" class="block text-sm font-medium text-gray-700 mb-1">Front Rise</label>
+                            <input type="number" id="front_rise" name="front_rise" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="back_rise" class="block text-sm font-medium text-gray-700 mb-1">Back Rise</label>
+                            <input type="number" id="back_rise" name="back_rise" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
                     </div>
-                    <div>
-                        <label for="measurement_hip" class="block text-sm font-medium text-gray-700 mb-1">Hip (inches)</label>
-                        <input type="number" id="measurement_hip" name="measurement_hip" step="0.1"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-                    </div>
-                    <div>
-                        <label for="measurement_inseam" class="block text-sm font-medium text-gray-700 mb-1">Inseam (inches)</label>
-                        <input type="number" id="measurement_inseam" name="measurement_inseam" step="0.1"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-                    </div>
-                    <div>
-                        <label for="measurement_sleeve" class="block text-sm font-medium text-gray-700 mb-1">Sleeve Length (inches)</label>
-                        <input type="number" id="measurement_sleeve" name="measurement_sleeve" step="0.1"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-                    </div>
-                    <div>
-                        <label for="measurement_shoulder" class="block text-sm font-medium text-gray-700 mb-1">Shoulder Width (inches)</label>
-                        <input type="number" id="measurement_shoulder" name="measurement_shoulder" step="0.1"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+
+                <!-- Dress/Skirt Specific Measurements -->
+                <div class="mb-6">
+                    <h3 class="text-md font-medium text-gray-700 mb-3">Dress/Skirt Measurements</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="skirt_dress_length" class="block text-sm font-medium text-gray-700 mb-1">Skirt/Dress Length</label>
+                            <input type="number" id="skirt_dress_length" name="skirt_dress_length" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="hem_circumference" class="block text-sm font-medium text-gray-700 mb-1">Hem Circumference</label>
+                            <input type="number" id="hem_circumference" name="hem_circumference" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
+                        <div>
+                            <label for="jacket_length_shoulder_to_hem" class="block text-sm font-medium text-gray-700 mb-1">Jacket Length (Shoulder to Hem)</label>
+                            <input type="number" id="jacket_length_shoulder_to_hem" name="jacket_length_shoulder_to_hem" step="0.1"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -157,6 +265,102 @@
         return digitsOnly.length >= 10;
     }
 
+    // Collect measurement data (aligned with create_order.html approach)
+    function collectMeasurementData() {
+        const measurements = {};
+
+        // Helper function to get value if element exists and has value
+        function getValue(id) {
+            const element = document.getElementById(id);
+            return element && element.value ? parseFloat(element.value) : null;
+        }
+
+        // Collect full body measurements from the customer form using the same field names as Order model
+        const measurementFields = [
+            // Upper body measurements
+            'neck_circumference',
+            'shoulder_width',
+            'chest_bust_circumference',
+            'upper_bust_circumference',
+            'under_bust_circumference',
+            'waist_circumference',
+            'armhole_circumference',
+            'bicep_circumference',
+            'wrist_circumference',
+            'back_length_nape_to_waist',
+            'blouse_length_shoulder_to_hem',
+            // Lower body measurements
+            'high_hip_circumference',
+            'full_hip_circumference',
+            'thigh_circumference',
+            'knee_circumference',
+            'calf_circumference',
+            'ankle_circumference',
+            'inseam_crotch_to_ankle',
+            'outseam_waist_to_ankle',
+            'front_rise',
+            'back_rise',
+            // Dress/Skirt measurements
+            'skirt_dress_length',
+            'hem_circumference',
+            'jacket_length_shoulder_to_hem'
+        ];
+
+        // Collect measurements using the exact field names from Order model
+        measurementFields.forEach(fieldId => {
+            const value = getValue(fieldId);
+            if (value !== null) {
+                measurements[fieldId] = value;
+            }
+        });
+
+        // Filter out null values (same as create_order.html)
+        const filteredMeasurements = {};
+        for (const [key, value] of Object.entries(measurements)) {
+            if (value !== null && value !== undefined) {
+                filteredMeasurements[key] = value;
+            }
+        }
+
+        return filteredMeasurements;
+    }
+
+    // Validate measurements (aligned with create_order.html approach)
+    function validateMeasurements() {
+        const measurementInputs = document.querySelectorAll('input[type="number"][name$="_circumference"], input[type="number"][name$="_width"], input[type="number"][name$="_ankle"], input[type="number"][name$="_waist"], input[type="number"][name$="_length"], input[type="number"][name$="_rise"], input[type="number"][name$="_hem"]');
+        let isValid = true;
+
+        measurementInputs.forEach(input => {
+            const value = parseFloat(input.value);
+
+            // Clear previous error styling
+            input.classList.remove('border-red-500');
+            input.classList.add('border-gray-300');
+
+            // Only validate if there's a value (measurements are optional for customer creation)
+            if (input.value && input.value.trim() !== '') {
+                if (value <= 0) {
+                    showFieldError(input, 'Measurement must be greater than 0');
+                    isValid = false;
+                } else if (value > 200) {
+                    showFieldError(input, 'Measurement must be 200 inches or less');
+                    isValid = false;
+                }
+            }
+        });
+
+        return isValid;
+    }
+
+    // Show field-specific error (helper function)
+    function showFieldError(field, message) {
+        field.classList.remove('border-gray-300');
+        field.classList.add('border-red-500');
+
+        // You could add a tooltip or error message display here if needed
+        console.warn(`Field ${field.id}: ${message}`);
+    }
+
     // Add real-time phone number validation
     document.getElementById('phone_number').addEventListener('input', function(e) {
         const phoneNumber = e.target.value;
@@ -169,6 +373,25 @@
             e.target.classList.remove('border-red-500');
             e.target.classList.add('border-gray-300');
         }
+    });
+
+    // Add real-time measurement validation
+    document.querySelectorAll('input[type="number"][name$="_circumference"], input[type="number"][name$="_width"], input[type="number"][name$="_ankle"], input[type="number"][name$="_waist"], input[type="number"][name$="_length"], input[type="number"][name$="_rise"], input[type="number"][name$="_hem"]').forEach(input => {
+        input.addEventListener('input', function(e) {
+            const value = parseFloat(e.target.value);
+
+            // Clear previous styling
+            e.target.classList.remove('border-red-500');
+            e.target.classList.add('border-gray-300');
+
+            // Only validate if there's a value
+            if (e.target.value && e.target.value.trim() !== '') {
+                if (value <= 0 || value > 200) {
+                    e.target.classList.add('border-red-500');
+                    e.target.classList.remove('border-gray-300');
+                }
+            }
+        });
     });
 
     document.getElementById('customerForm').addEventListener('submit', function(e) {
@@ -191,23 +414,19 @@
             return;
         }
 
+        // Validate measurements
+        if (!validateMeasurements()) {
+            showStatusMessage('Please fix the measurement validation errors before submitting.', 'error');
+            return;
+        }
+
         // Generate a random username and password for the customer (they won't login)
         const randomStr = Math.random().toString(36).substring(2, 10);
         const username = 'customer_' + randomStr;
         const password = Math.random().toString(36).substring(2, 15);
 
-        // Collect measurements
-        const measurements = {};
-        const measurementFields = [
-            'chest', 'waist', 'hip', 'inseam', 'sleeve', 'shoulder'
-        ];
-
-        measurementFields.forEach(field => {
-            const value = document.getElementById('measurement_' + field).value;
-            if (value) {
-                measurements[field] = parseFloat(value);
-            }
-        });
+        // Collect measurements using the same approach as create_order.html
+        const measurements = collectMeasurementData();
 
         // Create the customer data
         const customerData = {
@@ -257,7 +476,44 @@
         })
         .catch(error => {
             console.error('Error:', error);
-            showStatusMessage('Error creating customer: ' + error.message, 'error');
+
+            // Better error handling with debugging information
+            let errorMessage = 'Error creating customer';
+            if (error.message) {
+                try {
+                    // Try to parse the error message as JSON
+                    const errorObj = JSON.parse(error.message);
+
+                    // Format field-specific errors nicely
+                    if (typeof errorObj === 'object') {
+                        const fieldErrors = [];
+                        for (const [field, errors] of Object.entries(errorObj)) {
+                            // Format field name nicer
+                            let fieldName = field.replace('_', ' ');
+                            fieldName = fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
+
+                            if (Array.isArray(errors)) {
+                                fieldErrors.push(`${fieldName}: ${errors.join(', ')}`);
+                            } else {
+                                fieldErrors.push(`${fieldName}: ${errors}`);
+                            }
+                        }
+
+                        if (fieldErrors.length > 0) {
+                            errorMessage = fieldErrors.join('\n');
+                        } else {
+                            errorMessage = JSON.stringify(errorObj);
+                        }
+                    } else {
+                        errorMessage = JSON.stringify(errorObj);
+                    }
+                } catch (e) {
+                    // If not JSON, use the error message directly
+                    errorMessage = error.message;
+                }
+            }
+
+            showStatusMessage(errorMessage, 'error');
         });
     });
     
@@ -288,16 +544,32 @@
     
     function showStatusMessage(message, type) {
         const statusElement = document.getElementById('statusMessage');
-        statusElement.textContent = message;
+
+        // Handle multiline messages
+        if (message.includes('\n')) {
+            const messageLines = message.split('\n');
+            const messageHTML = messageLines.map(line => `<p>${line}</p>`).join('');
+            statusElement.innerHTML = messageHTML;
+        } else {
+            statusElement.textContent = message;
+        }
+
         statusElement.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
-        
+
         if (type === 'success') {
             statusElement.classList.add('bg-green-100', 'text-green-800');
         } else {
             statusElement.classList.add('bg-red-100', 'text-red-800');
         }
-        
+
         statusElement.classList.remove('hidden');
+
+        // Auto-hide success messages after 5 seconds
+        if (type === 'success') {
+            setTimeout(() => {
+                statusElement.classList.add('hidden');
+            }, 5000);
+        }
     }
 </script>
 {% endblock %}

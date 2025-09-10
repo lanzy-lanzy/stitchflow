@@ -15,6 +15,8 @@
     <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Shared Pricing Logic -->
+    <script src="{% load static %}{% static 'js/pricing.js' %}"></script>
     <!-- Tailwind Config for Custom Colors -->
     <script>
         tailwind.config = {
@@ -129,6 +131,18 @@
                 <a href="{% url 'etailoring:manage_commissions' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-primary-beige hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'manage_commissions' %}bg-primary-beige shadow-inner{% endif %}">
                     <i class="fas fa-money-bill-wave mr-3 w-5 text-center"></i>
                     <span>Commissions</span>
+                </a>
+                <a href="{% url 'etailoring:manage_payments' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-primary-beige hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'manage_payments' %}bg-primary-beige shadow-inner{% endif %}">
+                    <i class="fas fa-credit-card mr-3 w-5 text-center"></i>
+                    <span>Manage Payments</span>
+                </a>
+
+                <div class="px-4 py-3 text-text-medium text-xs font-bold uppercase tracking-wider mt-6 mb-2 flex items-center">
+                    <i class="fas fa-chart-line mr-2 text-text-light"></i> Reports
+                </div>
+                <a href="{% url 'etailoring:generate_tailor_report' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-primary-beige hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'generate_tailor_report' %}bg-primary-beige shadow-inner{% endif %}">
+                    <i class="fas fa-file-pdf mr-3 w-5 text-center"></i>
+                    <span>Tailor Reports</span>
                 </a>
 
                 <div class="px-4 py-3 text-text-medium text-xs font-bold uppercase tracking-wider mt-6 mb-2 flex items-center">

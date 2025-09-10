@@ -12,6 +12,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.db.models import Sum
+from django.http import HttpResponse
+from datetime import datetime, timedelta
 from .models import (
     UserExtension, Customer, Tailor, Fabric, 
     Accessory, Order, Task, Commission, Testimonial
@@ -22,6 +24,7 @@ from .serializers import (
     TaskSerializer, CommissionSerializer
 )
 from .business_logic import OrderManager
+from .report_generator import TailorReportGenerator
 
 
 # Homepage view
@@ -87,10 +90,10 @@ def login_view(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            
+
             if next_url:
                 return redirect(next_url)
-                
+
             # Redirect based on role
             if user.is_staff:
                 return redirect('etailoring:admin_dashboard')
@@ -99,7 +102,7 @@ def login_view(request):
                     return redirect('etailoring:tailor_dashboard')
                 elif user.userextension.role == 'CUSTOMER':
                     return redirect('etailoring:customer_dashboard')
-            
+
             return redirect('etailoring:homepage')
         
     return render(request, 'login.html', {'next_url': next_url})
@@ -207,6 +210,17 @@ def manage_commissions_view(request):
     if not request.user.is_staff:
         return redirect('etailoring:homepage')
     return render(request, 'manage_commissions.html')
+
+
+@login_required
+def manage_payments(request):
+    """
+    Admin view to manage customer payments.
+    """
+    # Only staff/admin users can manage payments
+    if not request.user.is_staff:
+        return redirect('etailoring:homepage')
+    return render(request, 'manage_payments.html')
 
 
 @login_required
@@ -414,23 +428,121 @@ class CommissionListView(generics.ListAPIView):
 def process_customer_payment(request, order_id):
     """
     API endpoint to process customer payment for an order.
+    Supports different payment types: DOWN_PAYMENT, FULL_PAYMENT, REMAINING_PAYMENT
     """
     try:
         order = Order.objects.get(id=order_id)
-        order.payment_status = 'PAID'
-        order.paid_at = timezone.now()
+        payment_type = request.data.get('payment_type', 'FULL_PAYMENT')
+
+        if payment_type == 'DOWN_PAYMENT':
+            # Process down payment only
+            order.down_payment_status = 'PAID'
+            order.down_payment_paid_at = timezone.now()
+            order.payment_status = 'DOWN_PAYMENT_PAID'
+
+        elif payment_type == 'REMAINING_PAYMENT':
+            # Process remaining balance (only if down payment was already paid)
+            if order.payment_status != 'DOWN_PAYMENT_PAID':
+                return Response({
+                    'detail': 'Down payment must be processed first.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            order.payment_status = 'PAID'
+            order.paid_at = timezone.now()
+
+        elif payment_type == 'FULL_PAYMENT':
+            # Process full payment at once
+            order.payment_status = 'PAID'
+            order.paid_at = timezone.now()
+            order.down_payment_status = 'PAID'
+            order.down_payment_paid_at = timezone.now()
+
+        else:
+            return Response({
+                'detail': 'Invalid payment type. Use DOWN_PAYMENT, FULL_PAYMENT, or REMAINING_PAYMENT.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
         order.save()
-        
+
         return Response({
             'detail': 'Payment processed successfully.',
             'order_id': order.id,
-            'payment_status': order.payment_status
+            'payment_status': order.payment_status,
+            'payment_type': payment_type
         }, status=status.HTTP_200_OK)
+
     except Order.DoesNotExist:
-        return Response({'detail': 'Order not found.'}, 
+        return Response({'detail': 'Order not found.'},
                         status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
-        return Response({'detail': f'An error occurred: {str(e)}'}, 
+        return Response({'detail': f'An error occurred: {str(e)}'},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def payment_summary(request):
+    """
+    API endpoint to get payment summary statistics.
+    """
+    try:
+        from django.db.models import Count, Sum
+
+        # Get payment statistics
+        pending_orders = Order.objects.filter(payment_status='PENDING')
+        down_payment_orders = Order.objects.filter(payment_status='DOWN_PAYMENT_PAID')
+        paid_orders = Order.objects.filter(payment_status='PAID')
+
+        summary = {
+            'pending_count': pending_orders.count(),
+            'pending_amount': pending_orders.aggregate(total=Sum('total_amount'))['total'] or 0,
+            'down_payment_count': down_payment_orders.count(),
+            'down_payment_amount': down_payment_orders.aggregate(total=Sum('down_payment_amount'))['total'] or 0,
+            'full_payment_count': paid_orders.count(),
+            'full_payment_amount': paid_orders.aggregate(total=Sum('total_amount'))['total'] or 0,
+            'total_revenue': paid_orders.aggregate(total=Sum('total_amount'))['total'] or 0
+        }
+
+        return Response(summary, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({'detail': f'An error occurred: {str(e)}'},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def approve_task(request, task_id):
+    """
+    API endpoint for admin to approve a completed task and create commission.
+    """
+    try:
+        task = Task.objects.get(id=task_id)
+
+        # Check if task is completed
+        if task.status != 'COMPLETED':
+            return Response({'detail': 'Task must be completed before it can be approved.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # Use business logic to approve task and create commission
+        commission = OrderManager.approve_task(task)
+
+        return Response({
+            'detail': 'Task approved successfully. Commission created.',
+            'task_id': task.id,
+            'task_status': task.status,
+            'commission_id': commission.id,
+            'commission_amount': str(commission.amount)
+        }, status=status.HTTP_200_OK)
+
+    except Task.DoesNotExist:
+        return Response({'detail': 'Task not found.'},
+                        status=status.HTTP_404_NOT_FOUND)
+    except ValueError as e:
+        return Response({'detail': str(e)},
+                        status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Response({'detail': f'An error occurred: {str(e)}'},
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -600,14 +712,13 @@ def complete_task(request, task_id):
                             status=status.HTTP_400_BAD_REQUEST)
         
         # Use the business logic to complete the task
-        commission = OrderManager.complete_task(task)
-        
+        completed_task = OrderManager.complete_task(task)
+
         return Response({
-            'detail': 'Task completed successfully.',
-            'task_id': task.id,
-            'task_status': task.status,
-            'commission_id': commission.id,
-            'commission_amount': str(commission.amount)
+            'detail': 'Task completed successfully. Waiting for admin approval to generate commission.',
+            'task_id': completed_task.id,
+            'task_status': completed_task.status,
+            'message': 'Commission will be created when admin approves this task.'
         }, status=status.HTTP_200_OK)
         
     except Task.DoesNotExist:
@@ -705,9 +816,13 @@ class TailorTaskDetailView(generics.RetrieveUpdateAPIView):
 class TailorCommissionListView(generics.ListAPIView):
     serializer_class = CommissionSerializer
     permission_classes = [IsAuthenticated]
-    
+
     def get_queryset(self):
-        return Commission.objects.filter(tailor__user=self.request.user)
+        # Only show commissions for approved tasks
+        return Commission.objects.filter(
+            tailor__user=self.request.user,
+            order__task__status='APPROVED'
+        )
 
 
 # Customer Views
@@ -759,3 +874,161 @@ def assign_order_view(request, order_id):
         'order': order,
         'tailors': tailors
     })
+
+
+# Report Generation Views
+@login_required
+def generate_tailor_report(request, tailor_id=None):
+    """Generate tailor performance report"""
+    try:
+        # Determine which tailor's report to generate
+        if request.user.is_staff:
+            # Admin can generate report for any tailor
+            if tailor_id:
+                tailor = get_object_or_404(Tailor, id=tailor_id)
+            else:
+                # If no tailor_id provided, show selection form
+                tailors = Tailor.objects.all()
+                return render(request, 'select_tailor_report.html', {'tailors': tailors})
+        else:
+            # Tailor can only generate their own report
+            try:
+                tailor = Tailor.objects.get(user=request.user)
+            except Tailor.DoesNotExist:
+                return HttpResponse("Access denied. You are not registered as a tailor.", status=403)
+
+        # Get date range parameters
+        date_from_str = request.GET.get('date_from')
+        date_to_str = request.GET.get('date_to')
+        period = request.GET.get('period', 'last_month')
+
+        # Parse date range
+        if date_from_str and date_to_str:
+            date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date()
+            date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date()
+        else:
+            # Use predefined periods
+            today = timezone.now().date()
+            if period == 'last_week':
+                date_from = today - timedelta(days=7)
+                date_to = today
+            elif period == 'last_month':
+                date_from = today - timedelta(days=30)
+                date_to = today
+            elif period == 'last_quarter':
+                date_from = today - timedelta(days=90)
+                date_to = today
+            elif period == 'ytd':
+                date_from = today.replace(month=1, day=1)
+                date_to = today
+            elif period == 'all_time':
+                date_from = tailor.user.date_joined.date()
+                date_to = today
+            else:
+                date_from = today - timedelta(days=30)
+                date_to = today
+
+        # Convert to datetime with timezone
+        date_from = timezone.make_aware(datetime.combine(date_from, datetime.min.time()))
+        date_to = timezone.make_aware(datetime.combine(date_to, datetime.max.time()))
+
+        # Generate report
+        report_generator = TailorReportGenerator(
+            tailor=tailor,
+            date_from=date_from,
+            date_to=date_to,
+            generated_by=request.user
+        )
+
+        pdf_data = report_generator.generate_report()
+        filename = report_generator.get_filename()
+
+        # Return PDF response
+        response = HttpResponse(pdf_data, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response['Content-Length'] = len(pdf_data)
+
+        return response
+
+    except Exception as e:
+        return HttpResponse(f"Error generating report: {str(e)}", status=500)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def tailor_report_api(request, tailor_id=None):
+    """API endpoint for generating tailor reports"""
+    try:
+        # Determine which tailor's report to generate
+        if request.user.is_staff:
+            if tailor_id:
+                tailor = get_object_or_404(Tailor, id=tailor_id)
+            else:
+                return Response({'error': 'Tailor ID required for admin users'}, status=400)
+        else:
+            try:
+                tailor = Tailor.objects.get(user=request.user)
+            except Tailor.DoesNotExist:
+                return Response({'error': 'Access denied. You are not registered as a tailor.'}, status=403)
+
+        # Get parameters
+        period = request.GET.get('period', 'last_month')
+        date_from_str = request.GET.get('date_from')
+        date_to_str = request.GET.get('date_to')
+
+        # Parse date range (same logic as above)
+        if date_from_str and date_to_str:
+            try:
+                date_from = datetime.strptime(date_from_str, '%Y-%m-%d').date()
+                date_to = datetime.strptime(date_to_str, '%Y-%m-%d').date()
+            except ValueError:
+                return Response({'error': 'Invalid date format. Use YYYY-MM-DD'}, status=400)
+        else:
+            today = timezone.now().date()
+            if period == 'last_week':
+                date_from = today - timedelta(days=7)
+                date_to = today
+            elif period == 'last_month':
+                date_from = today - timedelta(days=30)
+                date_to = today
+            elif period == 'last_quarter':
+                date_from = today - timedelta(days=90)
+                date_to = today
+            elif period == 'ytd':
+                date_from = today.replace(month=1, day=1)
+                date_to = today
+            elif period == 'all_time':
+                date_from = tailor.user.date_joined.date()
+                date_to = today
+            else:
+                date_from = today - timedelta(days=30)
+                date_to = today
+
+        # Convert to datetime with timezone
+        date_from = timezone.make_aware(datetime.combine(date_from, datetime.min.time()))
+        date_to = timezone.make_aware(datetime.combine(date_to, datetime.max.time()))
+
+        # Generate report
+        report_generator = TailorReportGenerator(
+            tailor=tailor,
+            date_from=date_from,
+            date_to=date_to,
+            generated_by=request.user
+        )
+
+        pdf_data = report_generator.generate_report()
+        filename = report_generator.get_filename()
+
+        # Return PDF as base64 for API consumption
+        import base64
+        pdf_base64 = base64.b64encode(pdf_data).decode('utf-8')
+
+        return Response({
+            'success': True,
+            'filename': filename,
+            'pdf_data': pdf_base64,
+            'content_type': 'application/pdf'
+        })
+
+    except Exception as e:
+        return Response({'error': f'Error generating report: {str(e)}'}, status=500)

@@ -54,7 +54,7 @@
                     </div>
                     <div class="ml-4">
                         <div class="text-sm font-medium">Total Revenue</div>
-                        <div class="text-2xl font-bold" id="totalRevenue">₱0</div>
+                        <div class="text-2xl font-bold" id="totalRevenue">₱0.00</div>
                     </div>
                 </div>
             </div>
@@ -205,7 +205,7 @@
             document.getElementById('totalOrders').textContent = totalOrders;
             document.getElementById('completedOrders').textContent = completedOrders;
             document.getElementById('pendingOrders').textContent = pendingOrders;
-            document.getElementById('totalRevenue').textContent = `₱${totalRevenue.toFixed(2)}`;
+            document.getElementById('totalRevenue').textContent = PricingManager.formatCurrency(totalRevenue);
             
             // Generate category and garment type summaries
             generateCategorySummary(orders);
@@ -239,7 +239,7 @@
                 <h3 class="font-semibold text-gray-800 mb-2">${category}</h3>
                 <div class="text-sm text-gray-600">
                     <div>Orders: ${stats.count}</div>
-                    <div>Total: ₱${stats.total.toFixed(2)}</div>
+                    <div>Total: ${PricingManager.formatCurrency(stats.total)}</div>
                 </div>
             `;
             categorySummaryDiv.appendChild(card);
@@ -269,7 +269,7 @@
                 <h3 class="font-semibold text-gray-800 mb-2">${garmentType}</h3>
                 <div class="text-sm text-gray-600">
                     <div>Items: ${stats.count}</div>
-                    <div>Total: ₱${stats.total.toFixed(2)}</div>
+                    <div>Total: ${PricingManager.formatCurrency(stats.total)}</div>
                 </div>
             `;
             garmentTypeSummaryDiv.appendChild(card);
@@ -328,7 +328,7 @@
                             ${order.status}
                         </span>
                     </td>
-                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">₱${parseFloat(order.total_amount || 0).toFixed(2)}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${PricingManager.formatCurrency(order.total_amount || 0)}</td>
                 `;
 
                 tableBody.appendChild(row);

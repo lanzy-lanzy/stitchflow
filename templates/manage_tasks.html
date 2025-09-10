@@ -238,13 +238,20 @@
                         <button class="text-blue-600 hover:text-blue-900 mr-2 edit-task" data-id="${task.id}" title="Edit">
                             <i class="fas fa-edit"></i>
                         </button>
-                        ${task.status === 'COMPLETED' ? 
+                        ${task.status === 'COMPLETED' ?
+                        `<button class="text-blue-600 hover:text-blue-900 mr-2 approve-task" data-task-id="${task.id}" title="Approve Task & Create Commission">
+                            <i class="fas fa-thumbs-up"></i>
+                        </button>
+                        <button class="text-green-600 hover:text-green-900 mr-2 process-payment" data-order-id="${task.order}" title="Process Payment">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </button>` :
+                        task.status === 'APPROVED' ?
                         `<button class="text-green-600 hover:text-green-900 mr-2 process-payment" data-order-id="${task.order}" title="Process Payment">
                             <i class="fas fa-money-bill-wave"></i>
                         </button>
                         <button class="text-purple-600 hover:text-purple-900 pay-commission" data-task-id="${task.id}" title="Pay Commission">
                             <i class="fas fa-coins"></i>
-                        </button>` : 
+                        </button>` :
                         `<button class="text-green-600 hover:text-green-900 complete-task" data-id="${task.id}" title="Complete">
                             <i class="fas fa-check"></i>
                         </button>`}
@@ -282,14 +289,21 @@
                 });
             });
             
-            // Add event listeners for payment processing and commission payment
+            // Add event listeners for task approval, payment processing and commission payment
+            document.querySelectorAll('.approve-task').forEach(button => {
+                button.addEventListener('click', function() {
+                    const taskId = this.getAttribute('data-task-id');
+                    approveTask(taskId);
+                });
+            });
+
             document.querySelectorAll('.process-payment').forEach(button => {
                 button.addEventListener('click', function() {
                     const orderId = this.getAttribute('data-order-id');
                     processCustomerPayment(orderId);
                 });
             });
-            
+
             document.querySelectorAll('.pay-commission').forEach(button => {
                 button.addEventListener('click', function() {
                     const taskId = this.getAttribute('data-task-id');
@@ -480,6 +494,39 @@
         }
     }
     
+    // Approve a completed task and create commission
+    function approveTask(taskId) {
+        if (confirm('Are you sure you want to approve this task? This will create a commission for the tailor.')) {
+            // Get token from session storage first, then local storage as fallback
+            let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+
+            // Approve task via the API endpoint
+            fetch(`/api/admin/tasks/${taskId}/approve/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                    ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
+                },
+                credentials: 'include' // Include cookies for session authentication
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to approve task: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert(`Task approved successfully! Commission of ₱${data.commission_amount} created for the tailor.`);
+                loadTaskData(); // Refresh the table
+            })
+            .catch(error => {
+                console.error('Error approving task:', error);
+                alert('Error approving task: ' + error.message);
+            });
+        }
+    }
+
     // Pay commission for a completed task
     function payCommission(taskId) {
         if (confirm('Are you sure you want to pay the commission for this task?')) {

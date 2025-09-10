@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}Select Tailor for Report - El Senior Dumingag{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-lg p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+            <i class="fas fa-file-pdf text-purple-600 mr-2"></i> Generate Tailor Report
+        </h2>
+    </div>
+    
+    <div class="mb-6">
+        <p class="text-gray-600">Select a tailor to generate their performance report. You can choose the time period and download the report as a PDF.</p>
+    </div>
+    
+    <!-- Tailor Selection -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for tailor in tailors %}
+        <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer tailor-card" 
+             data-tailor-id="{{ tailor.id }}" 
+             data-tailor-name="{{ tailor.user.get_full_name }}">
+            <div class="flex items-center mb-3">
+                <div class="bg-purple-100 rounded-full p-3 mr-3">
+                    <i class="fas fa-user-tie text-purple-600"></i>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-gray-800">{{ tailor.user.get_full_name }}</h3>
+                    <p class="text-sm text-gray-500">ID: T{{ tailor.id|stringformat:"04d" }}</p>
+                </div>
+            </div>
+            
+            <div class="text-sm text-gray-600 space-y-1">
+                <div><i class="fas fa-envelope w-4"></i> {{ tailor.user.email }}</div>
+                <div><i class="fas fa-calendar w-4"></i> Joined: {{ tailor.user.date_joined|date:"M d, Y" }}</div>
+            </div>
+            
+            <div class="mt-4">
+                <button class="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors generate-report-btn"
+                        data-tailor-id="{{ tailor.id }}">
+                    <i class="fas fa-file-pdf mr-2"></i> Generate Report
+                </button>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-span-full text-center py-8">
+            <i class="fas fa-users text-gray-400 text-4xl mb-4"></i>
+            <p class="text-gray-500">No tailors found.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Report Options Modal -->
+<div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-xl p-6 w-96 max-w-md mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">Generate Performance Report</h3>
+            <button onclick="closeReportModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="mb-4">
+            <p class="text-sm text-gray-600">Generating report for: <span id="selectedTailorName" class="font-semibold"></span></p>
+        </div>
+        
+        <form id="reportForm">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Report Period</label>
+                <select id="reportPeriod" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-200 focus:border-purple-500">
+                    <option value="last_week">Last Week</option>
+                    <option value="last_month" selected>Last Month</option>
+                    <option value="last_quarter">Last Quarter</option>
+                    <option value="ytd">Year to Date</option>
+                    <option value="all_time">All Time</option>
+                    <option value="custom">Custom Date Range</option>
+                </select>
+            </div>
+            
+            <div id="customDateRange" class="mb-4 hidden">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+                        <input type="date" id="dateFrom" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-200 focus:border-purple-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+                        <input type="date" id="dateTo" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-200 focus:border-purple-500">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="closeReportModal()" class="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                    Cancel
+                </button>
+                <button type="button" onclick="generateReport()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                    <i class="fas fa-file-pdf mr-2"></i> Generate PDF
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    let selectedTailorId = null;
+    
+    // Add click handlers to tailor cards
+    document.querySelectorAll('.generate-report-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            selectedTailorId = this.dataset.tailorId;
+            const tailorName = this.closest('.tailor-card').dataset.tailorName;
+            showReportModal(tailorName);
+        });
+    });
+    
+    function showReportModal(tailorName) {
+        document.getElementById('selectedTailorName').textContent = tailorName;
+        document.getElementById('reportModal').classList.remove('hidden');
+        
+        // Add event listener for period selection
+        document.getElementById('reportPeriod').addEventListener('change', function() {
+            const customRange = document.getElementById('customDateRange');
+            if (this.value === 'custom') {
+                customRange.classList.remove('hidden');
+                // Set default dates
+                const today = new Date();
+                const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+                document.getElementById('dateFrom').value = lastMonth.toISOString().split('T')[0];
+                document.getElementById('dateTo').value = today.toISOString().split('T')[0];
+            } else {
+                customRange.classList.add('hidden');
+            }
+        });
+    }
+    
+    function closeReportModal() {
+        document.getElementById('reportModal').classList.add('hidden');
+        selectedTailorId = null;
+    }
+    
+    function generateReport() {
+        if (!selectedTailorId) {
+            alert('Please select a tailor first.');
+            return;
+        }
+        
+        const period = document.getElementById('reportPeriod').value;
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        
+        // Validate custom date range
+        if (period === 'custom') {
+            if (!dateFrom || !dateTo) {
+                alert('Please select both from and to dates for custom range.');
+                return;
+            }
+            if (new Date(dateFrom) > new Date(dateTo)) {
+                alert('From date cannot be later than to date.');
+                return;
+            }
+        }
+        
+        // Show loading state
+        const generateBtn = document.querySelector('#reportModal button[onclick="generateReport()"]');
+        const originalText = generateBtn.innerHTML;
+        generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generating...';
+        generateBtn.disabled = true;
+        
+        // Build URL
+        let url = `/generate-report/${selectedTailorId}/`;
+        const params = new URLSearchParams();
+        
+        if (period === 'custom') {
+            params.append('date_from', dateFrom);
+            params.append('date_to', dateTo);
+        } else {
+            params.append('period', period);
+        }
+        
+        if (params.toString()) {
+            url += '?' + params.toString();
+        }
+        
+        // Create a temporary link to download the PDF
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Close modal and reset button
+        setTimeout(() => {
+            closeReportModal();
+            generateBtn.innerHTML = originalText;
+            generateBtn.disabled = false;
+        }, 1000);
+    }
+    
+    // Close modal when clicking outside
+    document.getElementById('reportModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeReportModal();
+        }
+    });
+</script>
+{% endblock %}

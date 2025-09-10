@@ -69,7 +69,7 @@
             </div>
             <div class="bg-gradient-to-r from-amber-50 to-amber-100 rounded-lg p-4 shadow">
                 <h4 class="text-md font-semibold text-amber-800 mb-2 flex items-center">
-                    <i class="fas fa-clock mr-2"></i> Pending Commissions
+                    <i class="fas fa-money-check-alt mr-2"></i> Ready for Payment
                 </h4>
                 <div class="text-2xl font-bold text-amber-700" id="pendingCommissions">₱0.00</div>
             </div>
@@ -112,9 +112,12 @@
                 <!-- Pending payments will be loaded here via API -->
                 <p class="text-gray-600">Loading pending payments...</p>
             </div>
-            <div class="mt-4">
-                <a href="{% url 'etailoring:manage_orders' %}?payment_status=PENDING" class="text-green-600 hover:text-green-800 font-medium flex items-center">
-                    View All Pending Payments <i class="fas fa-arrow-right ml-2 text-sm"></i>
+            <div class="mt-4 space-y-2">
+                <a href="{% url 'etailoring:manage_payments' %}" class="text-green-600 hover:text-green-800 font-medium flex items-center">
+                    <i class="fas fa-credit-card mr-2"></i> Manage Payments <i class="fas fa-arrow-right ml-2 text-sm"></i>
+                </a>
+                <a href="{% url 'etailoring:manage_orders' %}?payment_status=PENDING" class="text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                    <i class="fas fa-exclamation-circle mr-2"></i> View Pending Payments <i class="fas fa-arrow-right ml-2 text-sm"></i>
                 </a>
             </div>
         </div>
@@ -145,6 +148,10 @@
             <a href="{% url 'etailoring:manage_tailors' %}" class="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl p-4 text-center hover:from-green-600 hover:to-green-700 transition-all shadow-md hover:shadow-lg">
                 <i class="fas fa-user-tie text-2xl mb-2"></i>
                 <div class="font-medium">Manage Tailors</div>
+            </a>
+            <a href="{% url 'etailoring:manage_payments' %}" class="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl p-4 text-center hover:from-emerald-600 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg">
+                <i class="fas fa-credit-card text-2xl mb-2"></i>
+                <div class="font-medium">Manage Payments</div>
             </a>
         </div>
     </div>
@@ -204,7 +211,8 @@
                     <span class="px-2 py-1 text-xs rounded-full ${getStatusColor(order.status)}">${order.status}</span>
                 </div>
                 <p class="text-sm text-gray-600 mt-2">Customer: ${order.customer && order.customer.user ? order.customer.user.first_name + ' ' + order.customer.user.last_name : 'Unknown'}</p>
-                <p class="text-sm text-gray-600">Total: ₱${order.total_amount || '0.00'}</p>
+                <p class="text-sm text-gray-600">Total: ${PricingManager.formatCurrency(order.total_amount || 0)}</p>
+                <p class="text-sm text-gray-600">Down Payment: ${PricingManager.formatCurrency(PricingManager.calculateDownPayment(order.total_amount || 0))}</p>
                 <p class="text-xs text-gray-500 mt-2">Created: ${order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}</p>
             `;
             recentOrdersElement.appendChild(orderElement);
@@ -344,7 +352,8 @@
                     <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">PENDING</span>
                 </div>
                 <p class="text-sm text-gray-600 mt-2">Customer: ${order.customer && order.customer.user ? order.customer.user.first_name + ' ' + order.customer.user.last_name : 'Unknown'}</p>
-                <p class="text-sm text-gray-600">Total: ₱${order.total_amount || '0.00'}</p>
+                <p class="text-sm text-gray-600">Total: ${PricingManager.formatCurrency(order.total_amount || 0)}</p>
+                <p class="text-sm text-gray-600">Down Payment: ${PricingManager.formatCurrency(PricingManager.calculateDownPayment(order.total_amount || 0))}</p>
                 <p class="text-xs text-gray-500 mt-2">Created: ${order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}</p>
             `;
             pendingPaymentsElement.appendChild(orderElement);
@@ -377,16 +386,16 @@
         commissions.forEach(commission => {
             const amount = parseFloat(commission.amount) || 0;
             totalAmount += amount;
-            if (commission.status === 'PENDING') {
-                pendingAmount += amount;
+            if (commission.status === 'APPROVED') {
+                pendingAmount += amount;  // APPROVED commissions are ready for payment
             } else if (commission.status === 'PAID') {
                 paidAmount += amount;
             }
         });
         
-        document.getElementById('totalCommissions').textContent = '₱' + totalAmount.toFixed(2);
-        document.getElementById('pendingCommissions').textContent = '₱' + pendingAmount.toFixed(2);
-        document.getElementById('paidCommissions').textContent = '₱' + paidAmount.toFixed(2);
+        document.getElementById('totalCommissions').textContent = PricingManager.formatCurrency(totalAmount);
+        document.getElementById('pendingCommissions').textContent = PricingManager.formatCurrency(pendingAmount);
+        document.getElementById('paidCommissions').textContent = PricingManager.formatCurrency(paidAmount);
     })
     .catch(error => {
         console.error('Error loading commission summary:', error);
