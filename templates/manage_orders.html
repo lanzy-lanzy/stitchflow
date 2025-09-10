@@ -3,16 +3,16 @@
 {% block title %}Manage Orders - El Senior Dumingag{% endblock %}
 
 {% block content %}
-<div class="bg-white rounded-xl shadow-lg p-6">
+<div class="bg-primary-cream rounded-xl shadow-lg p-6 border border-primary-beige">
     <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-gray-800 flex items-center">
-            <i class="fas fa-file-invoice text-green-600 mr-2"></i> Manage Orders
+        <h2 class="text-2xl font-bold text-text-dark flex items-center">
+            <i class="fas fa-file-invoice text-text-medium mr-2"></i> Manage Orders
         </h2>
         <div class="flex space-x-2">
-            <button id="refreshBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center">
+            <button id="refreshBtn" class="bg-primary-beige text-text-dark px-4 py-2 rounded-lg hover:bg-primary-peach transition-colors flex items-center">
                 <i class="fas fa-sync-alt mr-2"></i>Refresh
             </button>
-            <a href="{% url 'etailoring:create_order' %}" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center">
+            <a href="{% url 'etailoring:create_order' %}" class="bg-primary-rose text-text-dark px-4 py-2 rounded-lg hover:bg-primary-peach transition-colors flex items-center">
                 <i class="fas fa-plus mr-2"></i>Create Order
             </a>
         </div>
@@ -22,8 +22,8 @@
     <div class="mb-6">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-                <label class="block text-gray-700 mb-2">Status</label>
-                <select id="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-200 focus:border-green-500">
+                <label class="block text-text-dark mb-2">Status</label>
+                <select id="statusFilter" class="w-full px-3 py-2 border border-primary-beige rounded-lg focus:ring-2 focus:ring-primary-rose focus:border-primary-rose bg-primary-cream text-text-dark">
                     <option value="">All Statuses</option>
                     <option value="PENDING">Pending</option>
                     <option value="ASSIGNED">Assigned</option>
@@ -33,19 +33,19 @@
                 </select>
             </div>
             <div>
-                <label class="block text-gray-700 mb-2">Customer</label>
-                <select id="customerFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-200 focus:border-green-500">
+                <label class="block text-text-dark mb-2">Customer</label>
+                <select id="customerFilter" class="w-full px-3 py-2 border border-primary-beige rounded-lg focus:ring-2 focus:ring-primary-rose focus:border-primary-rose bg-primary-cream text-text-dark">
                     <option value="">All Customers</option>
                     <!-- Customers will be loaded here -->
                 </select>
             </div>
             <div>
-                <label class="block text-gray-700 mb-2">Date From</label>
-                <input type="date" id="dateFromFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-200 focus:border-green-500">
+                <label class="block text-text-dark mb-2">Date From</label>
+                <input type="date" id="dateFromFilter" class="w-full px-3 py-2 border border-primary-beige rounded-lg focus:ring-2 focus:ring-primary-rose focus:border-primary-rose bg-primary-cream text-text-dark">
             </div>
             <div>
-                <label class="block text-gray-700 mb-2">Date To</label>
-                <input type="date" id="dateToFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-200 focus:border-green-500">
+                <label class="block text-text-dark mb-2">Date To</label>
+                <input type="date" id="dateToFilter" class="w-full px-3 py-2 border border-primary-beige rounded-lg focus:ring-2 focus:ring-primary-rose focus:border-primary-rose bg-primary-cream text-text-dark">
             </div>
         </div>
         <div class="mt-4">

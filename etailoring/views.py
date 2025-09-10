@@ -209,6 +209,14 @@ def manage_commissions_view(request):
     return render(request, 'manage_commissions.html')
 
 
+@login_required
+def order_summary_view(request):
+    # Only staff/admin users can view order summary
+    if not request.user.is_staff:
+        return redirect('etailoring:homepage')
+    return render(request, 'order_summary.html')
+
+
 def logout_page_view(request):
     logout(request)
     return redirect('etailoring:homepage')

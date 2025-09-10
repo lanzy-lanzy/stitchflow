@@ -3,20 +3,20 @@
 {% block title %}Login - El Senior Dumingag{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-cream to-primary-peach py-12 px-4 sm:px-6 lg:px-8">
   <div class="max-w-md w-full space-y-8">
-    <div class="bg-white rounded-3xl shadow-2xl p-8 transition-all duration-300 hover:shadow-2xl">
+    <div class="bg-primary-cream rounded-3xl shadow-2xl p-8 transition-all duration-300 hover:shadow-2xl border border-primary-beige">
       <div class="text-center">
-        <div class="mx-auto h-24 w-24 rounded-full bg-gradient-to-r from-green-500 to-blue-600 flex items-center justify-center mb-6">
-          <i class="fas fa-cut text-white text-3xl"></i>
+        <div class="mx-auto h-24 w-24 rounded-full bg-gradient-to-r from-primary-rose to-primary-peach flex items-center justify-center mb-6">
+          <i class="fas fa-cut text-text-dark text-3xl"></i>
         </div>
-        <h2 class="mt-2 text-4xl font-extrabold text-gray-900">
+        <h2 class="mt-2 text-4xl font-extrabold text-text-dark">
           El Senior Dumingag
         </h2>
-        <p class="mt-3 text-lg text-gray-600">
+        <p class="mt-3 text-lg text-text-medium">
           Premium Tailoring Services
         </p>
-        <p class="mt-2 text-sm text-gray-500">
+        <p class="mt-2 text-sm text-text-light">
           Sign in to your account
         </p>
       </div>
@@ -26,45 +26,45 @@
         <input type="hidden" id="next_url" name="next" value="{{ next_url }}">
         <div class="rounded-md space-y-5">
           <div>
-            <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+            <label for="username" class="block text-sm font-medium text-text-dark mb-2">Username</label>
             <div class="relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="fas fa-user text-gray-400"></i>
+                <i class="fas fa-user text-text-medium"></i>
               </div>
-              <input id="username" name="username" type="text" required class="pl-10 appearance-none relative block w-full px-4 py-4 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-base transition duration-200" placeholder="Enter your username">
+              <input id="username" name="username" type="text" required class="pl-10 appearance-none relative block w-full px-4 py-4 border border-primary-beige placeholder-text-light text-text-dark rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-rose focus:border-primary-rose focus:z-10 sm:text-base transition duration-200 bg-primary-cream" placeholder="Enter your username">
             </div>
           </div>
-          
+
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+            <label for="password" class="block text-sm font-medium text-text-dark mb-2">Password</label>
             <div class="relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="fas fa-lock text-gray-400"></i>
+                <i class="fas fa-lock text-text-medium"></i>
               </div>
-              <input id="password" name="password" type="password" required class="pl-10 appearance-none relative block w-full px-4 py-4 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-base transition duration-200" placeholder="Enter your password">
+              <input id="password" name="password" type="password" required class="pl-10 appearance-none relative block w-full px-4 py-4 border border-primary-beige placeholder-text-light text-text-dark rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-rose focus:border-primary-rose focus:z-10 sm:text-base transition duration-200 bg-primary-cream" placeholder="Enter your password">
             </div>
           </div>
         </div>
 
         <div class="flex items-center justify-between">
           <div class="flex items-center">
-            <input id="remember-me" name="remember-me" type="checkbox" class="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded">
-            <label for="remember-me" class="ml-3 block text-sm text-gray-700">
+            <input id="remember-me" name="remember-me" type="checkbox" class="h-5 w-5 text-primary-rose focus:ring-primary-rose border-primary-beige rounded">
+            <label for="remember-me" class="ml-3 block text-sm text-text-dark">
               Remember me
             </label>
           </div>
 
           <div class="text-sm">
-            <a href="#" class="font-medium text-green-600 hover:text-green-500 transition-colors">
+            <a href="#" class="font-medium text-text-medium hover:text-text-light transition-colors">
               Forgot your password?
             </a>
           </div>
         </div>
 
         <div>
-          <button type="submit" class="group relative w-full flex justify-center py-4 px-4 border border-transparent text-base font-bold rounded-xl text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 transform hover:-translate-y-1 shadow-lg">
+          <button type="submit" class="group relative w-full flex justify-center py-4 px-4 border border-transparent text-base font-bold rounded-xl text-text-dark bg-gradient-to-r from-primary-rose to-primary-peach hover:from-primary-peach hover:to-primary-beige focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-rose transition-all duration-300 transform hover:-translate-y-1 shadow-lg">
             <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-              <i class="fas fa-sign-in-alt text-green-300"></i>
+              <i class="fas fa-sign-in-alt text-text-medium"></i>
             </span>
             Sign in
           </button>

@@ -7,40 +7,61 @@
     <title>{% block title %}El Senior Dumingag{% endblock %}</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% load static %}{% static 'css/custom.css' %}">
     <!-- Alpine.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <!-- HTMX CDN -->
     <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tailwind Config for Custom Colors -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-rose': '#FFDCDC',
+                        'primary-cream': '#FFF2EB',
+                        'primary-peach': '#FFE8CD',
+                        'primary-beige': '#FFD6BA',
+                        'text-dark': '#8B4513',
+                        'text-medium': '#A0522D',
+                        'text-light': '#CD853F',
+                        'border-color': '#DEB887'
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="bg-gray-100">
+<body class="bg-primary-cream">
     <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: false }">
         <!-- Mobile sidebar overlay -->
         <div x-show="sidebarOpen" @click="sidebarOpen = false" class="fixed inset-0 z-20 bg-black bg-opacity-50 md:hidden"></div>
-        
+
         <!-- Sidebar -->
         {% if user.is_authenticated and user.is_staff %}
-        <div :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="bg-gradient-to-b from-green-800 to-green-900 text-white w-64 h-screen overflow-y-auto flex flex-col fixed inset-y-0 left-0 z-30 transform transition duration-300 ease-in-out md:translate-x-0 md:relative md:inset-auto shadow-2xl">
+        <div :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="bg-gradient-to-b from-primary-rose to-primary-peach text-text-dark w-64 h-screen overflow-y-auto flex flex-col fixed inset-y-0 left-0 z-30 transform transition duration-300 ease-in-out md:translate-x-0 md:relative md:inset-auto shadow-2xl">
             <div class="flex justify-between items-center px-4 py-4">
-                <div class="text-white text-xl font-bold flex items-center">
-                    <i class="fas fa-cut mr-2 text-green-300"></i>
-                    <a href="{% url 'etailoring:admin_dashboard' %}" class="hover:text-green-200 transition-colors">El Senior Dumingag</a>
+                <div class="text-text-dark text-xl font-bold flex items-center">
+                    <i class="fas fa-cut mr-2 text-text-medium"></i>
+                    <a href="{% url 'etailoring:admin_dashboard' %}" class="hover:text-text-light transition-colors">El Senior Dumingag</a>
                 </div>
-                <button @click="sidebarOpen = false" class="md:hidden text-white hover:text-green-300 focus:outline-none">
+                <button @click="sidebarOpen = false" class="md:hidden text-text-dark hover:text-text-light focus:outline-none">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="px-4 mb-4">
-                <div class="px-4 py-4 bg-green-900 bg-opacity-50 rounded-xl mx-2 backdrop-blur-sm border border-green-700 shadow-lg">
+                <div class="px-4 py-4 bg-primary-beige bg-opacity-50 rounded-xl mx-2 backdrop-blur-sm border border-primary-peach shadow-lg">
                     <div class="flex items-center">
-                        <div class="bg-gradient-to-br from-green-500 to-green-700 rounded-full p-3 mr-3 shadow-md">
-                            <i class="fas fa-user text-white"></i>
+                        <div class="bg-gradient-to-br from-primary-peach to-primary-beige rounded-full p-3 mr-3 shadow-md">
+                            <i class="fas fa-user text-text-dark"></i>
                         </div>
                         <div class="text-sm">
-                            <p class="font-semibold truncate">{{ user.first_name }} {{ user.last_name }}</p>
-                            <p class="text-green-300 text-xs mt-1 flex items-center">
-                                <i class="fas fa-crown text-yellow-400 mr-1"></i> Administrator
+                            <p class="font-semibold truncate text-text-dark">{{ user.first_name }} {{ user.last_name }}</p>
+                            <p class="text-text-medium text-xs mt-1 flex items-center">
+                                <i class="fas fa-crown text-yellow-600 mr-1"></i> Administrator
                             </p>
                         </div>
                     </div>
@@ -49,161 +70,161 @@
             
             <!-- Sidebar Content -->
             <nav class="px-2 flex-grow overflow-y-auto pb-24">
-                <a href="{% url 'etailoring:admin_dashboard' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-green-700 hover:shadow-md {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-gradient-to-r from-green-600 to-green-700 shadow-md{% endif %}">
+                <a href="{% url 'etailoring:admin_dashboard' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-primary-beige hover:shadow-md {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-gradient-to-r from-primary-beige to-primary-peach shadow-md{% endif %}">
                     <i class="fas fa-tachometer-alt mr-3 w-5 text-center"></i>
                     <span class="font-medium">Dashboard</span>
                 </a>
-                
-                <div class="px-4 py-3 text-green-200 text-xs font-bold uppercase tracking-wider mt-6 mb-2 flex items-center">
-                    <i class="fas fa-users mr-2 text-green-300"></i> Customer Management
+
+                <div class="px-4 py-3 text-text-medium text-xs font-bold uppercase tracking-wider mt-6 mb-2 flex items-center">
+                    <i class="fas fa-users mr-2 text-text-light"></i> Customer Management
                 </div>
-                <a href="{% url 'etailoring:create_customer' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-green-700 hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'create_customer' %}bg-green-700 shadow-inner{% endif %}">
+                <a href="{% url 'etailoring:create_customer' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-primary-beige hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'create_customer' %}bg-primary-beige shadow-inner{% endif %}">
                     <i class="fas fa-user-plus mr-3 w-5 text-center"></i>
                     <span>Create Customer</span>
                 </a>
-                <a href="{% url 'etailoring:create_order' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-green-700 hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'create_order' %}bg-green-700 shadow-inner{% endif %}">
+                <a href="{% url 'etailoring:create_order' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-primary-beige hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'create_order' %}bg-primary-beige shadow-inner{% endif %}">
                     <i class="fas fa-shopping-cart mr-3 w-5 text-center"></i>
                     <span>Create Order</span>
                 </a>
-                <a href="{% url 'etailoring:manage_customers' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-green-700 hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'manage_customers' %}bg-green-700 shadow-inner{% endif %}">
+                <a href="{% url 'etailoring:manage_customers' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-primary-beige hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'manage_customers' %}bg-primary-beige shadow-inner{% endif %}">
                     <i class="fas fa-users mr-3 w-5 text-center"></i>
                     <span>Manage Customers</span>
                 </a>
-                
-                <div class="px-4 py-3 text-green-200 text-xs font-bold uppercase tracking-wider mt-6 mb-2 flex items-center">
-                    <i class="fas fa-boxes mr-2 text-green-300"></i> Inventory Management
+
+                <div class="px-4 py-3 text-text-medium text-xs font-bold uppercase tracking-wider mt-6 mb-2 flex items-center">
+                    <i class="fas fa-boxes mr-2 text-text-light"></i> Inventory Management
                 </div>
-                <a href="{% url 'etailoring:inventory_management' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-green-700 hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'inventory_management' %}bg-green-700 shadow-inner{% endif %}">
+                <a href="{% url 'etailoring:inventory_management' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-primary-beige hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'inventory_management' %}bg-primary-beige shadow-inner{% endif %}">
                     <i class="fas fa-warehouse mr-3 w-5 text-center"></i>
                     <span>View Inventory</span>
                 </a>
-                <a href="{% url 'etailoring:manage_fabrics' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-green-700 hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'manage_fabrics' %}bg-green-700 shadow-inner{% endif %}">
+                <a href="{% url 'etailoring:manage_fabrics' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-primary-beige hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'manage_fabrics' %}bg-primary-beige shadow-inner{% endif %}">
                     <i class="fas fa-tshirt mr-3 w-5 text-center"></i>
                     <span>Manage Fabrics</span>
                 </a>
-                <a href="{% url 'etailoring:manage_accessories' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-green-700 hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'manage_accessories' %}bg-green-700 shadow-inner{% endif %}">
+                <a href="{% url 'etailoring:manage_accessories' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-primary-beige hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'manage_accessories' %}bg-primary-beige shadow-inner{% endif %}">
                     <i class="fas fa-puzzle-piece mr-3 w-5 text-center"></i>
                     <span>Manage Accessories</span>
                 </a>
-                
-                <div class="px-4 py-3 text-green-200 text-xs font-bold uppercase tracking-wider mt-6 mb-2 flex items-center">
-                    <i class="fas fa-user-tie mr-2 text-green-300"></i> Staff Management
+
+                <div class="px-4 py-3 text-text-medium text-xs font-bold uppercase tracking-wider mt-6 mb-2 flex items-center">
+                    <i class="fas fa-user-tie mr-2 text-text-light"></i> Staff Management
                 </div>
-                <a href="{% url 'etailoring:manage_tailors' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-green-700 hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'manage_tailors' %}bg-green-700 shadow-inner{% endif %}">
+                <a href="{% url 'etailoring:manage_tailors' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-primary-beige hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'manage_tailors' %}bg-primary-beige shadow-inner{% endif %}">
                     <i class="fas fa-users-cog mr-3 w-5 text-center"></i>
                     <span>Manage Tailors</span>
                 </a>
-                
-                <div class="px-4 py-3 text-green-200 text-xs font-bold uppercase tracking-wider mt-6 mb-2 flex items-center">
-                    <i class="fas fa-list mr-2 text-green-300"></i> Order Management
+
+                <div class="px-4 py-3 text-text-medium text-xs font-bold uppercase tracking-wider mt-6 mb-2 flex items-center">
+                    <i class="fas fa-list mr-2 text-text-light"></i> Order Management
                 </div>
-                <a href="{% url 'etailoring:manage_orders' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-green-700 hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'manage_orders' %}bg-green-700 shadow-inner{% endif %}">
+                <a href="{% url 'etailoring:manage_orders' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-primary-beige hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'manage_orders' %}bg-primary-beige shadow-inner{% endif %}">
                     <i class="fas fa-file-invoice mr-3 w-5 text-center"></i>
                     <span>View All Orders</span>
                 </a>
-                <a href="{% url 'etailoring:manage_tasks' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-green-700 hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'manage_tasks' %}bg-green-700 shadow-inner{% endif %}">
+                <a href="{% url 'etailoring:manage_tasks' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-primary-beige hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'manage_tasks' %}bg-primary-beige shadow-inner{% endif %}">
                     <i class="fas fa-tasks mr-3 w-5 text-center"></i>
                     <span>Manage Tasks</span>
                 </a>
-                <a href="{% url 'etailoring:manage_commissions' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-green-700 hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'manage_commissions' %}bg-green-700 shadow-inner{% endif %}">
+                <a href="{% url 'etailoring:manage_commissions' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-primary-beige hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'manage_commissions' %}bg-primary-beige shadow-inner{% endif %}">
                     <i class="fas fa-money-bill-wave mr-3 w-5 text-center"></i>
                     <span>Commissions</span>
                 </a>
-                
-                <div class="px-4 py-3 text-green-200 text-xs font-bold uppercase tracking-wider mt-6 mb-2 flex items-center">
-                    <i class="fas fa-cog mr-2 text-green-300"></i> System
+
+                <div class="px-4 py-3 text-text-medium text-xs font-bold uppercase tracking-wider mt-6 mb-2 flex items-center">
+                    <i class="fas fa-cog mr-2 text-text-light"></i> System
                 </div>
-                <a href="{% url 'etailoring:command_management' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-green-700 hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'command_management' %}bg-green-700 shadow-inner{% endif %}">
+                <a href="{% url 'etailoring:command_management' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-primary-beige hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'command_management' %}bg-primary-beige shadow-inner{% endif %}">
                     <i class="fas fa-terminal mr-3 w-5 text-center"></i>
                     <span>Command Management</span>
                 </a>
-                <a href="#" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-green-700 hover:shadow-md ml-4">
+                <a href="#" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-primary-beige hover:shadow-md ml-4">
                     <i class="fas fa-cogs mr-3 w-5 text-center"></i>
                     <span>Settings</span>
                 </a>
-                <a href="{% url 'etailoring:logout' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-red-600 hover:shadow-md ml-4 mt-4">
+                <a href="{% url 'etailoring:logout' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-red-400 hover:shadow-md ml-4 mt-4">
                     <i class="fas fa-sign-out-alt mr-3 w-5 text-center"></i>
                     <span>Logout</span>
                 </a>
             </nav>
             
             <!-- Sidebar Footer -->
-            <div class="mt-auto p-4 bg-gradient-to-r from-green-900 to-green-800 border-t border-green-700 sticky bottom-0 left-0 right-0">
-                <div class="text-xs text-green-300 text-center">
+            <div class="mt-auto p-4 bg-gradient-to-r from-primary-peach to-primary-beige border-t border-primary-beige sticky bottom-0 left-0 right-0">
+                <div class="text-xs text-text-dark text-center">
                     <p>El Senior Dumingag Admin</p>
                     <p class="mt-1">© 2025 All Rights Reserved</p>
                 </div>
             </div>
         </div>
         {% elif user.is_authenticated and user.userextension.role == 'TAILOR' %}
-        <div :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="bg-gradient-to-b from-green-800 to-green-900 text-white w-64 h-screen overflow-y-auto flex flex-col fixed inset-y-0 left-0 z-30 transform transition duration-300 ease-in-out md:translate-x-0 md:relative md:inset-auto shadow-xl">
+        <div :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="bg-gradient-to-b from-primary-rose to-primary-peach text-text-dark w-64 h-screen overflow-y-auto flex flex-col fixed inset-y-0 left-0 z-30 transform transition duration-300 ease-in-out md:translate-x-0 md:relative md:inset-auto shadow-xl">
             <div class="flex justify-between items-center px-4 py-4">
-                <div class="text-white text-xl font-bold flex items-center">
-                    <i class="fas fa-cut mr-2 text-green-300"></i>
-                    <a href="{% url 'etailoring:tailor_dashboard' %}" class="hover:text-green-200 transition-colors">El Senior Dumingag</a>
+                <div class="text-text-dark text-xl font-bold flex items-center">
+                    <i class="fas fa-cut mr-2 text-text-medium"></i>
+                    <a href="{% url 'etailoring:tailor_dashboard' %}" class="hover:text-text-light transition-colors">El Senior Dumingag</a>
                 </div>
-                <button @click="sidebarOpen = false" class="md:hidden text-white hover:text-green-300">
+                <button @click="sidebarOpen = false" class="md:hidden text-text-dark hover:text-text-light">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            
+
             <!-- Sidebar Content -->
             <nav class="px-4 flex-grow overflow-y-auto pb-24">
-                <a href="{% url 'etailoring:tailor_dashboard' %}" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-green-700 {% if request.resolver_match.url_name == 'tailor_dashboard' %}bg-green-700 shadow-inner{% endif %}">
+                <a href="{% url 'etailoring:tailor_dashboard' %}" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-primary-beige {% if request.resolver_match.url_name == 'tailor_dashboard' %}bg-primary-beige shadow-inner{% endif %}">
                     <i class="fas fa-tachometer-alt mr-3 w-5 text-center"></i>
                     <span class="font-medium">Dashboard</span>
                 </a>
-                
-                <div class="px-4 py-3 text-green-200 text-xs font-semibold uppercase tracking-wider mt-6 mb-2 flex items-center">
+
+                <div class="px-4 py-3 text-text-medium text-xs font-semibold uppercase tracking-wider mt-6 mb-2 flex items-center">
                     <i class="fas fa-tasks mr-2"></i> My Work
                 </div>
-                <a href="{% url 'etailoring:tailor_dashboard' %}#tasks" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-green-700 ml-4">
+                <a href="{% url 'etailoring:tailor_dashboard' %}#tasks" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-primary-beige ml-4">
                     <i class="fas fa-clipboard-list mr-3 w-5 text-center"></i>
                     <span>My Tasks</span>
                 </a>
-                <a href="{% url 'etailoring:tailor_dashboard' %}#commissions" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-green-700 ml-4">
+                <a href="{% url 'etailoring:tailor_dashboard' %}#commissions" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-primary-beige ml-4">
                     <i class="fas fa-money-bill-wave mr-3 w-5 text-center"></i>
                     <span>My Commissions</span>
                 </a>
-                
-                <div class="px-4 py-3 text-green-200 text-xs font-semibold uppercase tracking-wider mt-6 mb-2 flex items-center">
+
+                <div class="px-4 py-3 text-text-medium text-xs font-semibold uppercase tracking-wider mt-6 mb-2 flex items-center">
                     <i class="fas fa-chart-line mr-2"></i> Reports
                 </div>
-                <a href="{% url 'etailoring:tailor_dashboard' %}#completed" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-green-700 ml-4">
+                <a href="{% url 'etailoring:tailor_dashboard' %}#completed" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-primary-beige ml-4">
                     <i class="fas fa-check-circle mr-3 w-5 text-center"></i>
                     <span>Completed Tasks</span>
                 </a>
-                <a href="{% url 'etailoring:tailor_dashboard' %}#earnings" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-green-700 ml-4">
+                <a href="{% url 'etailoring:tailor_dashboard' %}#earnings" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-primary-beige ml-4">
                     <i class="fas fa-chart-bar mr-3 w-5 text-center"></i>
                     <span>Earnings Summary</span>
                 </a>
                 
-                <div class="px-4 py-3 text-green-200 text-xs font-semibold uppercase tracking-wider mt-6 mb-2 flex items-center">
+                <div class="px-4 py-3 text-text-medium text-xs font-semibold uppercase tracking-wider mt-6 mb-2 flex items-center">
                     <i class="fas fa-user-circle mr-2"></i> Account
                 </div>
-                <a href="#" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-green-700 ml-4">
+                <a href="#" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-primary-beige ml-4">
                     <i class="fas fa-user mr-3 w-5 text-center"></i>
                     <span>My Profile</span>
                 </a>
-                <a href="#" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-green-700 ml-4">
+                <a href="#" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-primary-beige ml-4">
                     <i class="fas fa-cog mr-3 w-5 text-center"></i>
                     <span>Settings</span>
                 </a>
-                <a href="{% url 'etailoring:logout' %}" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-green-700 ml-4">
+                <a href="{% url 'etailoring:logout' %}" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-primary-beige ml-4">
                     <i class="fas fa-sign-out-alt mr-3 w-5 text-center"></i>
                     <span>Logout</span>
                 </a>
             </nav>
-            
+
             <!-- Tailor Info Footer -->
-            <div class="mt-auto p-4 bg-green-900 bg-opacity-50 sticky bottom-0 left-0 right-0">
+            <div class="mt-auto p-4 bg-primary-beige bg-opacity-50 sticky bottom-0 left-0 right-0">
                 <div class="flex items-center">
-                    <div class="bg-green-700 rounded-full p-2 mr-3">
-                        <i class="fas fa-user-tie"></i>
+                    <div class="bg-primary-peach rounded-full p-2 mr-3">
+                        <i class="fas fa-user-tie text-text-dark"></i>
                     </div>
                     <div class="text-sm">
-                        <p class="font-medium truncate">{{ user.first_name }} {{ user.last_name }}</p>
-                        <p class="text-green-300 text-xs">Professional Tailor</p>
+                        <p class="font-medium truncate text-text-dark">{{ user.first_name }} {{ user.last_name }}</p>
+                        <p class="text-text-medium text-xs">Professional Tailor</p>
                     </div>
                 </div>
             </div>
@@ -214,11 +235,11 @@
         <div class="flex-1 overflow-auto flex flex-col relative">
             <!-- Mobile header with toggle button -->
             {% if user.is_authenticated %}
-            <div class="md:hidden bg-white shadow-sm p-4 flex items-center">
-                <button @click="sidebarOpen = true" class="text-gray-600 mr-4">
+            <div class="md:hidden bg-primary-cream shadow-sm p-4 flex items-center">
+                <button @click="sidebarOpen = true" class="text-text-dark mr-4">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
-                <div class="text-lg font-semibold text-gray-800">
+                <div class="text-lg font-semibold text-text-dark">
                     {% if user.is_staff %}
                         Admin Dashboard
                     {% elif user.userextension.role == 'TAILOR' %}

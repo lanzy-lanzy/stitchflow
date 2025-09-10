@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Summary - El Senior Dumingag{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="bg-white rounded-xl shadow-lg p-8">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+            <i class="fas fa-chart-bar text-blue-600 mr-2"></i> Order Summary & Reports
+        </h1>
+        
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-shopping-cart text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <div class="text-sm font-medium">Total Orders</div>
+                        <div class="text-2xl font-bold" id="totalOrders">0</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-6 text-white">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-check-circle text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <div class="text-sm font-medium">Completed Orders</div>
+                        <div class="text-2xl font-bold" id="completedOrders">0</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-lg p-6 text-white">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-clock text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <div class="text-sm font-medium">Pending Orders</div>
+                        <div class="text-2xl font-bold" id="pendingOrders">0</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg p-6 text-white">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-dollar-sign text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <div class="text-sm font-medium">Total Revenue</div>
+                        <div class="text-2xl font-bold" id="totalRevenue">₱0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Category Summary -->
+        <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-xl border border-gray-200 shadow-sm mb-8">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-tags text-green-600 mr-2"></i> Orders by Category
+            </h2>
+            <div id="categorySummary" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Category cards will be populated dynamically -->
+            </div>
+        </div>
+        
+        <!-- Garment Type Summary -->
+        <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-xl border border-gray-200 shadow-sm mb-8">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-tshirt text-purple-600 mr-2"></i> Orders by Garment Type
+            </h2>
+            <div id="garmentTypeSummary" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Garment type cards will be populated dynamically -->
+            </div>
+        </div>
+        
+        <!-- Detailed Orders Table -->
+        <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-xl border border-gray-200 shadow-sm">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-list text-blue-600 mr-2"></i> Detailed Orders
+            </h2>
+            
+            <!-- Filter Controls -->
+            <div class="mb-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label for="categoryFilter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Category</label>
+                    <select id="categoryFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Categories</option>
+                        <option value="SCHOOL_UNIFORM">School Uniforms</option>
+                        <option value="TEACHERS_UNIFORM">Teachers' Uniforms</option>
+                        <option value="OFFICE_ATTIRE">Office Attire</option>
+                        <option value="CASUAL_WEAR">Casual Wear</option>
+                        <option value="SPECIAL_ORDER">Special Orders</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="garmentFilter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Garment Type</label>
+                    <select id="garmentFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Garment Types</option>
+                        <option value="BLOUSE">Blouse</option>
+                        <option value="PANTS">Pants</option>
+                        <option value="SKIRT">Skirt</option>
+                        <option value="DRESS">Dress</option>
+                        <option value="JACKET">Jacket</option>
+                        <option value="OTHERS">Others</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="statusFilter" class="block text-sm font-medium text-gray-700 mb-1">Filter by Status</label>
+                    <select id="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Statuses</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="ASSIGNED">Assigned</option>
+                        <option value="IN_PROGRESS">In Progress</option>
+                        <option value="COMPLETED">Completed</option>
+                        <option value="CANCELLED">Cancelled</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button id="refreshBtn" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <i class="fas fa-sync-alt mr-2"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Orders Table -->
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Garment Type</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Orders will be populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Back Button -->
+        <div class="mt-6 flex justify-end">
+            <a href="{% url 'etailoring:admin_dashboard' %}" class="px-6 py-2 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    
+    // Load data when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSummaryData();
+        loadOrdersData();
+        
+        // Add event listeners for filters
+        document.getElementById('categoryFilter').addEventListener('change', loadOrdersData);
+        document.getElementById('garmentFilter').addEventListener('change', loadOrdersData);
+        document.getElementById('statusFilter').addEventListener('change', loadOrdersData);
+        document.getElementById('refreshBtn').addEventListener('click', function() {
+            loadSummaryData();
+            loadOrdersData();
+        });
+    });
+    
+    // Load summary statistics
+    function loadSummaryData() {
+        fetch('/api/admin/orders/', {
+            headers: {
+                'Authorization': 'Token ' + (localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || ''),
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+            const orders = data.results || data;
+            
+            // Calculate summary statistics
+            const totalOrders = orders.length;
+            const completedOrders = orders.filter(order => order.status === 'COMPLETED').length;
+            const pendingOrders = orders.filter(order => order.status === 'PENDING').length;
+            const totalRevenue = orders
+                .filter(order => order.status === 'COMPLETED')
+                .reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
+            
+            // Update summary cards
+            document.getElementById('totalOrders').textContent = totalOrders;
+            document.getElementById('completedOrders').textContent = completedOrders;
+            document.getElementById('pendingOrders').textContent = pendingOrders;
+            document.getElementById('totalRevenue').textContent = `₱${totalRevenue.toFixed(2)}`;
+            
+            // Generate category and garment type summaries
+            generateCategorySummary(orders);
+            generateGarmentTypeSummary(orders);
+        })
+        .catch(error => {
+            console.error('Error loading summary data:', error);
+        });
+    }
+    
+    // Generate category summary
+    function generateCategorySummary(orders) {
+        const categoryStats = {};
+        
+        orders.forEach(order => {
+            const category = order.category_display || 'Unknown';
+            if (!categoryStats[category]) {
+                categoryStats[category] = { count: 0, total: 0 };
+            }
+            categoryStats[category].count += order.quantity || 1;
+            categoryStats[category].total += parseFloat(order.total_amount || 0);
+        });
+        
+        const categorySummaryDiv = document.getElementById('categorySummary');
+        categorySummaryDiv.innerHTML = '';
+        
+        Object.entries(categoryStats).forEach(([category, stats]) => {
+            const card = document.createElement('div');
+            card.className = 'bg-white p-4 rounded-lg border border-gray-200 shadow-sm';
+            card.innerHTML = `
+                <h3 class="font-semibold text-gray-800 mb-2">${category}</h3>
+                <div class="text-sm text-gray-600">
+                    <div>Orders: ${stats.count}</div>
+                    <div>Total: ₱${stats.total.toFixed(2)}</div>
+                </div>
+            `;
+            categorySummaryDiv.appendChild(card);
+        });
+    }
+    
+    // Generate garment type summary
+    function generateGarmentTypeSummary(orders) {
+        const garmentStats = {};
+        
+        orders.forEach(order => {
+            const garmentType = order.garment_type_display || 'Unknown';
+            if (!garmentStats[garmentType]) {
+                garmentStats[garmentType] = { count: 0, total: 0 };
+            }
+            garmentStats[garmentType].count += order.quantity || 1;
+            garmentStats[garmentType].total += parseFloat(order.total_amount || 0);
+        });
+        
+        const garmentTypeSummaryDiv = document.getElementById('garmentTypeSummary');
+        garmentTypeSummaryDiv.innerHTML = '';
+        
+        Object.entries(garmentStats).forEach(([garmentType, stats]) => {
+            const card = document.createElement('div');
+            card.className = 'bg-white p-4 rounded-lg border border-gray-200 shadow-sm';
+            card.innerHTML = `
+                <h3 class="font-semibold text-gray-800 mb-2">${garmentType}</h3>
+                <div class="text-sm text-gray-600">
+                    <div>Items: ${stats.count}</div>
+                    <div>Total: ₱${stats.total.toFixed(2)}</div>
+                </div>
+            `;
+            garmentTypeSummaryDiv.appendChild(card);
+        });
+    }
+
+    // Load orders data for the table
+    function loadOrdersData() {
+        const categoryFilter = document.getElementById('categoryFilter').value;
+        const garmentFilter = document.getElementById('garmentFilter').value;
+        const statusFilter = document.getElementById('statusFilter').value;
+
+        fetch('/api/admin/orders/', {
+            headers: {
+                'Authorization': 'Token ' + (localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || ''),
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+            let orders = data.results || data;
+
+            // Apply filters
+            if (categoryFilter) {
+                orders = orders.filter(order => order.category === categoryFilter);
+            }
+            if (garmentFilter) {
+                orders = orders.filter(order => order.garment_type === garmentFilter);
+            }
+            if (statusFilter) {
+                orders = orders.filter(order => order.status === statusFilter);
+            }
+
+            // Populate orders table
+            const tableBody = document.getElementById('ordersTableBody');
+            tableBody.innerHTML = '';
+
+            orders.forEach(order => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+
+                const statusClass = getStatusClass(order.status);
+                const dueDate = order.due_date ? new Date(order.due_date).toLocaleDateString() : 'N/A';
+
+                row.innerHTML = `
+                    <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#${order.id}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${order.customer?.full_name || 'N/A'}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${order.category_display || 'N/A'}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${order.garment_type_display || 'N/A'}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${order.quantity || 1}</td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${dueDate}</td>
+                    <td class="px-4 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
+                            ${order.status}
+                        </span>
+                    </td>
+                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">₱${parseFloat(order.total_amount || 0).toFixed(2)}</td>
+                `;
+
+                tableBody.appendChild(row);
+            });
+
+            if (orders.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                        No orders found matching the selected filters.
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading orders data:', error);
+            const tableBody = document.getElementById('ordersTableBody');
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="px-4 py-8 text-center text-red-500">
+                        Error loading orders data. Please refresh the page.
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    // Get CSS class for order status
+    function getStatusClass(status) {
+        switch(status) {
+            case 'PENDING':
+                return 'bg-yellow-100 text-yellow-800';
+            case 'ASSIGNED':
+                return 'bg-blue-100 text-blue-800';
+            case 'IN_PROGRESS':
+                return 'bg-purple-100 text-purple-800';
+            case 'COMPLETED':
+                return 'bg-green-100 text-green-800';
+            case 'CANCELLED':
+                return 'bg-red-100 text-red-800';
+            default:
+                return 'bg-gray-100 text-gray-800';
+        }
+    }
+</script>
+{% endblock %}

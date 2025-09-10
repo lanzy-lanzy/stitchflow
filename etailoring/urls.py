@@ -24,6 +24,7 @@ urlpatterns = [
     path('manage-orders/', views.manage_orders_view, name='manage_orders'),
     path('manage-tasks/', views.manage_tasks_view, name='manage_tasks'),
     path('manage-commissions/', views.manage_commissions_view, name='manage_commissions'),
+    path('order-summary/', views.order_summary_view, name='order_summary'),
     path('logout/', views.logout_page_view, name='logout'),
     path('assign-order/<int:order_id>/', views.assign_order_view, name='assign_order'),
     

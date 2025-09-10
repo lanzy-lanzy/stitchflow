@@ -5,14 +5,14 @@
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <!-- Hero Section -->
-    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-green-700 to-blue-800 my-8 shadow-2xl">
-        <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary-rose to-primary-peach my-8 shadow-2xl">
+        <div class="absolute inset-0 bg-black opacity-10"></div>
         <div class="relative max-w-7xl mx-auto py-20 px-4 sm:py-28 sm:px-6 lg:px-8">
             <div class="text-center">
                 <!-- Scissors Icon Above Heading -->
                 <div class="flex justify-center mb-6">
-                    <div class="bg-white/20 backdrop-blur-sm rounded-full p-5 shadow-lg transform hover:rotate-45 transition-transform duration-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <div class="bg-primary-cream/30 backdrop-blur-sm rounded-full p-5 shadow-lg transform hover:rotate-45 transition-transform duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-text-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="6" cy="6" r="3"></circle>
                             <circle cx="6" cy="18" r="3"></circle>
                             <line x1="20" y1="4" x2="8.12" y2="15.88"></line>
@@ -21,17 +21,17 @@
                         </svg>
                     </div>
                 </div>
-                <h1 class="text-5xl font-extrabold tracking-tight text-white sm:text-6xl lg:text-7xl">
+                <h1 class="text-5xl font-extrabold tracking-tight text-text-dark sm:text-6xl lg:text-7xl">
                     El Senior Dumingag
                 </h1>
-                <p class="mt-8 max-w-2xl mx-auto text-2xl text-green-100 sm:max-w-3xl">
+                <p class="mt-8 max-w-2xl mx-auto text-2xl text-text-medium sm:max-w-3xl">
                     Premium tailoring services in the heart of Zamboanga del Sur, combining traditional craftsmanship with organic fabrics
                 </p>
                 <div class="mt-12 flex justify-center gap-6">
-                    <a href="{% url 'etailoring:login' %}" class="inline-flex items-center px-8 py-4 border border-transparent text-xl font-bold rounded-xl text-green-700 bg-white hover:bg-green-50 transition-all duration-300 transform hover:-translate-y-1 shadow-lg">
+                    <a href="{% url 'etailoring:login' %}" class="inline-flex items-center px-8 py-4 border border-transparent text-xl font-bold rounded-xl text-text-dark bg-primary-cream hover:bg-primary-peach transition-all duration-300 transform hover:-translate-y-1 shadow-lg">
                         Get Started
                     </a>
-                    <a href="#features" class="inline-flex items-center px-8 py-4 border-2 border-white text-xl font-bold rounded-xl text-white bg-transparent hover:bg-white hover:text-green-700 transition-all duration-300 shadow-lg">
+                    <a href="#features" class="inline-flex items-center px-8 py-4 border-2 border-primary-cream text-xl font-bold rounded-xl text-text-dark bg-transparent hover:bg-primary-cream hover:text-text-dark transition-all duration-300 shadow-lg">
                         Our Services
                     </a>
                 </div>
@@ -41,19 +41,19 @@
 
     <!-- Stats Section -->
     <div class="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <div class="bg-white overflow-hidden shadow-xl rounded-2xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100">
+        <div class="bg-primary-cream overflow-hidden shadow-xl rounded-2xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-primary-beige">
             <div class="px-6 py-8 sm:p-10">
                 <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-gradient-to-br from-green-100 to-green-200 rounded-xl p-4 shadow-md">
-                        <svg class="h-10 w-10 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div class="flex-shrink-0 bg-gradient-to-br from-primary-peach to-primary-beige rounded-xl p-4 shadow-md">
+                        <svg class="h-10 w-10 text-text-dark" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                     </div>
                     <div class="ml-6 w-0 flex-1">
                         <dl>
-                            <dt class="text-lg font-medium text-gray-500 truncate">Satisfied Clients</dt>
+                            <dt class="text-lg font-medium text-text-medium truncate">Satisfied Clients</dt>
                             <dd class="flex items-baseline">
-                                <div class="text-4xl font-extrabold text-gray-900">{{ customers_count|default:"0" }}</div>
+                                <div class="text-4xl font-extrabold text-text-dark">{{ customers_count|default:"0" }}</div>
                             </dd>
                         </dl>
                     </div>
@@ -61,19 +61,19 @@
             </div>
         </div>
 
-        <div class="bg-white overflow-hidden shadow-xl rounded-2xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100">
+        <div class="bg-primary-cream overflow-hidden shadow-xl rounded-2xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-primary-beige">
             <div class="px-6 py-8 sm:p-10">
                 <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-gradient-to-br from-green-100 to-green-200 rounded-xl p-4 shadow-md">
-                        <svg class="h-10 w-10 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div class="flex-shrink-0 bg-gradient-to-br from-primary-peach to-primary-beige rounded-xl p-4 shadow-md">
+                        <svg class="h-10 w-10 text-text-dark" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                     </div>
                     <div class="ml-6 w-0 flex-1">
                         <dl>
-                            <dt class="text-lg font-medium text-gray-500 truncate">Master Tailors</dt>
+                            <dt class="text-lg font-medium text-text-medium truncate">Master Tailors</dt>
                             <dd class="flex items-baseline">
-                                <div class="text-4xl font-extrabold text-gray-900">{{ tailors_count|default:"0" }}</div>
+                                <div class="text-4xl font-extrabold text-text-dark">{{ tailors_count|default:"0" }}</div>
                             </dd>
                         </dl>
                     </div>
@@ -81,19 +81,19 @@
             </div>
         </div>
 
-        <div class="bg-white overflow-hidden shadow-xl rounded-2xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100">
+        <div class="bg-primary-cream overflow-hidden shadow-xl rounded-2xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-primary-beige">
             <div class="px-6 py-8 sm:p-10">
                 <div class="flex items-center">
-                    <div class="flex-shrink-0 bg-gradient-to-br from-green-100 to-green-200 rounded-xl p-4 shadow-md">
-                        <svg class="h-10 w-10 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div class="flex-shrink-0 bg-gradient-to-br from-primary-peach to-primary-beige rounded-xl p-4 shadow-md">
+                        <svg class="h-10 w-10 text-text-dark" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
                     </div>
                     <div class="ml-6 w-0 flex-1">
                         <dl>
-                            <dt class="text-lg font-medium text-gray-500 truncate">Orders Completed</dt>
+                            <dt class="text-lg font-medium text-text-medium truncate">Orders Completed</dt>
                             <dd class="flex items-baseline">
-                                <div class="text-4xl font-extrabold text-gray-900">{{ completed_orders_count|default:"0" }}</div>
+                                <div class="text-4xl font-extrabold text-text-dark">{{ completed_orders_count|default:"0" }}</div>
                             </dd>
                         </dl>
                     </div>

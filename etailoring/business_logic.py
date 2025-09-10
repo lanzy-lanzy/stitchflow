@@ -4,33 +4,93 @@ from django.utils import timezone
 from .models import Commission, Task, Order
 
 
+# Static pricing configuration for garment types
+GARMENT_PRICES = {
+    'BLOUSE': Decimal('550.00'),
+    'PANTS': Decimal('650.00'),
+    'SKIRT': Decimal('500.00'),
+    'DRESS': Decimal('800.00'),
+    'JACKET': Decimal('750.00'),
+    'OTHERS': Decimal('600.00'),
+}
+
+
+class PricingManager:
+    @staticmethod
+    def get_garment_price(garment_type):
+        """
+        Get the fixed price for a garment type.
+        """
+        return GARMENT_PRICES.get(garment_type, GARMENT_PRICES['OTHERS'])
+
+    @staticmethod
+    def calculate_order_total(garment_type, quantity=1):
+        """
+        Calculate total order amount based on garment type and quantity.
+        """
+        base_price = PricingManager.get_garment_price(garment_type)
+        return base_price * quantity
+
+    @staticmethod
+    def calculate_down_payment(total_amount):
+        """
+        Calculate 50% down payment of total amount.
+        """
+        return total_amount * Decimal('0.5')
+
+
 class OrderManager:
+    @staticmethod
+    def create_order_with_pricing(order_data):
+        """
+        Create an order with static pricing and automatic inventory deduction.
+        """
+        # Calculate total amount using static pricing
+        garment_type = order_data.get('garment_type', 'OTHERS')
+        quantity = order_data.get('quantity', 1)
+        total_amount = PricingManager.calculate_order_total(garment_type, quantity)
+
+        # Update order data with calculated amounts
+        order_data['total_amount'] = total_amount
+        order_data['down_payment_amount'] = PricingManager.calculate_down_payment(total_amount)
+        order_data['remaining_balance'] = total_amount - order_data['down_payment_amount']
+
+        return order_data
+
+    @staticmethod
+    def process_order_creation(order):
+        """
+        Process order creation including inventory deduction.
+        """
+        # Check inventory first
+        has_inventory, message = InventoryManager.check_inventory_for_garment(order)
+        if not has_inventory:
+            raise ValidationError(message)
+
+        # Deduct inventory immediately upon order creation
+        InventoryManager.deduct_inventory_for_garment(order)
+
+        return order
+
     @staticmethod
     def assign_order_to_tailor(order, tailor):
         """
-        Assign an order to a tailor, deduct inventory, and create a task.
+        Assign an order to a tailor and create a task.
+        Note: Inventory is now deducted during order creation, not assignment.
         """
-        # Check inventory first
-        has_inventory, message = InventoryManager.check_inventory(order)
-        if not has_inventory:
-            raise ValidationError(message)
-        
-        # Deduct inventory
-        InventoryManager.deduct_inventory(order)
-        
         # Update order status
         order.status = 'ASSIGNED'
         order.save()
-        
+
         # Create task
         task = Task.objects.create(
             order=order,
             tailor=tailor
         )
-        
+
         # Create commission
         CommissionManager.create_commission(task)
-        
+
         return task
     
     @staticmethod
@@ -97,33 +157,76 @@ class CommissionManager:
 
 
 class InventoryManager:
+    # Garment-based inventory requirements
+    GARMENT_INVENTORY_REQUIREMENTS = {
+        'BLOUSE': {'fabric_units': 2, 'accessories_units': 1},
+        'PANTS': {'fabric_units': 3, 'accessories_units': 1},
+        'SKIRT': {'fabric_units': 2, 'accessories_units': 1},
+        'DRESS': {'fabric_units': 4, 'accessories_units': 2},
+        'JACKET': {'fabric_units': 3, 'accessories_units': 2},
+        'OTHERS': {'fabric_units': 2, 'accessories_units': 1},
+    }
+
+    @staticmethod
+    def get_inventory_requirements(garment_type):
+        """
+        Get inventory requirements for a specific garment type.
+        """
+        return InventoryManager.GARMENT_INVENTORY_REQUIREMENTS.get(
+            garment_type,
+            InventoryManager.GARMENT_INVENTORY_REQUIREMENTS['OTHERS']
+        )
+
+    @staticmethod
+    def check_inventory_for_garment(order):
+        """
+        Check if there's sufficient inventory for an order based on garment type.
+        Returns (has_inventory: bool, message: str)
+        """
+        requirements = InventoryManager.get_inventory_requirements(order.garment_type)
+        fabric_needed = requirements['fabric_units'] * order.quantity
+        accessories_needed = requirements['accessories_units'] * order.quantity
+
+        # Check fabric
+        if order.fabric.quantity < fabric_needed:
+            return False, f"Insufficient fabric: {order.fabric.name}. Need {fabric_needed} units, have {order.fabric.quantity}"
+
+        # Check accessories
+        for accessory in order.accessories.all():
+            if accessory.quantity < accessories_needed:
+                return False, f"Insufficient accessory: {accessory.name}. Need {accessories_needed} units, have {accessory.quantity}"
+
+        return True, "Sufficient inventory"
+
+    @staticmethod
+    def deduct_inventory_for_garment(order):
+        """
+        Deduct inventory for an order based on garment type.
+        """
+        requirements = InventoryManager.get_inventory_requirements(order.garment_type)
+        fabric_needed = requirements['fabric_units'] * order.quantity
+        accessories_needed = requirements['accessories_units'] * order.quantity
+
+        # Deduct fabric
+        order.fabric.quantity -= fabric_needed
+        order.fabric.save()
+
+        # Deduct accessories
+        for accessory in order.accessories.all():
+            accessory.quantity -= accessories_needed
+            accessory.save()
+
+    # Legacy methods for backward compatibility
     @staticmethod
     def check_inventory(order):
         """
-        Check if there's sufficient inventory for an order.
-        Returns (has_inventory: bool, message: str)
+        Legacy method - redirects to new garment-based checking.
         """
-        # Check fabric
-        if order.fabric.quantity < 1:  # Assuming 1 unit per order
-            return False, f"Insufficient fabric: {order.fabric.name}"
-        
-        # Check accessories
-        for accessory in order.accessories.all():
-            if accessory.quantity < 1:  # Assuming 1 unit per accessory per order
-                return False, f"Insufficient accessory: {accessory.name}"
-        
-        return True, "Sufficient inventory"
-    
+        return InventoryManager.check_inventory_for_garment(order)
+
     @staticmethod
     def deduct_inventory(order):
         """
-        Deduct inventory for an order.
+        Legacy method - redirects to new garment-based deduction.
         """
-        # Deduct fabric (assuming 1 meter/yard per order)
-        order.fabric.quantity -= 1
-        order.fabric.save()
-        
-        # Deduct accessories (assuming 1 unit per accessory per order)
-        for accessory in order.accessories.all():
-            accessory.quantity -= 1
-            accessory.save()
+        return InventoryManager.deduct_inventory_for_garment(order)

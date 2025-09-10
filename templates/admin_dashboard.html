@@ -12,41 +12,41 @@
     </div>
     
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-6 text-center shadow-md hover:shadow-lg transition-shadow">
-            <div class="text-4xl font-bold text-green-700 mb-2">{{ customers_count }}</div>
-            <div class="text-gray-700 font-medium">Customers</div>
+        <div class="bg-gradient-to-r from-primary-cream to-primary-peach rounded-xl p-6 text-center shadow-md hover:shadow-lg transition-shadow">
+            <div class="text-4xl font-bold text-text-dark mb-2">{{ customers_count }}</div>
+            <div class="text-text-medium font-medium">Customers</div>
+        </div>
+
+        <div class="bg-gradient-to-r from-primary-peach to-primary-beige rounded-xl p-6 text-center shadow-md hover:shadow-lg transition-shadow">
+            <div class="text-4xl font-bold text-text-dark mb-2">{{ tailors_count }}</div>
+            <div class="text-text-medium font-medium">Tailors</div>
         </div>
         
-        <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6 text-center shadow-md hover:shadow-lg transition-shadow">
-            <div class="text-4xl font-bold text-blue-700 mb-2">{{ tailors_count }}</div>
-            <div class="text-gray-700 font-medium">Tailors</div>
+        <div class="bg-gradient-to-r from-primary-rose to-primary-peach rounded-xl p-6 text-center shadow-md hover:shadow-lg transition-shadow">
+            <div class="text-4xl font-bold text-text-dark mb-2">{{ orders_count }}</div>
+            <div class="text-text-medium font-medium">Orders</div>
         </div>
-        
-        <div class="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-6 text-center shadow-md hover:shadow-lg transition-shadow">
-            <div class="text-4xl font-bold text-purple-700 mb-2">{{ orders_count }}</div>
-            <div class="text-gray-700 font-medium">Orders</div>
-        </div>
-        
-        <div class="bg-gradient-to-r from-amber-50 to-amber-100 rounded-xl p-6 text-center shadow-md hover:shadow-lg transition-shadow">
-            <div class="text-4xl font-bold text-amber-700 mb-2">{{ tasks_count }}</div>
-            <div class="text-gray-700 font-medium">Tasks</div>
+
+        <div class="bg-gradient-to-r from-primary-beige to-primary-cream rounded-xl p-6 text-center shadow-md hover:shadow-lg transition-shadow">
+            <div class="text-4xl font-bold text-text-dark mb-2">{{ tasks_count }}</div>
+            <div class="text-text-medium font-medium">Tasks</div>
         </div>
     </div>
-    
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-md">
-            <h3 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
-                <i class="fas fa-shopping-cart text-green-600 mr-2"></i> Recent Orders
+        <div class="bg-primary-cream border border-primary-beige rounded-xl p-6 shadow-md">
+            <h3 class="text-xl font-semibold mb-4 text-text-dark flex items-center">
+                <i class="fas fa-shopping-cart text-text-medium mr-2"></i> Recent Orders
             </h3>
             <div id="recentOrders" class="space-y-4">
                 <!-- Orders will be loaded here via API -->
-                <p class="text-gray-600">Loading recent orders...</p>
+                <p class="text-text-medium">Loading recent orders...</p>
             </div>
         </div>
-        
-        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-md">
-            <h3 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
-                <i class="fas fa-tasks text-blue-600 mr-2"></i> Pending Tasks
+
+        <div class="bg-primary-cream border border-primary-beige rounded-xl p-6 shadow-md">
+            <h3 class="text-xl font-semibold mb-4 text-text-dark flex items-center">
+                <i class="fas fa-tasks text-text-medium mr-2"></i> Pending Tasks
             </h3>
             <div id="pendingTasks" class="space-y-4">
                 <!-- Tasks will be loaded here via API -->
@@ -125,7 +125,7 @@
         <h3 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
             <i class="fas fa-bolt text-indigo-600 mr-2"></i> Quick Actions
         </h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
             <a href="{% url 'etailoring:create_customer' %}" class="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl p-4 text-center hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg">
                 <i class="fas fa-user-plus text-2xl mb-2"></i>
                 <div class="font-medium">Create Customer</div>
@@ -133,6 +133,10 @@
             <a href="{% url 'etailoring:create_order' %}" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl p-4 text-center hover:from-blue-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg">
                 <i class="fas fa-shopping-cart text-2xl mb-2"></i>
                 <div class="font-medium">Create Order</div>
+            </a>
+            <a href="{% url 'etailoring:order_summary' %}" class="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl p-4 text-center hover:from-orange-600 hover:to-orange-700 transition-all shadow-md hover:shadow-lg">
+                <i class="fas fa-chart-bar text-2xl mb-2"></i>
+                <div class="font-medium">Order Summary</div>
             </a>
             <a href="{% url 'etailoring:inventory_management' %}" class="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl p-4 text-center hover:from-purple-600 hover:to-purple-700 transition-all shadow-md hover:shadow-lg">
                 <i class="fas fa-boxes text-2xl mb-2"></i>

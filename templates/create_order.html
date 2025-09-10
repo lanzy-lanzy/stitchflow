@@ -20,28 +20,115 @@
                     <i class="fas fa-info-circle text-blue-600 mr-2"></i> Order Details
                 </h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Customer Selection/Creation Section -->
+                    <div class="md:col-span-2">
+                        <div class="bg-white border border-gray-200 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-4">
+                                <label class="block text-sm font-medium text-gray-700">Customer *</label>
+                                <div class="flex bg-gray-100 rounded-lg p-1">
+                                    <button type="button" id="existingCustomerTab"
+                                        class="px-3 py-1 text-sm font-medium rounded-md bg-white text-gray-900 shadow-sm">
+                                        Select Existing
+                                    </button>
+                                    <button type="button" id="newCustomerTab"
+                                        class="px-3 py-1 text-sm font-medium rounded-md text-gray-500 hover:text-gray-900">
+                                        Create New
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Existing Customer Selection -->
+                            <div id="existingCustomerSection">
+                                <select id="customer" name="customer" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    <option value="">Select a customer</option>
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+
+                            <!-- New Customer Creation Form -->
+                            <div id="newCustomerSection" class="hidden">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="new_first_name" class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                                        <input type="text" id="new_first_name" name="new_first_name"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    </div>
+                                    <div>
+                                        <label for="new_last_name" class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                                        <input type="text" id="new_last_name" name="new_last_name"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    </div>
+                                    <div>
+                                        <label for="new_email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                        <input type="email" id="new_email" name="new_email"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    </div>
+                                    <div>
+                                        <label for="new_phone_number" class="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                                        <input type="tel" id="new_phone_number" name="new_phone_number"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label for="new_address" class="block text-sm font-medium text-gray-700 mb-1">Address *</label>
+                                        <textarea id="new_address" name="new_address" rows="2"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div>
-                        <label for="customer" class="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
-                        <select id="customer" name="customer" required
+                        <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                        <select id="category" name="category" required
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-                            <option value="">Select a customer</option>
-                            <!-- Options will be populated dynamically -->
+                            <option value="">Select a category</option>
+                            <option value="SCHOOL_UNIFORM">School Uniforms</option>
+                            <option value="TEACHERS_UNIFORM">Teachers' Uniforms</option>
+                            <option value="OFFICE_ATTIRE">Office Attire</option>
+                            <option value="CASUAL_WEAR">Casual Wear</option>
+                            <option value="SPECIAL_ORDER">Special Orders</option>
                         </select>
                     </div>
                     <div>
-                        <label for="fabric" class="block text-sm font-medium text-gray-700 mb-1">Fabric *</label>
-                        <select id="fabric" name="fabric" required
+                        <label for="garment_type" class="block text-sm font-medium text-gray-700 mb-1">Garment Type *</label>
+                        <select id="garment_type" name="garment_type" required
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-                            <option value="">Select a fabric</option>
-                            <!-- Options will be populated dynamically -->
+                            <option value="">Select a garment type</option>
+                            <option value="BLOUSE">Blouse</option>
+                            <option value="PANTS">Pants</option>
+                            <option value="SKIRT">Skirt</option>
+                            <option value="DRESS">Dress</option>
+                            <option value="JACKET">Jacket</option>
+                            <option value="OTHERS">Others</option>
                         </select>
                     </div>
                     <div>
-                        <label for="accessories" class="block text-sm font-medium text-gray-700 mb-1">Accessories</label>
-                        <select id="accessories" name="accessories" multiple
+                        <label for="quantity" class="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
+                        <input type="number" id="quantity" name="quantity" min="1" value="1" required
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-                            <!-- Options will be populated dynamically -->
-                        </select>
+                    </div>
+                    <div>
+                        <label for="fabric_type" class="block text-sm font-medium text-gray-700 mb-1">Fabric Type/Details</label>
+                        <input type="text" id="fabric_type" name="fabric_type" placeholder="e.g., Cotton blend, Polyester"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <div class="mt-1 text-sm text-gray-500">Specify fabric preferences. Actual fabric will be selected from available inventory.</div>
+                    </div>
+                    <div>
+                        <label for="accessories_preference" class="block text-sm font-medium text-gray-700 mb-1">Accessories Preference</label>
+                        <input type="text" id="accessories_preference" name="accessories_preference" placeholder="e.g., Buttons, Zippers, Lace trim"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                        <div class="mt-1 text-sm text-gray-500">Specify accessory preferences. Actual accessories will be selected from available inventory.</div>
+                    </div>
+                    <div>
+                        <label for="color_design_preference" class="block text-sm font-medium text-gray-700 mb-1">Color/Design Preference</label>
+                        <textarea id="color_design_preference" name="color_design_preference" rows="2" placeholder="Describe preferred colors, patterns, or design details"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+                    </div>
+                    <div>
+                        <label for="due_date" class="block text-sm font-medium text-gray-700 mb-1">Due Date *</label>
+                        <input type="date" id="due_date" name="due_date" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                     </div>
                     <div>
                         <label for="tailor" class="block text-sm font-medium text-gray-700 mb-1">Assign to Tailor (Optional)</label>
@@ -52,22 +139,315 @@
                         </select>
                         <div class="mt-1 text-sm text-gray-500">If selected, the order will be assigned to this tailor immediately after creation.</div>
                     </div>
-                    <div>
-                        <label for="total_amount" class="block text-sm font-medium text-gray-700 mb-1">Total Amount (₱) *</label>
-                        <input type="number" id="total_amount" name="total_amount" step="0.01" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" readonly>
-                        <div class="mt-1 text-sm text-gray-500">This amount is automatically calculated based on selected fabric and accessories.</div>
+                    <!-- Pricing Information -->
+                    <div class="md:col-span-2">
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h3 class="text-md font-medium text-blue-800 mb-3">Pricing Information</h3>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Garment Price</label>
+                                    <div id="garment_price_display" class="text-lg font-semibold text-green-600">₱0.00</div>
+                                    <div class="text-xs text-gray-500">Fixed price per garment</div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Total Amount</label>
+                                    <div id="total_amount_display" class="text-lg font-semibold text-blue-600">₱0.00</div>
+                                    <div class="text-xs text-gray-500">Price × Quantity</div>
+                                    <input type="hidden" id="total_amount" name="total_amount" required>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Down Payment Required (50%)</label>
+                                    <div id="down_payment_display" class="text-lg font-semibold text-red-600">₱0.00</div>
+                                    <div class="text-xs text-gray-500">Must be paid before processing</div>
+                                </div>
+                            </div>
+
+                            <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                                <div class="flex items-center">
+                                    <svg class="w-4 h-4 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-sm text-yellow-800">
+                                        <strong>Payment Policy:</strong> A 50% down payment is required before the order can be processed.
+                                        The remaining balance will be due upon completion.
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                                <div class="flex items-center">
+                                    <svg class="w-4 h-4 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="text-sm text-blue-800">
+                                        <strong>New Pricing Model:</strong> Prices are now fixed per garment type.
+                                        Fabrics and accessories will be automatically selected from available inventory based on your preferences.
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Customer Measurements -->
+            <!-- Detailed Measurements -->
             <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-xl border border-gray-200 shadow-sm">
                 <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <i class="fas fa-ruler-vertical text-purple-600 mr-2"></i> Customer Measurements
+                    <i class="fas fa-ruler-vertical text-purple-600 mr-2"></i> Detailed Measurements
                 </h2>
-                <div id="measurementsDisplay" class="text-gray-600">
-                    <p>Select a customer to view their measurements</p>
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r-lg">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-700">
+                                <strong>Note:</strong> Measurement fields will appear based on the selected garment type. All measurements are in inches.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Basic Measurements Display -->
+                <div id="customerMeasurementsDisplay" class="mb-6">
+                    <h3 class="text-md font-medium text-gray-700 mb-3">Customer's Basic Measurements</h3>
+                    <div id="basicMeasurements" class="text-gray-600">
+                        <p>Select a customer to view their basic measurements</p>
+                    </div>
+                </div>
+
+                <!-- Dynamic Measurement Fields -->
+                <div id="measurementFields">
+                    <h3 class="text-md font-medium text-gray-700 mb-3">Specific Measurements for This Order</h3>
+                    <p class="text-gray-500 mb-4">Select a garment type to see relevant measurement fields</p>
+
+                    <!-- Blouse/Shirt/Top Measurements -->
+                    <div id="blouseMeasurements" class="measurement-section hidden">
+                        <h4 class="text-sm font-semibold text-gray-600 mb-3">Blouse/Top Measurements</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label for="neck_circumference" class="block text-sm font-medium text-gray-700 mb-1">Neck Circumference</label>
+                                <input type="number" id="neck_circumference" name="neck_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="shoulder_width" class="block text-sm font-medium text-gray-700 mb-1">Shoulder Width</label>
+                                <input type="number" id="shoulder_width" name="shoulder_width" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="chest_bust_circumference" class="block text-sm font-medium text-gray-700 mb-1">Chest/Bust Circumference</label>
+                                <input type="number" id="chest_bust_circumference" name="chest_bust_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="upper_bust_circumference" class="block text-sm font-medium text-gray-700 mb-1">Upper Bust Circumference</label>
+                                <input type="number" id="upper_bust_circumference" name="upper_bust_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="under_bust_circumference" class="block text-sm font-medium text-gray-700 mb-1">Under Bust Circumference</label>
+                                <input type="number" id="under_bust_circumference" name="under_bust_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="waist_circumference" class="block text-sm font-medium text-gray-700 mb-1">Waist Circumference</label>
+                                <input type="number" id="waist_circumference" name="waist_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="armhole_circumference" class="block text-sm font-medium text-gray-700 mb-1">Armhole Circumference</label>
+                                <input type="number" id="armhole_circumference" name="armhole_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="sleeve_length" class="block text-sm font-medium text-gray-700 mb-1">Sleeve Length</label>
+                                <select id="sleeve_length" name="sleeve_length"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    <option value="">Select sleeve length</option>
+                                    <option value="SHORT">Short</option>
+                                    <option value="THREE_QUARTER">3/4</option>
+                                    <option value="LONG">Long</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="bicep_circumference" class="block text-sm font-medium text-gray-700 mb-1">Bicep Circumference</label>
+                                <input type="number" id="bicep_circumference" name="bicep_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="wrist_circumference" class="block text-sm font-medium text-gray-700 mb-1">Wrist Circumference</label>
+                                <input type="number" id="wrist_circumference" name="wrist_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="back_length_nape_to_waist" class="block text-sm font-medium text-gray-700 mb-1">Back Length (Nape to Waist)</label>
+                                <input type="number" id="back_length_nape_to_waist" name="back_length_nape_to_waist" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="blouse_length_shoulder_to_hem" class="block text-sm font-medium text-gray-700 mb-1">Blouse Length (Shoulder to Hem)</label>
+                                <input type="number" id="blouse_length_shoulder_to_hem" name="blouse_length_shoulder_to_hem" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pants/Trousers Measurements -->
+                    <div id="pantsMeasurements" class="measurement-section hidden">
+                        <h4 class="text-sm font-semibold text-gray-600 mb-3">Pants/Trousers Measurements</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label for="waist_circumference_pants" class="block text-sm font-medium text-gray-700 mb-1">Waist Circumference</label>
+                                <input type="number" id="waist_circumference_pants" name="waist_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="high_hip_circumference" class="block text-sm font-medium text-gray-700 mb-1">High Hip Circumference</label>
+                                <input type="number" id="high_hip_circumference" name="high_hip_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="full_hip_circumference" class="block text-sm font-medium text-gray-700 mb-1">Full Hip Circumference</label>
+                                <input type="number" id="full_hip_circumference" name="full_hip_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="thigh_circumference" class="block text-sm font-medium text-gray-700 mb-1">Thigh Circumference</label>
+                                <input type="number" id="thigh_circumference" name="thigh_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="knee_circumference" class="block text-sm font-medium text-gray-700 mb-1">Knee Circumference</label>
+                                <input type="number" id="knee_circumference" name="knee_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="calf_circumference" class="block text-sm font-medium text-gray-700 mb-1">Calf Circumference</label>
+                                <input type="number" id="calf_circumference" name="calf_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="ankle_circumference" class="block text-sm font-medium text-gray-700 mb-1">Ankle Circumference</label>
+                                <input type="number" id="ankle_circumference" name="ankle_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="inseam_crotch_to_ankle" class="block text-sm font-medium text-gray-700 mb-1">Inseam (Crotch to Ankle)</label>
+                                <input type="number" id="inseam_crotch_to_ankle" name="inseam_crotch_to_ankle" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="outseam_waist_to_ankle" class="block text-sm font-medium text-gray-700 mb-1">Outseam (Waist to Ankle)</label>
+                                <input type="number" id="outseam_waist_to_ankle" name="outseam_waist_to_ankle" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="front_rise" class="block text-sm font-medium text-gray-700 mb-1">Front Rise</label>
+                                <input type="number" id="front_rise" name="front_rise" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="back_rise" class="block text-sm font-medium text-gray-700 mb-1">Back Rise</label>
+                                <input type="number" id="back_rise" name="back_rise" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Skirt/Dress Measurements -->
+                    <div id="skirtDressMeasurements" class="measurement-section hidden">
+                        <h4 class="text-sm font-semibold text-gray-600 mb-3">Skirt/Dress Measurements</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label for="waist_circumference_skirt" class="block text-sm font-medium text-gray-700 mb-1">Waist Circumference</label>
+                                <input type="number" id="waist_circumference_skirt" name="waist_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="high_hip_circumference_skirt" class="block text-sm font-medium text-gray-700 mb-1">High Hip Circumference</label>
+                                <input type="number" id="high_hip_circumference_skirt" name="high_hip_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="full_hip_circumference_skirt" class="block text-sm font-medium text-gray-700 mb-1">Full Hip Circumference</label>
+                                <input type="number" id="full_hip_circumference_skirt" name="full_hip_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="skirt_dress_length" class="block text-sm font-medium text-gray-700 mb-1">Skirt/Dress Length</label>
+                                <input type="number" id="skirt_dress_length" name="skirt_dress_length" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="hem_circumference" class="block text-sm font-medium text-gray-700 mb-1">Hem Circumference (optional)</label>
+                                <input type="number" id="hem_circumference" name="hem_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Jacket/Coat Measurements -->
+                    <div id="jacketMeasurements" class="measurement-section hidden">
+                        <h4 class="text-sm font-semibold text-gray-600 mb-3">Jacket/Coat Measurements</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label for="neck_circumference_jacket" class="block text-sm font-medium text-gray-700 mb-1">Neck Circumference</label>
+                                <input type="number" id="neck_circumference_jacket" name="neck_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="shoulder_width_jacket" class="block text-sm font-medium text-gray-700 mb-1">Shoulder Width</label>
+                                <input type="number" id="shoulder_width_jacket" name="shoulder_width" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="chest_bust_circumference_jacket" class="block text-sm font-medium text-gray-700 mb-1">Chest/Bust Circumference</label>
+                                <input type="number" id="chest_bust_circumference_jacket" name="chest_bust_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="waist_circumference_jacket" class="block text-sm font-medium text-gray-700 mb-1">Waist Circumference</label>
+                                <input type="number" id="waist_circumference_jacket" name="waist_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="full_hip_circumference_jacket" class="block text-sm font-medium text-gray-700 mb-1">Hip Circumference</label>
+                                <input type="number" id="full_hip_circumference_jacket" name="full_hip_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="sleeve_length_jacket" class="block text-sm font-medium text-gray-700 mb-1">Sleeve Length</label>
+                                <select id="sleeve_length_jacket" name="sleeve_length"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    <option value="">Select sleeve length</option>
+                                    <option value="SHORT">Short</option>
+                                    <option value="THREE_QUARTER">3/4</option>
+                                    <option value="LONG">Long</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="bicep_circumference_jacket" class="block text-sm font-medium text-gray-700 mb-1">Bicep Circumference</label>
+                                <input type="number" id="bicep_circumference_jacket" name="bicep_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="wrist_circumference_jacket" class="block text-sm font-medium text-gray-700 mb-1">Wrist Circumference</label>
+                                <input type="number" id="wrist_circumference_jacket" name="wrist_circumference" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                            <div>
+                                <label for="jacket_length_shoulder_to_hem" class="block text-sm font-medium text-gray-700 mb-1">Jacket Length (Shoulder to Hem)</label>
+                                <input type="number" id="jacket_length_shoulder_to_hem" name="jacket_length_shoulder_to_hem" step="0.1"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -95,13 +475,28 @@
         sessionStorage.setItem('csrfToken', csrfToken);
     }
     
-    // Load customers, fabrics, and accessories when page loads
+    // Load customers and tailors when page loads
     document.addEventListener('DOMContentLoaded', function() {
         loadCustomers();
-        loadFabrics();
-        loadAccessories();
         loadTailors(); // Load tailors for assignment
-        
+
+        // Set default due date (7 days from now)
+        const today = new Date();
+        const defaultDueDate = new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000));
+        document.getElementById('due_date').value = defaultDueDate.toISOString().split('T')[0];
+
+        // Set minimum due date to today
+        document.getElementById('due_date').min = today.toISOString().split('T')[0];
+
+        // Initialize customer section tabs
+        initializeCustomerTabs();
+
+        // Add phone number validation for new customer
+        addNewCustomerValidation();
+
+        // Initialize pricing display
+        updatePricingDisplay();
+
         // Check if we're creating an order for a specific customer
         const customerId = localStorage.getItem('lastCreatedCustomerId');
         if (customerId) {
@@ -116,63 +511,118 @@
     document.getElementById('customer').addEventListener('change', function() {
         // Clear error styling
         this.classList.remove('border-red-500');
-        
+
         const customerId = this.value;
         if (customerId) {
             loadCustomerMeasurements(customerId);
         } else {
-            document.getElementById('measurementsDisplay').innerHTML = '<p>Select a customer to view their measurements</p>';
+            const basicMeasurementsEl = document.getElementById('basicMeasurements');
+            if (basicMeasurementsEl) {
+                basicMeasurementsEl.innerHTML = '<p>Select a customer to view their basic measurements</p>';
+            }
         }
     });
-    
-    // Handle fabric selection to update total amount
-    document.getElementById('fabric').addEventListener('change', function() {
+
+    // Handle garment type selection to show relevant measurement fields
+    document.getElementById('garment_type').addEventListener('change', function() {
         // Clear error styling
         this.classList.remove('border-red-500');
-        
-        updateTotalAmount();
+
+        const garmentType = this.value;
+        showMeasurementFields(garmentType);
     });
-    
-    // Handle accessories selection to update total amount
-    document.getElementById('accessories').addEventListener('change', function() {
+
+    // Handle garment type change to update pricing
+    document.getElementById('garment_type').addEventListener('change', function() {
         // Clear error styling
         this.classList.remove('border-red-500');
-        
-        updateTotalAmount();
+
+        updatePricingDisplay();
+    });
+
+    // Handle quantity change to update total amount
+    document.getElementById('quantity').addEventListener('change', function() {
+        // Clear error styling
+        this.classList.remove('border-red-500');
+
+        updatePricingDisplay();
     });
     
     // Handle form submission
-    document.getElementById('orderForm').addEventListener('submit', function(e) {
+    document.getElementById('orderForm').addEventListener('submit', async function(e) {
         e.preventDefault();
-        
-        // Validate form fields
-        const customer = document.getElementById('customer').value;
-        const fabric = document.getElementById('fabric').value;
+
+        // Check if we're creating a new customer or using existing
+        const isNewCustomer = !document.getElementById('newCustomerSection').classList.contains('hidden');
+        let customerId = null;
+
+        if (isNewCustomer) {
+            // Create new customer first
+            const newCustomer = await createNewCustomer();
+            if (!newCustomer) {
+                return; // Error creating customer, stop here
+            }
+            customerId = newCustomer.id;
+        } else {
+            // Use existing customer
+            customerId = document.getElementById('customer').value;
+            if (!customerId) {
+                showStatusMessage('Please select a customer', 'error');
+                return;
+            }
+        }
+
+        // Validate other form fields
+        const category = document.getElementById('category').value;
+        const garmentType = document.getElementById('garment_type').value;
+        const quantity = document.getElementById('quantity').value;
+        const dueDate = document.getElementById('due_date').value;
         const totalAmount = document.getElementById('total_amount').value;
-        
-        // Validate required fields
-        if (!customer) {
-            showStatusMessage('Please select a customer', 'error');
+
+        if (!category) {
+            showStatusMessage('Please select a category', 'error');
             return;
         }
-        
-        if (!fabric) {
-            showStatusMessage('Please select a fabric', 'error');
+
+        if (!garmentType) {
+            showStatusMessage('Please select a garment type', 'error');
             return;
         }
-        
+
+        if (!quantity || quantity <= 0) {
+            showStatusMessage('Quantity must be greater than zero', 'error');
+            return;
+        }
+
+
+
+        if (!dueDate) {
+            showStatusMessage('Please select a due date', 'error');
+            return;
+        }
+
+        // Total amount is automatically calculated, just ensure it's valid
         if (!totalAmount || totalAmount <= 0) {
-            showStatusMessage('Total amount must be greater than zero', 'error');
+            showStatusMessage('Please select a garment type and quantity to calculate pricing', 'error');
             return;
         }
-        
+
+        // Collect measurement data based on garment type
+        const measurementData = collectMeasurementData(garmentType);
+
         // Collect form data
         const orderData = {
-            customer_id: customer,
-            fabric_id: fabric,
-            accessories_ids: Array.from(document.getElementById('accessories').selectedOptions).map(option => option.value),
+            customer_id: customerId,
+            category: category,
+            garment_type: garmentType,
+            quantity: parseInt(quantity),
+            fabric_type: document.getElementById('fabric_type').value,
+            accessories_preference: document.getElementById('accessories_preference').value,
+            color_design_preference: document.getElementById('color_design_preference').value,
+            due_date: dueDate,
             total_amount: totalAmount,
-            status: 'PENDING'
+            status: 'PENDING',
+            ...measurementData
         };
         
         // Debug log
@@ -254,7 +704,10 @@
         .then(order => {
             // Reset the form
             document.getElementById('orderForm').reset();
-            document.getElementById('measurementsDisplay').innerHTML = '<p>Select a customer to view their measurements</p>';
+            const basicMeasurementsEl = document.getElementById('basicMeasurements');
+            if (basicMeasurementsEl) {
+                basicMeasurementsEl.innerHTML = '<p>Select a customer to view their basic measurements</p>';
+            }
             
             // Redirect to admin dashboard after a short delay
             setTimeout(() => {
@@ -304,17 +757,9 @@
                         document.getElementById('customer').classList.add('border-red-500');
                     }
                     
-                    // Check for fabric_id errors
-                    if (error.message.includes('fabric_id')) {
-                        errorMessage = 'Please select a fabric';
-                        document.getElementById('fabric').classList.add('border-red-500');
-                    }
-                    
-                    // Check for many-to-many errors with accessories
-                    if (error.message.includes('many-to-many') || error.message.includes('accessories')) {
-                        errorMessage = 'Error with accessories selection. Please try again.';
-                        document.getElementById('accessories').classList.add('border-red-500');
-                        console.error('Many-to-many error details:', error.message);
+                    // Check for inventory errors
+                    if (error.message.includes('Insufficient')) {
+                        errorMessage = error.message;
                     }
                 }
             }
@@ -335,7 +780,337 @@
             window.location.href = '{% url "etailoring:admin_dashboard" %}';
         }
     });
-    
+
+    // Show/hide measurement fields based on garment type
+    function showMeasurementFields(garmentType) {
+        // Hide all measurement sections
+        const measurementSections = document.querySelectorAll('.measurement-section');
+        measurementSections.forEach(section => {
+            section.classList.add('hidden');
+        });
+
+        // Show relevant measurement sections based on garment type
+        switch(garmentType) {
+            case 'BLOUSE':
+                document.getElementById('blouseMeasurements').classList.remove('hidden');
+                break;
+            case 'PANTS':
+                document.getElementById('pantsMeasurements').classList.remove('hidden');
+                break;
+            case 'SKIRT':
+                document.getElementById('skirtDressMeasurements').classList.remove('hidden');
+                break;
+            case 'DRESS':
+                document.getElementById('blouseMeasurements').classList.remove('hidden');
+                document.getElementById('skirtDressMeasurements').classList.remove('hidden');
+                break;
+            case 'JACKET':
+                document.getElementById('jacketMeasurements').classList.remove('hidden');
+                break;
+            default:
+                // For 'OTHERS' or no selection, show no specific measurements
+                break;
+        }
+    }
+
+    // Collect measurement data based on garment type
+    function collectMeasurementData(garmentType) {
+        const measurements = {};
+
+        // Helper function to get value if element exists and has value
+        function getValue(id) {
+            const element = document.getElementById(id);
+            return element && element.value ? parseFloat(element.value) : null;
+        }
+
+        // Collect measurements based on garment type
+        if (garmentType === 'BLOUSE' || garmentType === 'DRESS') {
+            measurements.neck_circumference = getValue('neck_circumference');
+            measurements.shoulder_width = getValue('shoulder_width');
+            measurements.chest_bust_circumference = getValue('chest_bust_circumference');
+            measurements.upper_bust_circumference = getValue('upper_bust_circumference');
+            measurements.under_bust_circumference = getValue('under_bust_circumference');
+            measurements.waist_circumference = getValue('waist_circumference');
+            measurements.armhole_circumference = getValue('armhole_circumference');
+            measurements.bicep_circumference = getValue('bicep_circumference');
+            measurements.wrist_circumference = getValue('wrist_circumference');
+            measurements.back_length_nape_to_waist = getValue('back_length_nape_to_waist');
+            measurements.blouse_length_shoulder_to_hem = getValue('blouse_length_shoulder_to_hem');
+
+            // Handle sleeve length dropdown
+            const sleeveLength = document.getElementById('sleeve_length');
+            if (sleeveLength && sleeveLength.value) {
+                measurements.sleeve_length = sleeveLength.value;
+            }
+        }
+
+        if (garmentType === 'PANTS') {
+            measurements.waist_circumference = getValue('waist_circumference_pants');
+            measurements.high_hip_circumference = getValue('high_hip_circumference');
+            measurements.full_hip_circumference = getValue('full_hip_circumference');
+            measurements.thigh_circumference = getValue('thigh_circumference');
+            measurements.knee_circumference = getValue('knee_circumference');
+            measurements.calf_circumference = getValue('calf_circumference');
+            measurements.ankle_circumference = getValue('ankle_circumference');
+            measurements.inseam_crotch_to_ankle = getValue('inseam_crotch_to_ankle');
+            measurements.outseam_waist_to_ankle = getValue('outseam_waist_to_ankle');
+            measurements.front_rise = getValue('front_rise');
+            measurements.back_rise = getValue('back_rise');
+        }
+
+        if (garmentType === 'SKIRT' || garmentType === 'DRESS') {
+            measurements.waist_circumference = getValue('waist_circumference_skirt');
+            measurements.high_hip_circumference = getValue('high_hip_circumference_skirt');
+            measurements.full_hip_circumference = getValue('full_hip_circumference_skirt');
+            measurements.skirt_dress_length = getValue('skirt_dress_length');
+            measurements.hem_circumference = getValue('hem_circumference');
+        }
+
+        if (garmentType === 'JACKET') {
+            measurements.neck_circumference = getValue('neck_circumference_jacket');
+            measurements.shoulder_width = getValue('shoulder_width_jacket');
+            measurements.chest_bust_circumference = getValue('chest_bust_circumference_jacket');
+            measurements.waist_circumference = getValue('waist_circumference_jacket');
+            measurements.full_hip_circumference = getValue('full_hip_circumference_jacket');
+            measurements.bicep_circumference = getValue('bicep_circumference_jacket');
+            measurements.wrist_circumference = getValue('wrist_circumference_jacket');
+            measurements.jacket_length_shoulder_to_hem = getValue('jacket_length_shoulder_to_hem');
+
+            // Handle sleeve length dropdown for jacket
+            const sleeveLength = document.getElementById('sleeve_length_jacket');
+            if (sleeveLength && sleeveLength.value) {
+                measurements.sleeve_length = sleeveLength.value;
+            }
+        }
+
+        // Filter out null values
+        const filteredMeasurements = {};
+        for (const [key, value] of Object.entries(measurements)) {
+            if (value !== null && value !== undefined) {
+                filteredMeasurements[key] = value;
+            }
+        }
+
+        return filteredMeasurements;
+    }
+
+    // Initialize customer section tabs
+    function initializeCustomerTabs() {
+        const existingTab = document.getElementById('existingCustomerTab');
+        const newTab = document.getElementById('newCustomerTab');
+        const existingSection = document.getElementById('existingCustomerSection');
+        const newSection = document.getElementById('newCustomerSection');
+        const customerSelect = document.getElementById('customer');
+
+        // Check if all required elements exist
+        if (!existingTab || !newTab || !existingSection || !newSection || !customerSelect) {
+            console.error('Customer tab elements not found. Tab functionality will not work.');
+            return;
+        }
+
+        // Tab click handlers
+        existingTab.addEventListener('click', function() {
+            // Switch to existing customer tab
+            existingTab.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+            existingTab.classList.remove('text-gray-500');
+            newTab.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+            newTab.classList.add('text-gray-500');
+
+            // Show/hide sections
+            existingSection.classList.remove('hidden');
+            newSection.classList.add('hidden');
+
+            // Update form validation
+            customerSelect.required = true;
+            clearNewCustomerFields();
+            setNewCustomerFieldsRequired(false);
+        });
+
+        newTab.addEventListener('click', function() {
+            // Switch to new customer tab
+            newTab.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+            newTab.classList.remove('text-gray-500');
+            existingTab.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+            existingTab.classList.add('text-gray-500');
+
+            // Show/hide sections
+            newSection.classList.remove('hidden');
+            existingSection.classList.add('hidden');
+
+            // Update form validation
+            customerSelect.required = false;
+            customerSelect.value = '';
+            setNewCustomerFieldsRequired(true);
+
+            // Clear customer measurements display
+            const basicMeasurementsEl = document.getElementById('basicMeasurements');
+            if (basicMeasurementsEl) {
+                basicMeasurementsEl.innerHTML = '<p>Customer measurements will be available after creating the new customer</p>';
+            }
+        });
+    }
+
+    // Helper function to clear new customer fields
+    function clearNewCustomerFields() {
+        const fields = ['new_first_name', 'new_last_name', 'new_email', 'new_phone_number', 'new_address'];
+        fields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.value = '';
+            }
+        });
+    }
+
+    // Helper function to set required attribute on new customer fields
+    function setNewCustomerFieldsRequired(required) {
+        const requiredFields = ['new_first_name', 'new_last_name', 'new_phone_number', 'new_address'];
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                if (required) {
+                    field.setAttribute('required', 'required');
+                } else {
+                    field.removeAttribute('required');
+                }
+            }
+        });
+    }
+
+    // Function to validate new customer fields
+    function validateNewCustomerFields() {
+        const firstNameEl = document.getElementById('new_first_name');
+        const lastNameEl = document.getElementById('new_last_name');
+        const phoneNumberEl = document.getElementById('new_phone_number');
+        const addressEl = document.getElementById('new_address');
+
+        if (!firstNameEl || !lastNameEl || !phoneNumberEl || !addressEl) {
+            showStatusMessage('New customer form elements not found.', 'error');
+            return false;
+        }
+
+        const firstName = firstNameEl.value.trim();
+        const lastName = lastNameEl.value.trim();
+        const phoneNumber = phoneNumberEl.value.trim();
+        const address = addressEl.value.trim();
+
+        if (!firstName || !lastName || !phoneNumber || !address) {
+            showStatusMessage('Please fill in all required new customer fields.', 'error');
+            return false;
+        }
+
+        // Validate phone number (basic validation)
+        const digitsOnly = phoneNumber.replace(/\D/g, '');
+        if (digitsOnly.length < 10) {
+            showStatusMessage('Phone number must contain at least 10 digits.', 'error');
+            return false;
+        }
+
+        return true;
+    }
+
+    // Add validation for new customer fields
+    function addNewCustomerValidation() {
+        // Phone number validation
+        const phoneInput = document.getElementById('new_phone_number');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', function(e) {
+            const phoneNumber = e.target.value;
+            const digitsOnly = phoneNumber.replace(/\D/g, '');
+
+            if (phoneNumber && digitsOnly.length < 10) {
+                e.target.classList.add('border-red-500');
+                e.target.classList.remove('border-gray-300');
+            } else {
+                e.target.classList.remove('border-red-500');
+                e.target.classList.add('border-gray-300');
+            }
+            });
+        }
+
+        // Real-time validation for required fields
+        const requiredFields = ['new_first_name', 'new_last_name', 'new_phone_number', 'new_address'];
+        requiredFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                field.addEventListener('blur', function() {
+                    if (field.hasAttribute('required') && !field.value.trim()) {
+                        field.classList.add('border-red-500');
+                        field.classList.remove('border-gray-300');
+                    } else {
+                        field.classList.remove('border-red-500');
+                        field.classList.add('border-gray-300');
+                    }
+                });
+            }
+        });
+    }
+
+    // Function to create new customer and return customer data
+    async function createNewCustomer() {
+        if (!validateNewCustomerFields()) {
+            return null;
+        }
+
+        const firstNameEl = document.getElementById('new_first_name');
+        const lastNameEl = document.getElementById('new_last_name');
+        const emailEl = document.getElementById('new_email');
+        const phoneNumberEl = document.getElementById('new_phone_number');
+        const addressEl = document.getElementById('new_address');
+
+        if (!firstNameEl || !lastNameEl || !phoneNumberEl || !addressEl) {
+            showStatusMessage('New customer form elements not found.', 'error');
+            return null;
+        }
+
+        const firstName = firstNameEl.value.trim();
+        const lastName = lastNameEl.value.trim();
+        const email = emailEl ? emailEl.value.trim() : '';
+        const phoneNumber = phoneNumberEl.value.trim();
+        const address = addressEl.value.trim();
+
+        // Generate a random username and password for the customer
+        const randomStr = Math.random().toString(36).substring(2, 10);
+        const username = 'customer_' + randomStr;
+        const password = Math.random().toString(36).substring(2, 15);
+
+        const customerData = {
+            user: {
+                username: username,
+                email: email || username + '@example.com',
+                password: password,
+                first_name: firstName,
+                last_name: lastName
+            },
+            phone_number: phoneNumber,
+            address: address,
+            measurements: {}
+        };
+
+        try {
+            const response = await fetch('/api/register/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(customerData)
+            });
+
+            if (!response.ok) {
+                const errors = await response.json();
+                throw new Error(JSON.stringify(errors));
+            }
+
+            const newCustomer = await response.json();
+            showStatusMessage('New customer created successfully!', 'success');
+            return newCustomer;
+        } catch (error) {
+            console.error('Error creating customer:', error);
+            showStatusMessage('Error creating customer: ' + error.message, 'error');
+            return null;
+        }
+    }
+
     // Load customers from API
     function loadCustomers() {
         fetch('/api/admin/customers/', {
@@ -371,77 +1146,9 @@
         });
     }
     
-    // Load fabrics from API
-    function loadFabrics() {
-        fetch('/api/admin/fabrics/', {
-            headers: {
-                'Authorization': 'Token ' + (localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || ''),
-                'X-CSRFToken': csrfToken,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to load fabrics: ' + response.status);
-            }
-            return response.json();
-        })
-        .then(data => {
-            const fabrics = data.results || data; // Handle both paginated and non-paginated responses
-            const fabricSelect = document.getElementById('fabric');
-            // Clear existing options except the first one
-            fabricSelect.innerHTML = '<option value="">Select a fabric</option>';
-            
-            fabrics.forEach(fabric => {
-                const option = document.createElement('option');
-                option.value = fabric.id;
-                option.textContent = `${fabric.name} (${fabric.unit_type}) - ₱${fabric.price_per_unit} per unit`;
-                option.dataset.price = fabric.price_per_unit;
-                fabricSelect.appendChild(option);
-            });
-        })
-        .catch(error => {
-            console.error('Error loading fabrics:', error);
-            showStatusMessage('Error loading fabrics. Please refresh the page.', 'error');
-        });
-    }
+
     
-    // Load accessories from API
-    function loadAccessories() {
-        fetch('/api/admin/accessories/', {
-            headers: {
-                'Authorization': 'Token ' + (localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || ''),
-                'X-CSRFToken': csrfToken,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to load accessories: ' + response.status);
-            }
-            return response.json();
-        })
-        .then(data => {
-            const accessories = data.results || data; // Handle both paginated and non-paginated responses
-            const accessoriesSelect = document.getElementById('accessories');
-            // Clear existing options
-            accessoriesSelect.innerHTML = '';
-            
-            accessories.forEach(accessory => {
-                const option = document.createElement('option');
-                option.value = accessory.id;
-                option.textContent = `${accessory.name} - ₱${accessory.price_per_unit} per unit`;
-                option.dataset.price = accessory.price_per_unit;
-                accessoriesSelect.appendChild(option);
-            });
-        })
-        .catch(error => {
-            console.error('Error loading accessories:', error);
-            showStatusMessage('Error loading accessories. Please refresh the page.', 'error');
-        });
-    }
+
     
     // Load tailors from API
     function loadTailors() {
@@ -478,30 +1185,53 @@
         });
     }
     
-    // Update total amount based on selected fabric and accessories
-    function updateTotalAmount() {
-        const fabricSelect = document.getElementById('fabric');
-        const accessoriesSelect = document.getElementById('accessories');
+    // Static pricing configuration
+    const GARMENT_PRICES = {
+        'BLOUSE': 550.00,
+        'PANTS': 650.00,
+        'SKIRT': 500.00,
+        'DRESS': 800.00,
+        'JACKET': 750.00,
+        'OTHERS': 600.00
+    };
+
+    // Update pricing display based on garment type and quantity
+    function updatePricingDisplay() {
+        const garmentTypeSelect = document.getElementById('garment_type');
+        const quantityInput = document.getElementById('quantity');
+        const garmentPriceDisplay = document.getElementById('garment_price_display');
+        const totalAmountDisplay = document.getElementById('total_amount_display');
+        const downPaymentDisplay = document.getElementById('down_payment_display');
         const totalAmountInput = document.getElementById('total_amount');
-        
-        let total = 0;
-        
-        // Add fabric price
-        const selectedFabricOption = fabricSelect.options[fabricSelect.selectedIndex];
-        if (selectedFabricOption && selectedFabricOption.dataset.price) {
-            total += parseFloat(selectedFabricOption.dataset.price);
+
+        const garmentType = garmentTypeSelect.value || 'OTHERS';
+        const quantity = parseInt(quantityInput.value) || 1;
+
+        // Get garment price
+        const garmentPrice = GARMENT_PRICES[garmentType] || GARMENT_PRICES['OTHERS'];
+
+        // Calculate total amount
+        const totalAmount = garmentPrice * quantity;
+
+        // Calculate down payment (50%)
+        const downPayment = totalAmount * 0.5;
+
+        // Update displays
+        if (garmentPriceDisplay) {
+            garmentPriceDisplay.textContent = `₱${garmentPrice.toFixed(2)}`;
         }
-        
-        // Add accessories prices
-        const selectedAccessories = Array.from(accessoriesSelect.selectedOptions);
-        selectedAccessories.forEach(option => {
-            if (option.dataset.price) {
-                total += parseFloat(option.dataset.price);
-            }
-        });
-        
-        // Update the total amount input
-        totalAmountInput.value = total.toFixed(2);
+
+        if (totalAmountDisplay) {
+            totalAmountDisplay.textContent = `₱${totalAmount.toFixed(2)}`;
+        }
+
+        if (downPaymentDisplay) {
+            downPaymentDisplay.textContent = `₱${downPayment.toFixed(2)}`;
+        }
+
+        if (totalAmountInput) {
+            totalAmountInput.value = totalAmount.toFixed(2);
+        }
     }
     
     // Load customer measurements
@@ -523,8 +1253,8 @@
         .then(data => {
             // Handle both paginated and non-paginated responses
             const customer = data.results || data;
-            
-            const measurementsDisplay = document.getElementById('measurementsDisplay');
+
+            const basicMeasurements = document.getElementById('basicMeasurements');
             if (customer.measurements && Object.keys(customer.measurements).length > 0) {
                 let measurementsHtml = '<div class="grid grid-cols-2 md:grid-cols-3 gap-4">';
                 for (const [key, value] of Object.entries(customer.measurements)) {
@@ -536,14 +1266,17 @@
                     `;
                 }
                 measurementsHtml += '</div>';
-                measurementsDisplay.innerHTML = measurementsHtml;
+                basicMeasurements.innerHTML = measurementsHtml;
             } else {
-                measurementsDisplay.innerHTML = '<p class="text-gray-500">No measurements recorded for this customer</p>';
+                basicMeasurements.innerHTML = '<p class="text-gray-500">No basic measurements recorded for this customer</p>';
             }
         })
         .catch(error => {
             console.error('Error loading customer measurements:', error);
-            document.getElementById('measurementsDisplay').innerHTML = '<p class="text-red-500">Error loading measurements</p>';
+            const basicMeasurementsEl = document.getElementById('basicMeasurements');
+            if (basicMeasurementsEl) {
+                basicMeasurementsEl.innerHTML = '<p class="text-red-500">Error loading measurements</p>';
+            }
         });
     }
     
@@ -576,5 +1309,133 @@
             }, 5000);
         }
     }
+
+    // Validation functions
+    function validateDueDate() {
+        const dueDateInput = document.getElementById('due_date');
+        const today = new Date();
+        const selectedDate = new Date(dueDateInput.value);
+
+        if (selectedDate <= today) {
+            showFieldError(dueDateInput, 'Due date must be in the future');
+            return false;
+        }
+
+        clearFieldError(dueDateInput);
+        return true;
+    }
+
+    function validateQuantity() {
+        const quantityInput = document.getElementById('quantity');
+        const quantity = parseInt(quantityInput.value);
+
+        if (!quantity || quantity < 1) {
+            showFieldError(quantityInput, 'Quantity must be at least 1');
+            return false;
+        }
+
+        if (quantity > 100) {
+            showFieldError(quantityInput, 'Quantity cannot exceed 100');
+            return false;
+        }
+
+        clearFieldError(quantityInput);
+        return true;
+    }
+
+    function validateMeasurements() {
+        const garmentType = document.getElementById('garment_type').value;
+        if (!garmentType) return true; // Skip validation if no garment type selected
+
+        const measurementSections = document.querySelectorAll('.measurement-section:not(.hidden)');
+        let isValid = true;
+
+        measurementSections.forEach(section => {
+            const inputs = section.querySelectorAll('input[type="number"]');
+            inputs.forEach(input => {
+                const value = parseFloat(input.value);
+                if (input.hasAttribute('required') && (!value || value <= 0)) {
+                    showFieldError(input, 'This measurement is required and must be greater than 0');
+                    isValid = false;
+                } else if (value && (value < 0 || value > 200)) {
+                    showFieldError(input, 'Measurement must be between 0 and 200 inches');
+                    isValid = false;
+                } else {
+                    clearFieldError(input);
+                }
+            });
+        });
+
+        return isValid;
+    }
+
+    function showFieldError(field, message) {
+        clearFieldError(field);
+
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'field-error text-red-500 text-sm mt-1';
+        errorDiv.textContent = message;
+
+        field.classList.add('border-red-500');
+        field.parentNode.appendChild(errorDiv);
+    }
+
+    function clearFieldError(field) {
+        field.classList.remove('border-red-500');
+        const existingError = field.parentNode.querySelector('.field-error');
+        if (existingError) {
+            existingError.remove();
+        }
+    }
+
+    // Add event listeners for real-time validation
+    document.addEventListener('DOMContentLoaded', function() {
+        const dueDateInput = document.getElementById('due_date');
+        const quantityInput = document.getElementById('quantity');
+
+        dueDateInput.addEventListener('change', validateDueDate);
+        quantityInput.addEventListener('input', validateQuantity);
+
+        // Add measurement validation on input
+        document.addEventListener('input', function(e) {
+            if (e.target.type === 'number' && e.target.closest('.measurement-section')) {
+                const value = parseFloat(e.target.value);
+                if (value && (value < 0 || value > 200)) {
+                    showFieldError(e.target, 'Measurement must be between 0 and 200 inches');
+                } else {
+                    clearFieldError(e.target);
+                }
+            }
+        });
+
+        // Validate form before submission
+        const form = document.getElementById('orderForm');
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+
+            // Clear previous status messages
+            document.getElementById('statusMessage').classList.add('hidden');
+
+            // Validate all fields
+            if (!validateDueDate()) isValid = false;
+            if (!validateQuantity()) isValid = false;
+            if (!validateMeasurements()) isValid = false;
+
+            // Check required fields
+            const requiredFields = form.querySelectorAll('[required]');
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    showFieldError(field, 'This field is required');
+                    isValid = false;
+                }
+            });
+
+            if (!isValid) {
+                e.preventDefault();
+                showStatusMessage('Please fix the validation errors before submitting.', 'error');
+                return false;
+            }
+        });
+    });
 </script>
 {% endblock %}

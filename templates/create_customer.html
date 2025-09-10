@@ -67,11 +67,25 @@
             <!-- Measurements Section -->
             <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-xl border border-gray-200 shadow-sm">
                 <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <i class="fas fa-ruler-vertical text-purple-600 mr-2"></i> Measurements (Optional)
+                    <i class="fas fa-ruler-vertical text-purple-600 mr-2"></i> Basic Measurements (Optional)
                 </h2>
+                <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 rounded-r-lg">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700">
+                                <strong>Note:</strong> These are basic measurements. Detailed measurements for specific garments will be taken during order creation.
+                            </p>
+                        </div>
+                    </div>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
-                        <label for="measurement_chest" class="block text-sm font-medium text-gray-700 mb-1">Chest (inches)</label>
+                        <label for="measurement_chest" class="block text-sm font-medium text-gray-700 mb-1">Chest/Bust (inches)</label>
                         <input type="number" id="measurement_chest" name="measurement_chest" step="0.1"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                     </div>
@@ -137,38 +151,75 @@
 </div>
 
 <script>
+    // Phone number validation function
+    function validatePhoneNumber(phoneNumber) {
+        const digitsOnly = phoneNumber.replace(/\D/g, '');
+        return digitsOnly.length >= 10;
+    }
+
+    // Add real-time phone number validation
+    document.getElementById('phone_number').addEventListener('input', function(e) {
+        const phoneNumber = e.target.value;
+        const isValid = validatePhoneNumber(phoneNumber);
+
+        if (phoneNumber && !isValid) {
+            e.target.classList.add('border-red-500');
+            e.target.classList.remove('border-gray-300');
+        } else {
+            e.target.classList.remove('border-red-500');
+            e.target.classList.add('border-gray-300');
+        }
+    });
+
     document.getElementById('customerForm').addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
+        // Validate required fields
+        const firstName = document.getElementById('first_name').value.trim();
+        const lastName = document.getElementById('last_name').value.trim();
+        const phoneNumber = document.getElementById('phone_number').value.trim();
+        const address = document.getElementById('address').value.trim();
+
+        if (!firstName || !lastName || !phoneNumber || !address) {
+            showStatusMessage('Please fill in all required fields.', 'error');
+            return;
+        }
+
+        // Validate phone number
+        if (!validatePhoneNumber(phoneNumber)) {
+            showStatusMessage('Phone number must contain at least 10 digits.', 'error');
+            return;
+        }
+
         // Generate a random username and password for the customer (they won't login)
         const randomStr = Math.random().toString(36).substring(2, 10);
         const username = 'customer_' + randomStr;
         const password = Math.random().toString(36).substring(2, 15);
-        
+
         // Collect measurements
         const measurements = {};
         const measurementFields = [
             'chest', 'waist', 'hip', 'inseam', 'sleeve', 'shoulder'
         ];
-        
+
         measurementFields.forEach(field => {
             const value = document.getElementById('measurement_' + field).value;
             if (value) {
                 measurements[field] = parseFloat(value);
             }
         });
-        
+
         // Create the customer data
         const customerData = {
             user: {
                 username: username,
                 email: document.getElementById('email').value || username + '@example.com',
                 password: password,
-                first_name: document.getElementById('first_name').value,
-                last_name: document.getElementById('last_name').value
+                first_name: firstName,
+                last_name: lastName
             },
-            phone_number: document.getElementById('phone_number').value,
-            address: document.getElementById('address').value,
+            phone_number: phoneNumber,
+            address: address,
             measurements: measurements
         };
         
