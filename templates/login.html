@@ -3,114 +3,75 @@
 
 {% block title %}Login - El Senior Dumingag{% endblock %}
 
-{% block extra_css %}
-<style>
-    .login-background {
-        background-color: #A0522D; /* Fallback color */
-        background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)),
-                         url('{% static "images/login-bg.jpg" %}');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        min-height: 100vh;
-    }
-
-    .glass-card {
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        background: rgba(255, 248, 240, 0.95);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .floating-animation {
-        animation: float 6s ease-in-out infinite;
-    }
-
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-    }
-
-    /* Enhanced background overlay for better contrast */
-    .login-background::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(135deg, rgba(139, 69, 19, 0.1) 0%, rgba(160, 82, 45, 0.1) 50%, rgba(205, 133, 63, 0.1) 100%);
-        pointer-events: none;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 login-background">
-  <div class="max-w-md w-full space-y-8">
-    <div class="glass-card rounded-3xl shadow-2xl p-8 transition-all duration-300 hover:shadow-2xl floating-animation">
+<!-- Main Background Container -->
+<div class="login-main-background">
+  <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-lg w-full space-y-8">
+      <!-- Login Form Card with Enhanced Separation -->
+      <div class="login-form-card">
       <div class="text-center">
-        <div class="mx-auto h-24 w-24 rounded-full bg-gradient-to-r from-primary-rose to-primary-peach flex items-center justify-center mb-6">
-          <i class="fas fa-cut text-text-dark text-3xl"></i>
+        <div class="mx-auto h-28 w-28 rounded-full brand-icon flex items-center justify-center mb-8">
+          <i class="fas fa-cut text-white text-4xl"></i>
         </div>
-        <h2 class="mt-2 text-4xl font-extrabold text-text-dark">
+        <h2 class="mt-2 text-4xl font-extrabold text-text-dark bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
           El Senior Dumingag
         </h2>
-        <p class="mt-3 text-lg text-text-medium">
+        <p class="mt-4 text-xl font-semibold text-text-medium">
           Premium Tailoring Services
         </p>
-        <p class="mt-2 text-sm text-text-light">
+        <p class="mt-3 text-base text-text-light font-medium">
           Sign in to your account
         </p>
+        <div class="mt-4 w-16 h-1 bg-gradient-to-r from-orange-500 to-amber-500 mx-auto rounded-full"></div>
       </div>
-      
-      <form id="loginForm" class="mt-8 space-y-6" method="post" action="{% url 'etailoring:login' %}">
+
+      <form id="loginForm" class="mt-10 space-y-8" method="post" action="{% url 'etailoring:login' %}">
         {% csrf_token %}
         <input type="hidden" id="next_url" name="next" value="{{ next_url }}">
-        <div class="rounded-md space-y-5">
+        <div class="space-y-6">
           <div>
-            <label for="username" class="block text-sm font-medium text-text-dark mb-2">Username</label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="fas fa-user text-text-medium"></i>
+            <label for="username" class="block text-sm form-label">Username</label>
+            <div class="relative mt-2">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <i class="fas fa-user text-text-medium input-icon"></i>
               </div>
-              <input id="username" name="username" type="text" required class="pl-10 appearance-none relative block w-full px-4 py-4 border border-primary-beige placeholder-text-light text-text-dark rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-rose focus:border-primary-rose focus:z-10 sm:text-base transition duration-200 bg-primary-cream" placeholder="Enter your username">
+              <input id="username" name="username" type="text" required class="form-input pl-12 appearance-none relative block w-full px-4 py-5 placeholder-text-light text-text-dark rounded-2xl focus:outline-none focus:z-10 text-base font-medium" placeholder="Enter your username">
             </div>
           </div>
 
           <div>
-            <label for="password" class="block text-sm font-medium text-text-dark mb-2">Password</label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <i class="fas fa-lock text-text-medium"></i>
+            <label for="password" class="block text-sm form-label">Password</label>
+            <div class="relative mt-2">
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <i class="fas fa-lock text-text-medium input-icon"></i>
               </div>
-              <input id="password" name="password" type="password" required class="pl-10 appearance-none relative block w-full px-4 py-4 border border-primary-beige placeholder-text-light text-text-dark rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-rose focus:border-primary-rose focus:z-10 sm:text-base transition duration-200 bg-primary-cream" placeholder="Enter your password">
+              <input id="password" name="password" type="password" required class="form-input pl-12 appearance-none relative block w-full px-4 py-5 placeholder-text-light text-text-dark rounded-2xl focus:outline-none focus:z-10 text-base font-medium" placeholder="Enter your password">
             </div>
           </div>
         </div>
 
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between mt-8">
           <div class="flex items-center">
-            <input id="remember-me" name="remember-me" type="checkbox" class="h-5 w-5 text-primary-rose focus:ring-primary-rose border-primary-beige rounded">
-            <label for="remember-me" class="ml-3 block text-sm text-text-dark">
+            <input id="remember-me" name="remember-me" type="checkbox" class="checkbox-custom">
+            <label for="remember-me" class="ml-3 block text-sm text-text-dark font-medium">
               Remember me
             </label>
           </div>
 
           <div class="text-sm">
-            <a href="#" class="font-medium text-text-medium hover:text-text-light transition-colors">
+            <a href="#" class="font-semibold text-text-medium link-hover">
               Forgot your password?
             </a>
           </div>
         </div>
 
-        <div>
-          <button type="submit" class="group relative w-full flex justify-center py-4 px-4 border border-transparent text-base font-bold rounded-xl text-text-dark bg-gradient-to-r from-primary-rose to-primary-peach hover:from-primary-peach hover:to-primary-beige focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-rose transition-all duration-300 transform hover:-translate-y-1 shadow-lg">
-            <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-              <i class="fas fa-sign-in-alt text-text-medium"></i>
+        <div class="mt-8">
+          <button type="submit" class="login-button group relative w-full flex justify-center py-5 px-6 border border-transparent text-lg font-bold rounded-2xl text-white focus:outline-none focus:ring-4 focus:ring-orange-300 focus:ring-offset-2 transition-all duration-300">
+            <span class="absolute left-0 inset-y-0 flex items-center pl-4">
+              <i class="fas fa-sign-in-alt text-white text-lg"></i>
             </span>
-            Sign in
+            <span class="relative z-10">Sign in</span>
           </button>
         </div>
       </form>
@@ -119,11 +80,11 @@
       <div id="loginStatus" class="mt-5 text-center hidden">
         <p id="loginMessage" class="text-sm"></p>
       </div>
-    </div> 
-    
-    <div class="text-center text-sm text-gray-500">
-      <p>© 2025 El Senior Dumingag. All rights reserved.</p>
-      <p class="mt-1">Proudly serving Dumingag, Zamboanga del Sur</p>
+    </div>
+
+    <div class="text-center text-sm text-white/80 mt-8">
+      <p class="font-medium">© 2025 El Senior Dumingag. All rights reserved.</p>
+      <p class="mt-2 text-white/60">Proudly serving Dumingag, Zamboanga del Sur</p>
     </div>
   </div>
 </div>
