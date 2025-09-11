@@ -89,6 +89,7 @@ urlpatterns = [
     path('api/customer/orders/<int:pk>/', views.CustomerOrderDetailView.as_view(), name='customer_order_detail'),
 
     # Report URLs
+    path('reports/', views.tailor_report_page, name='tailor_report_page'),
     path('generate-report/', views.generate_tailor_report, name='generate_tailor_report'),
     path('generate-report/<int:tailor_id>/', views.generate_tailor_report, name='generate_tailor_report_for_tailor'),
     path('api/generate-report/', views.tailor_report_api, name='tailor_report_api'),

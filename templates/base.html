@@ -204,6 +204,10 @@
                 <div class="px-4 py-3 text-text-medium text-xs font-semibold uppercase tracking-wider mt-6 mb-2 flex items-center">
                     <i class="fas fa-chart-line mr-2"></i> Reports
                 </div>
+                <a href="{% url 'etailoring:tailor_report_page' %}" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-primary-beige ml-4 {% if request.resolver_match.url_name == 'tailor_report_page' or request.resolver_match.url_name == 'generate_tailor_report' %}bg-primary-beige shadow-inner{% endif %}">
+                    <i class="fas fa-file-pdf mr-3 w-5 text-center"></i>
+                    <span>Generate Report</span>
+                </a>
                 <a href="{% url 'etailoring:tailor_dashboard' %}#completed" class="flex items-center py-3 px-4 rounded-lg transition duration-200 hover:bg-primary-beige ml-4">
                     <i class="fas fa-check-circle mr-3 w-5 text-center"></i>
                     <span>Completed Tasks</span>

@@ -8,10 +8,10 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
-from django.db.models import Sum
+from django.db.models import Sum, Count
 from django.http import HttpResponse
 from datetime import datetime, timedelta
 from .models import (
@@ -878,8 +878,67 @@ def assign_order_view(request, order_id):
 
 # Report Generation Views
 @login_required
+def tailor_report_page(request):
+    """Show the tailor report generation page"""
+    try:
+        # Determine which tailor's report page to show
+        if request.user.is_staff:
+            # Admin sees tailor selection page
+            tailors = Tailor.objects.all()
+            return render(request, 'select_tailor_report.html', {'tailors': tailors})
+        else:
+            # Tailor sees their own report generation page
+            try:
+                tailor = Tailor.objects.get(user=request.user)
+
+                # Get some basic stats for the page
+                total_tasks = Task.objects.filter(tailor=tailor).count()
+                completed_tasks = Task.objects.filter(tailor=tailor, status__in=['COMPLETED', 'APPROVED']).count()
+                in_progress_tasks = Task.objects.filter(tailor=tailor, status='IN_PROGRESS').count()
+
+                # Get commission statistics safely
+                try:
+                    total_commissions = Commission.objects.filter(tailor=tailor).aggregate(
+                        total=Sum('amount')
+                    )['total'] or 0
+
+                    paid_commissions = Commission.objects.filter(tailor=tailor, status='PAID').aggregate(
+                        total=Sum('amount')
+                    )['total'] or 0
+
+                    pending_commissions = total_commissions - paid_commissions
+                except Exception:
+                    total_commissions = 0
+                    paid_commissions = 0
+                    pending_commissions = 0
+
+                # Calculate completion rate
+                completion_rate = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
+
+                context = {
+                    'tailor': tailor,
+                    'total_tasks': total_tasks,
+                    'completed_tasks': completed_tasks,
+                    'in_progress_tasks': in_progress_tasks,
+                    'total_commissions': total_commissions,
+                    'paid_commissions': paid_commissions,
+                    'pending_commissions': pending_commissions,
+                    'completion_rate': completion_rate,
+                    'now': timezone.now(),
+                }
+
+                return render(request, 'tailor_report_page.html', context)
+
+            except Tailor.DoesNotExist:
+                return HttpResponse("Access denied. You are not registered as a tailor.", status=403)
+
+    except Exception as e:
+        return HttpResponse(f"Error loading report page: {str(e)}", status=500)
+
+
+@login_required
 def generate_tailor_report(request, tailor_id=None):
-    """Generate tailor performance report"""
+    """Generate tailor performance report PDF"""
     try:
         # Determine which tailor's report to generate
         if request.user.is_staff:
@@ -887,9 +946,7 @@ def generate_tailor_report(request, tailor_id=None):
             if tailor_id:
                 tailor = get_object_or_404(Tailor, id=tailor_id)
             else:
-                # If no tailor_id provided, show selection form
-                tailors = Tailor.objects.all()
-                return render(request, 'select_tailor_report.html', {'tailors': tailors})
+                return HttpResponse("Tailor ID required for admin users", status=400)
         else:
             # Tailor can only generate their own report
             try:
