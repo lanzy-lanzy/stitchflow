@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from . import inventory_views
 from . import customer_views
+from . import admin_report_views
 
 app_name = 'etailoring'
 
@@ -94,4 +95,21 @@ urlpatterns = [
     path('generate-report/<int:tailor_id>/', views.generate_tailor_report, name='generate_tailor_report_for_tailor'),
     path('api/generate-report/', views.tailor_report_api, name='tailor_report_api'),
     path('api/generate-report/<int:tailor_id>/', views.tailor_report_api, name='tailor_report_api_for_tailor'),
+
+    # Admin Report URLs
+    path('admin-reports/', admin_report_views.admin_reports_page, name='admin_reports_page'),
+    path('admin-reports/generate/<str:report_type>/', admin_report_views.generate_admin_report, name='generate_admin_report'),
+
+    # Admin Stats API URLs
+    path('api/admin/stats/revenue/', admin_report_views.admin_stats_revenue, name='admin_stats_revenue'),
+    path('api/admin/stats/orders/', admin_report_views.admin_stats_orders, name='admin_stats_orders'),
+    path('api/admin/stats/commissions/', admin_report_views.admin_stats_commissions, name='admin_stats_commissions'),
+    path('api/admin/stats/tailors/', admin_report_views.admin_stats_tailors, name='admin_stats_tailors'),
+
+    # Admin Charts API URLs
+    path('api/admin/charts/revenue/', admin_report_views.admin_charts_revenue, name='admin_charts_revenue'),
+    path('api/admin/charts/orders/', admin_report_views.admin_charts_orders, name='admin_charts_orders'),
+
+    # Admin Activity API URL
+    path('api/admin/activity/', admin_report_views.admin_recent_activity, name='admin_recent_activity'),
 ]

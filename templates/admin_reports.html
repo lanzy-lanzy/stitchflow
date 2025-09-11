@@ -1,0 +1,1321 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Reports - StitchFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Minimal custom styles that work with Tailwind */
+    .slide-up {
+        animation: slideUp 0.6s ease-out forwards;
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    .slide-up:nth-child(1) { animation-delay: 0.1s; }
+    .slide-up:nth-child(2) { animation-delay: 0.2s; }
+    .slide-up:nth-child(3) { animation-delay: 0.3s; }
+    .slide-up:nth-child(4) { animation-delay: 0.4s; }
+
+    @keyframes slideUp {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .floating {
+        animation: floating 3s ease-in-out infinite;
+    }
+
+    @keyframes floating {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-5px); }
+    }
+
+    /* Custom date range styles */
+    .custom-date-range {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+        opacity: 0;
+    }
+
+    .custom-date-range.show {
+        max-height: 200px;
+        opacity: 1;
+        margin-top: 1.5rem;
+    }
+
+    /* Loading modal styles */
+    .loading-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: all 0.3s ease-in-out;
+    }
+
+    .loading-modal.show {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .loading-spinner {
+        width: 3rem;
+        height: 3rem;
+        border: 3px solid #e5e7eb;
+        border-top: 3px solid #6366f1;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    /* Report card hover effects */
+    .report-card {
+        transition: all 0.3s ease;
+    }
+
+    .report-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Chart container */
+    .chart-container {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+
+    /* Modal specific styles */
+    .modal-content {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    /* Ensure modals are always centered */
+    #tailorModal, #customReportModal {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        display: none !important;
+        align-items: center !important;
+        justify-content: center !important;
+        z-index: 9999 !important;
+        background-color: rgba(0, 0, 0, 0.5) !important;
+    }
+
+    #tailorModal.show, #customReportModal.show {
+        display: flex !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+    <!-- Page Header -->
+    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-8 text-white shadow-xl slide-up mb-8">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-6">
+                <div class="bg-white/20 rounded-2xl p-4 backdrop-blur-sm floating">
+                    <i class="fas fa-chart-pie text-3xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-4xl font-bold mb-2">Admin Reports</h1>
+                    <p class="text-indigo-100 text-lg">Comprehensive business analytics and reporting dashboard</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="bg-white/10 rounded-xl px-4 py-2 backdrop-blur-sm">
+                    <div class="flex items-center space-x-2 text-white/90">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span class="font-semibold">{{ now|date:"F j, Y" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 slide-up">
+        <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Total Revenue</p>
+                    <p class="text-2xl font-bold text-gray-900" id="totalRevenue">PHP 0.00</p>
+                </div>
+                <div class="bg-green-100 rounded-full p-3">
+                    <i class="fas fa-dollar-sign text-green-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Active Orders</p>
+                    <p class="text-2xl font-bold text-gray-900" id="activeOrders">0</p>
+                </div>
+                <div class="bg-blue-100 rounded-full p-3">
+                    <i class="fas fa-shopping-cart text-blue-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Total Commissions</p>
+                    <p class="text-2xl font-bold text-gray-900" id="totalCommissions">PHP 0.00</p>
+                </div>
+                <div class="bg-purple-100 rounded-full p-3">
+                    <i class="fas fa-handshake text-purple-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm font-medium">Active Tailors</p>
+                    <p class="text-2xl font-bold text-gray-900" id="activeTailors">0</p>
+                </div>
+                <div class="bg-orange-100 rounded-full p-3">
+                    <i class="fas fa-users text-orange-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Types Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Business Overview Report -->
+        <div class="report-card bg-white rounded-xl p-6 shadow-lg border border-gray-100 slide-up">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-3">
+                    <i class="fas fa-chart-line text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Business Overview</h3>
+                    <p class="text-gray-600 text-sm">Complete business performance analysis</p>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Revenue trends</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Order analytics</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Customer insights</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+            </div>
+            <button onclick="generateBusinessReport()" class="w-full mt-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all">
+                Generate Report
+            </button>
+        </div>
+
+        <!-- Financial Report -->
+        <div class="report-card bg-white rounded-xl p-6 shadow-lg border border-gray-100 slide-up">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-3">
+                    <i class="fas fa-money-bill-wave text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Financial Report</h3>
+                    <p class="text-gray-600 text-sm">Revenue, expenses, and profit analysis</p>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Revenue breakdown</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Commission tracking</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Profit margins</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+            </div>
+            <button onclick="generateFinancialReport()" class="w-full mt-4 bg-gradient-to-r from-green-500 to-green-600 text-white py-2 px-4 rounded-lg hover:from-green-600 hover:to-green-700 transition-all">
+                Generate Report
+            </button>
+        </div>
+
+        <!-- Tailor Performance Report -->
+        <div class="report-card bg-white rounded-xl p-6 shadow-lg border border-gray-100 slide-up">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl p-3">
+                    <i class="fas fa-user-tie text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Tailor Performance</h3>
+                    <p class="text-gray-600 text-sm">Individual tailor analytics and metrics</p>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Task completion rates</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Quality metrics</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Earnings summary</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+            </div>
+            <button onclick="showTailorSelection()" class="w-full mt-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white py-2 px-4 rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all">
+                Select Tailor
+            </button>
+        </div>
+
+        <!-- Customer Analytics Report -->
+        <div class="report-card bg-white rounded-xl p-6 shadow-lg border border-gray-100 slide-up">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-3">
+                    <i class="fas fa-users text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Customer Analytics</h3>
+                    <p class="text-gray-600 text-sm">Customer behavior and satisfaction</p>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Customer retention</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Order patterns</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Satisfaction scores</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+            </div>
+            <button onclick="generateCustomerReport()" class="w-full mt-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white py-2 px-4 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all">
+                Generate Report
+            </button>
+        </div>
+
+        <!-- Inventory Report -->
+        <div class="report-card bg-white rounded-xl p-6 shadow-lg border border-gray-100 slide-up">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl p-3">
+                    <i class="fas fa-boxes text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Inventory Report</h3>
+                    <p class="text-gray-600 text-sm">Fabric and accessory stock analysis</p>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Stock levels</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Usage patterns</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Reorder alerts</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+            </div>
+            <button onclick="generateInventoryReport()" class="w-full mt-4 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white py-2 px-4 rounded-lg hover:from-indigo-600 hover:to-indigo-700 transition-all">
+                Generate Report
+            </button>
+        </div>
+
+        <!-- Custom Report Builder -->
+        <div class="report-card bg-white rounded-xl p-6 shadow-lg border border-gray-100 slide-up">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl p-3">
+                    <i class="fas fa-cogs text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Custom Report</h3>
+                    <p class="text-gray-600 text-sm">Build your own custom report</p>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Custom metrics</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Flexible date ranges</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Multiple formats</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+            </div>
+            <button onclick="showCustomReportBuilder()" class="w-full mt-4 bg-gradient-to-r from-pink-500 to-pink-600 text-white py-2 px-4 rounded-lg hover:from-pink-600 hover:to-pink-700 transition-all">
+                Build Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Report Configuration Panel -->
+    <div class="bg-white rounded-2xl shadow-lg p-8 slide-up mb-8">
+        <div class="mb-8">
+            <div class="flex items-center space-x-4 mb-6">
+                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-3 floating">
+                    <i class="fas fa-sliders-h text-2xl text-white"></i>
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-900">Report Configuration</h3>
+                    <p class="text-gray-600">Configure date range and report parameters</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Date Range Selection -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <button onclick="selectPeriod('last_week', this)" class="period-btn bg-gray-100 hover:bg-indigo-100 border-2 border-transparent hover:border-indigo-300 rounded-xl p-4 text-center transition-all">
+                <div class="text-lg font-semibold text-gray-800">Last Week</div>
+                <div class="text-sm text-gray-600">Past 7 days</div>
+            </button>
+
+            <button onclick="selectPeriod('last_month', this)" class="period-btn bg-indigo-100 border-2 border-indigo-300 rounded-xl p-4 text-center transition-all">
+                <div class="text-lg font-semibold text-indigo-800">Last Month</div>
+                <div class="text-sm text-indigo-600">Past 30 days</div>
+            </button>
+
+            <button onclick="selectPeriod('last_quarter', this)" class="period-btn bg-gray-100 hover:bg-indigo-100 border-2 border-transparent hover:border-indigo-300 rounded-xl p-4 text-center transition-all">
+                <div class="text-lg font-semibold text-gray-800">Last Quarter</div>
+                <div class="text-sm text-gray-600">Past 3 months</div>
+            </button>
+
+            <button onclick="selectPeriod('ytd', this)" class="period-btn bg-gray-100 hover:bg-indigo-100 border-2 border-transparent hover:border-indigo-300 rounded-xl p-4 text-center transition-all">
+                <div class="text-lg font-semibold text-gray-800">Year to Date</div>
+                <div class="text-sm text-gray-600">Since Jan 1st</div>
+            </button>
+
+            <button onclick="selectPeriod('all_time', this)" class="period-btn bg-gray-100 hover:bg-indigo-100 border-2 border-transparent hover:border-indigo-300 rounded-xl p-4 text-center transition-all">
+                <div class="text-lg font-semibold text-gray-800">All Time</div>
+                <div class="text-sm text-gray-600">Complete history</div>
+            </button>
+
+            <button onclick="selectPeriod('custom', this)" class="period-btn bg-gray-100 hover:bg-indigo-100 border-2 border-transparent hover:border-indigo-300 rounded-xl p-4 text-center transition-all">
+                <div class="text-lg font-semibold text-gray-800">Custom Range</div>
+                <div class="text-sm text-gray-600">Choose dates</div>
+            </button>
+        </div>
+
+        <!-- Custom Date Range -->
+        <div id="customDateRange" class="custom-date-range">
+            <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4">Custom Date Range</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="dateFrom" class="block text-sm font-medium text-gray-700 mb-2">From Date</label>
+                        <input type="date" id="dateFrom" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label for="dateTo" class="block text-sm font-medium text-gray-700 mb-2">To Date</label>
+                        <input type="date" id="dateTo" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500">
+                    </div>
+                </div>
+                <div id="dateError" class="hidden mt-2 text-red-600 text-sm"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts and Analytics Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Revenue Chart -->
+        <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100 slide-up">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Revenue Trends</h3>
+                <div class="flex space-x-2">
+                    <button class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Orders Chart -->
+        <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100 slide-up">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">Order Analytics</h3>
+                <div class="flex space-x-2">
+                    <button class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="ordersChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="bg-white rounded-xl p-6 shadow-lg border border-gray-100 slide-up">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-bold text-gray-900">Recent Activity</h3>
+            <button class="text-indigo-600 hover:text-indigo-800 font-medium">View All</button>
+        </div>
+        <div id="recentActivity" class="space-y-4">
+            <!-- Activity items will be loaded here -->
+            <p class="text-gray-600">Loading recent activity...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div id="loadingModal" class="loading-modal hidden" onclick="closeLoadingModal(event)" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: none; align-items: center; justify-content: center; z-index: 9999;">
+    <div class="bg-white rounded-2xl p-8 text-center shadow-2xl" onclick="event.stopPropagation()" style="max-width: 400px; margin: auto;">
+        <div class="loading-spinner"></div>
+        <h3 class="text-xl font-bold text-gray-900 mb-2">Generating Report</h3>
+        <p class="text-gray-600">Please wait while we compile your data...</p>
+        <div class="mt-4 bg-gray-200 rounded-full h-2">
+            <div id="progressBar" class="bg-gradient-to-r from-indigo-500 to-purple-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+        <button onclick="forceCloseModal()" class="mt-4 text-sm text-gray-500 hover:text-gray-700 underline focus:outline-none">
+            Cancel
+        </button>
+    </div>
+</div>
+
+<!-- Tailor Selection Modal -->
+<div id="tailorModal" class="loading-modal hidden" onclick="closeTailorModal(event)" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: none; align-items: center; justify-content: center; z-index: 9999; background-color: rgba(0, 0, 0, 0.5);">
+    <div class="bg-white rounded-2xl p-8 shadow-2xl max-w-2xl w-full mx-4 modal-content" onclick="event.stopPropagation()" style="margin: auto;">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-bold text-gray-900">Select Tailor</h3>
+            <button onclick="closeTailorModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div id="tailorList" class="space-y-3 max-h-96 overflow-y-auto">
+            <!-- Tailor list will be loaded here -->
+            <p class="text-gray-600">Loading tailors...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Report Builder Modal -->
+<div id="customReportModal" class="loading-modal hidden" onclick="closeCustomReportModal(event)" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: none; align-items: center; justify-content: center; z-index: 9999; background-color: rgba(0, 0, 0, 0.5);">
+    <div class="bg-white rounded-2xl p-8 shadow-2xl max-w-4xl w-full mx-4 modal-content" onclick="event.stopPropagation()" style="margin: auto;">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-bold text-gray-900">Custom Report Builder</h3>
+            <button onclick="closeCustomReportModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Report Metrics -->
+            <div>
+                <h4 class="text-lg font-semibold text-gray-800 mb-4">Select Metrics</h4>
+                <div class="space-y-3">
+                    <label class="flex items-center">
+                        <input type="checkbox" class="mr-3" value="revenue" checked>
+                        <span>Revenue Analysis</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" class="mr-3" value="orders">
+                        <span>Order Statistics</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" class="mr-3" value="commissions">
+                        <span>Commission Tracking</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" class="mr-3" value="customers">
+                        <span>Customer Analytics</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" class="mr-3" value="tailors">
+                        <span>Tailor Performance</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" class="mr-3" value="inventory">
+                        <span>Inventory Status</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Report Format -->
+            <div>
+                <h4 class="text-lg font-semibold text-gray-800 mb-4">Report Format</h4>
+                <div class="space-y-3">
+                    <label class="flex items-center">
+                        <input type="radio" name="format" class="mr-3" value="pdf" checked>
+                        <span>PDF Document</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="format" class="mr-3" value="excel">
+                        <span>Excel Spreadsheet</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" name="format" class="mr-3" value="csv">
+                        <span>CSV File</span>
+                    </label>
+                </div>
+
+                <h4 class="text-lg font-semibold text-gray-800 mb-4 mt-6">Additional Options</h4>
+                <div class="space-y-3">
+                    <label class="flex items-center">
+                        <input type="checkbox" class="mr-3" value="charts">
+                        <span>Include Charts</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" class="mr-3" value="summary">
+                        <span>Executive Summary</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" class="mr-3" value="detailed">
+                        <span>Detailed Breakdown</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end space-x-4 mt-8">
+            <button onclick="closeCustomReportModal()" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                Cancel
+            </button>
+            <button onclick="generateCustomReport()" class="px-6 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700">
+                Generate Report
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Container -->
+<div id="notificationContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Global variables
+let selectedPeriod = 'last_month';
+let isGenerating = false;
+let revenueChart = null;
+let ordersChart = null;
+
+// Period selection function
+function selectPeriod(period, buttonElement) {
+    console.log('Selecting period:', period);
+
+    if (isGenerating) {
+        showNotification('Report generation in progress. Please wait.', 'warning');
+        return;
+    }
+
+    selectedPeriod = period;
+
+    // Update button styles
+    document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.classList.remove('bg-indigo-100', 'border-indigo-300');
+        btn.classList.add('bg-gray-100', 'border-transparent');
+        btn.querySelector('.text-indigo-800')?.classList.replace('text-indigo-800', 'text-gray-800');
+        btn.querySelector('.text-indigo-600')?.classList.replace('text-indigo-600', 'text-gray-600');
+    });
+
+    buttonElement.classList.remove('bg-gray-100', 'border-transparent');
+    buttonElement.classList.add('bg-indigo-100', 'border-indigo-300');
+    buttonElement.querySelector('.text-gray-800')?.classList.replace('text-gray-800', 'text-indigo-800');
+    buttonElement.querySelector('.text-gray-600')?.classList.replace('text-gray-600', 'text-indigo-600');
+
+    // Show/hide custom date range
+    const customDateRange = document.getElementById('customDateRange');
+    if (period === 'custom') {
+        customDateRange.classList.add('show');
+    } else {
+        customDateRange.classList.remove('show');
+        hideError();
+    }
+
+    // Update charts and stats
+    updateDashboardData();
+}
+
+// Report generation functions
+function generateBusinessReport() {
+    generateReport('business', 'Business Overview Report');
+}
+
+function generateFinancialReport() {
+    generateReport('financial', 'Financial Analysis Report');
+}
+
+function generateCustomerReport() {
+    generateReport('customer', 'Customer Analytics Report');
+}
+
+function generateInventoryReport() {
+    generateReport('inventory', 'Inventory Status Report');
+}
+
+function showTailorSelection() {
+    const modal = document.getElementById('tailorModal');
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100vw';
+    modal.style.height = '100vh';
+    modal.style.zIndex = '9999';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    loadTailors();
+}
+
+function closeTailorModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    const modal = document.getElementById('tailorModal');
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+}
+
+function showCustomReportBuilder() {
+    const modal = document.getElementById('customReportModal');
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100vw';
+    modal.style.height = '100vh';
+    modal.style.zIndex = '9999';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+}
+
+function closeCustomReportModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    const modal = document.getElementById('customReportModal');
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+}
+
+// Generic report generation function
+function generateReport(reportType, reportName, tailorId = null) {
+    if (isGenerating) {
+        showNotification('Another report is being generated. Please wait.', 'warning');
+        return;
+    }
+
+    // Validate custom date range if selected
+    if (selectedPeriod === 'custom') {
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+
+        if (!dateFrom || !dateTo) {
+            showError('Please select both start and end dates for custom range.');
+            return;
+        }
+
+        if (new Date(dateFrom) > new Date(dateTo)) {
+            showError('Start date must be before end date.');
+            return;
+        }
+    }
+
+    // Start generation process
+    isGenerating = true;
+    showLoadingModal();
+
+    // Failsafe: Always hide modal after 5 seconds maximum
+    setTimeout(() => {
+        if (isGenerating) {
+            console.warn('Forcing modal close due to timeout');
+            isGenerating = false;
+            hideLoadingModal();
+            showNotification('Report generation took longer than expected. Please try again.', 'warning');
+        }
+    }, 5000);
+
+    // Build URL with parameters
+    let url = `/admin-reports/generate/${reportType}/`;
+    const params = new URLSearchParams();
+
+    if (selectedPeriod === 'custom') {
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        params.append('date_from', dateFrom);
+        params.append('date_to', dateTo);
+    } else {
+        params.append('period', selectedPeriod);
+    }
+
+    // Add tailor_id parameter for tailor reports
+    if (reportType === 'tailor' && tailorId) {
+        params.append('tailor_id', tailorId);
+    }
+
+    if (params.toString()) {
+        url += '?' + params.toString();
+    }
+
+    // Generate report
+    console.log('Generating report with URL:', url);
+
+    // Show progress for 1.5 seconds then trigger download
+    setTimeout(() => {
+        try {
+            // Create a temporary link element to trigger download
+            const link = document.createElement('a');
+            link.href = url;
+            link.target = '_blank';
+            link.style.display = 'none';
+
+            // Add to DOM, click, then remove
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Show success message
+            showNotification(`${reportName} generated successfully! Check your downloads folder.`, 'success');
+
+        } catch (error) {
+            console.error('Error generating report:', error);
+            showNotification('Error generating report. Please try again.', 'error');
+        }
+
+        // Always reset state
+        isGenerating = false;
+        hideLoadingModal();
+    }, 1500); // 1.5 second delay to show loading state
+}
+
+// Load tailors for selection
+function loadTailors() {
+    fetch('/api/admin/tailors/')
+        .then(response => response.json())
+        .then(data => {
+            const tailorList = document.getElementById('tailorList');
+            const tailors = data.results || data;
+
+            if (tailors.length === 0) {
+                tailorList.innerHTML = '<p class="text-gray-600">No tailors found.</p>';
+                return;
+            }
+
+            tailorList.innerHTML = tailors.map(tailor => `
+                <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer" onclick="generateTailorReport(${tailor.id})">
+                    <div class="flex items-center space-x-4">
+                        <div class="bg-purple-100 rounded-full p-3">
+                            <i class="fas fa-user-tie text-purple-600"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900">${tailor.user.first_name} ${tailor.user.last_name}</h4>
+                            <p class="text-sm text-gray-600">${tailor.specialty || 'General Tailoring'}</p>
+                            <p class="text-xs text-gray-500">Commission Rate: ${tailor.commission_rate}%</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        })
+        .catch(error => {
+            console.error('Error loading tailors:', error);
+            document.getElementById('tailorList').innerHTML = '<p class="text-red-600">Error loading tailors. Please try again.</p>';
+        });
+}
+
+// Generate tailor report
+function generateTailorReport(tailorId) {
+    closeTailorModal();
+    generateReport('tailor', 'Tailor Performance Report', tailorId);
+}
+
+// Generate custom report
+function generateCustomReport() {
+    const metrics = Array.from(document.querySelectorAll('#customReportModal input[type="checkbox"]:checked'))
+        .map(cb => cb.value);
+    const format = document.querySelector('#customReportModal input[name="format"]:checked').value;
+
+    if (metrics.length === 0) {
+        showNotification('Please select at least one metric for your custom report.', 'warning');
+        return;
+    }
+
+    closeCustomReportModal();
+
+    // Build custom report URL
+    let url = '/admin-reports/generate/custom/';
+    const params = new URLSearchParams();
+
+    metrics.forEach(metric => params.append('metrics', metric));
+    params.append('format', format);
+
+    if (selectedPeriod === 'custom') {
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        params.append('date_from', dateFrom);
+        params.append('date_to', dateTo);
+    } else {
+        params.append('period', selectedPeriod);
+    }
+
+    url += '?' + params.toString();
+
+    // Generate report
+    isGenerating = true;
+    showLoadingModal();
+
+    setTimeout(() => {
+        try {
+            const link = document.createElement('a');
+            link.href = url;
+            link.target = '_blank';
+            link.style.display = 'none';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showNotification('Custom report generated successfully!', 'success');
+        } catch (error) {
+            console.error('Error generating custom report:', error);
+            showNotification('Error generating custom report. Please try again.', 'error');
+        }
+
+        isGenerating = false;
+        hideLoadingModal();
+    }, 1500);
+}
+
+// Modal management functions
+function showLoadingModal() {
+    const modal = document.getElementById('loadingModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+        modal.style.alignItems = 'center';
+        modal.style.justifyContent = 'center';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100vw';
+        modal.style.height = '100vh';
+        modal.style.zIndex = '9999';
+        modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        animateProgressBar();
+    }
+}
+
+function hideLoadingModal() {
+    const modal = document.getElementById('loadingModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.add('hidden');
+        const progressBar = document.getElementById('progressBar');
+        if (progressBar) {
+            progressBar.style.width = '0%';
+        }
+        // Clear any progress intervals
+        if (window.progressInterval) {
+            clearInterval(window.progressInterval);
+            window.progressInterval = null;
+        }
+    }
+}
+
+function closeLoadingModal(event) {
+    // Only close if clicking on the backdrop (not the modal content)
+    if (event.target === event.currentTarget) {
+        forceCloseModal();
+    }
+}
+
+function forceCloseModal() {
+    console.log('Force closing modal');
+    isGenerating = false;
+    hideLoadingModal();
+    showNotification('Report generation cancelled', 'info');
+}
+
+function animateProgressBar() {
+    const progressBar = document.getElementById('progressBar');
+    if (!progressBar) return;
+
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 90) progress = 90;
+
+        progressBar.style.width = progress + '%';
+
+        if (!isGenerating) {
+            clearInterval(interval);
+            progressBar.style.width = '100%';
+        }
+    }, 200);
+
+    window.progressInterval = interval;
+}
+
+// Notification system
+function showNotification(message, type = 'info') {
+    const container = document.getElementById('notificationContainer');
+    const notification = document.createElement('div');
+
+    const bgColor = {
+        'success': 'bg-green-500',
+        'error': 'bg-red-500',
+        'warning': 'bg-yellow-500',
+        'info': 'bg-blue-500'
+    }[type] || 'bg-blue-500';
+
+    const icon = {
+        'success': 'fas fa-check-circle',
+        'error': 'fas fa-exclamation-circle',
+        'warning': 'fas fa-exclamation-triangle',
+        'info': 'fas fa-info-circle'
+    }[type] || 'fas fa-info-circle';
+
+    notification.className = `${bgColor} text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-3 transform translate-x-full transition-transform duration-300`;
+    notification.innerHTML = `
+        <i class="${icon}"></i>
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+
+    container.appendChild(notification);
+
+    // Animate in
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 100);
+
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.classList.add('translate-x-full');
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 300);
+        }
+    }, 5000);
+}
+
+function showError(message) {
+    const errorDiv = document.getElementById('dateError');
+    if (errorDiv) {
+        errorDiv.textContent = message;
+        errorDiv.classList.remove('hidden');
+    }
+}
+
+function hideError() {
+    const errorDiv = document.getElementById('dateError');
+    if (errorDiv) {
+        errorDiv.classList.add('hidden');
+    }
+}
+
+// Dashboard data updates
+function updateDashboardData() {
+    // Update quick stats
+    loadQuickStats();
+
+    // Update charts
+    updateCharts();
+
+    // Load recent activity
+    loadRecentActivity();
+}
+
+function loadQuickStats() {
+    // Load total revenue
+    fetch('/api/admin/stats/revenue/')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('totalRevenue').textContent = `PHP ${data.total_revenue.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        })
+        .catch(error => console.error('Error loading revenue stats:', error));
+
+    // Load active orders
+    fetch('/api/admin/stats/orders/')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('activeOrders').textContent = data.active_orders;
+        })
+        .catch(error => console.error('Error loading order stats:', error));
+
+    // Load commissions
+    fetch('/api/admin/stats/commissions/')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('totalCommissions').textContent = `PHP ${data.total_commissions.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        })
+        .catch(error => console.error('Error loading commission stats:', error));
+
+    // Load active tailors
+    fetch('/api/admin/stats/tailors/')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('activeTailors').textContent = data.active_tailors;
+        })
+        .catch(error => console.error('Error loading tailor stats:', error));
+}
+
+function updateCharts() {
+    // Update revenue chart
+    fetch('/api/admin/charts/revenue/')
+        .then(response => response.json())
+        .then(data => {
+            updateRevenueChart(data);
+        })
+        .catch(error => console.error('Error loading revenue chart data:', error));
+
+    // Update orders chart
+    fetch('/api/admin/charts/orders/')
+        .then(response => response.json())
+        .then(data => {
+            updateOrdersChart(data);
+        })
+        .catch(error => console.error('Error loading orders chart data:', error));
+}
+
+function updateRevenueChart(data) {
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+
+    if (revenueChart) {
+        revenueChart.destroy();
+    }
+
+    revenueChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Revenue (PHP)',
+                data: data.values,
+                borderColor: 'rgb(99, 102, 241)',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'PHP ' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function updateOrdersChart(data) {
+    const ctx = document.getElementById('ordersChart').getContext('2d');
+
+    if (ordersChart) {
+        ordersChart.destroy();
+    }
+
+    ordersChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                data: data.values,
+                backgroundColor: [
+                    'rgb(34, 197, 94)',
+                    'rgb(249, 115, 22)',
+                    'rgb(239, 68, 68)',
+                    'rgb(168, 85, 247)',
+                    'rgb(59, 130, 246)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function loadRecentActivity() {
+    fetch('/api/admin/activity/')
+        .then(response => response.json())
+        .then(data => {
+            const activityContainer = document.getElementById('recentActivity');
+            const activities = data.results || data;
+
+            if (activities.length === 0) {
+                activityContainer.innerHTML = '<p class="text-gray-600">No recent activity found.</p>';
+                return;
+            }
+
+            activityContainer.innerHTML = activities.map(activity => `
+                <div class="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                    <div class="bg-indigo-100 rounded-full p-2">
+                        <i class="fas fa-${getActivityIcon(activity.type)} text-indigo-600"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">${activity.description}</p>
+                        <p class="text-xs text-gray-500">${formatDate(activity.timestamp)}</p>
+                    </div>
+                </div>
+            `).join('');
+        })
+        .catch(error => {
+            console.error('Error loading recent activity:', error);
+            document.getElementById('recentActivity').innerHTML = '<p class="text-red-600">Error loading activity. Please refresh the page.</p>';
+        });
+}
+
+function getActivityIcon(type) {
+    const icons = {
+        'order': 'shopping-cart',
+        'task': 'tasks',
+        'commission': 'money-bill-wave',
+        'customer': 'user',
+        'tailor': 'user-tie',
+        'payment': 'credit-card'
+    };
+    return icons[type] || 'info-circle';
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = (now - date) / (1000 * 60 * 60);
+
+    if (diffInHours < 1) {
+        return 'Just now';
+    } else if (diffInHours < 24) {
+        return `${Math.floor(diffInHours)} hours ago`;
+    } else {
+        return date.toLocaleDateString();
+    }
+}
+
+// Initialize page when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing admin reports page...');
+
+    // Ensure loading modal is hidden on page load
+    const modal = document.getElementById('loadingModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+
+    // Initialize default date values
+    const today = new Date();
+    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+
+    const dateFromInput = document.getElementById('dateFrom');
+    const dateToInput = document.getElementById('dateTo');
+
+    if (dateFromInput && dateToInput) {
+        // Set default values
+        dateFromInput.value = lastMonth.toISOString().split('T')[0];
+        dateToInput.value = today.toISOString().split('T')[0];
+
+        // Set max date to today
+        const todayStr = today.toISOString().split('T')[0];
+        dateFromInput.max = todayStr;
+        dateToInput.max = todayStr;
+
+        // Add validation
+        dateFromInput.addEventListener('change', validateDates);
+        dateToInput.addEventListener('change', validateDates);
+    }
+
+    // Load initial dashboard data
+    updateDashboardData();
+
+    console.log('Admin reports page initialization complete');
+});
+
+function validateDates() {
+    const dateFrom = document.getElementById('dateFrom').value;
+    const dateTo = document.getElementById('dateTo').value;
+
+    if (dateFrom && dateTo) {
+        if (new Date(dateFrom) > new Date(dateTo)) {
+            showError('Start date must be before end date.');
+        } else {
+            hideError();
+        }
+    }
+}
+
+// Make functions globally available
+window.selectPeriod = selectPeriod;
+window.generateBusinessReport = generateBusinessReport;
+window.generateFinancialReport = generateFinancialReport;
+window.generateCustomerReport = generateCustomerReport;
+window.generateInventoryReport = generateInventoryReport;
+window.showTailorSelection = showTailorSelection;
+window.closeTailorModal = closeTailorModal;
+window.showCustomReportBuilder = showCustomReportBuilder;
+window.closeCustomReportModal = closeCustomReportModal;
+window.generateTailorReport = generateTailorReport;
+window.generateCustomReport = generateCustomReport;
+window.closeLoadingModal = closeLoadingModal;
+window.forceCloseModal = forceCloseModal;
+
+console.log('Admin reports page script loaded successfully');
+</script>
+
+{% endblock %}

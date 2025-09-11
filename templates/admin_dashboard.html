@@ -65,19 +65,19 @@
                 <h4 class="text-md font-semibold text-blue-800 mb-2 flex items-center">
                     <i class="fas fa-wallet mr-2"></i> Total Commissions
                 </h4>
-                <div class="text-2xl font-bold text-blue-700" id="totalCommissions">₱0.00</div>
+                <div class="text-2xl font-bold text-blue-700" id="totalCommissions">PHP 0.00</div>
             </div>
             <div class="bg-gradient-to-r from-amber-50 to-amber-100 rounded-lg p-4 shadow">
                 <h4 class="text-md font-semibold text-amber-800 mb-2 flex items-center">
                     <i class="fas fa-money-check-alt mr-2"></i> Ready for Payment
                 </h4>
-                <div class="text-2xl font-bold text-amber-700" id="pendingCommissions">₱0.00</div>
+                <div class="text-2xl font-bold text-amber-700" id="pendingCommissions">PHP 0.00</div>
             </div>
             <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4 shadow">
                 <h4 class="text-md font-semibold text-green-800 mb-2 flex items-center">
                     <i class="fas fa-check-circle mr-2"></i> Paid Commissions
                 </h4>
-                <div class="text-2xl font-bold text-green-700" id="paidCommissions">₱0.00</div>
+                <div class="text-2xl font-bold text-green-700" id="paidCommissions">PHP 0.00</div>
             </div>
         </div>
         <div class="mt-4">
@@ -128,7 +128,7 @@
         <h3 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
             <i class="fas fa-bolt text-indigo-600 mr-2"></i> Quick Actions
         </h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             <a href="{% url 'etailoring:create_customer' %}" class="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl p-4 text-center hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg">
                 <i class="fas fa-user-plus text-2xl mb-2"></i>
                 <div class="font-medium">Create Customer</div>
@@ -140,6 +140,10 @@
             <a href="{% url 'etailoring:order_summary' %}" class="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl p-4 text-center hover:from-orange-600 hover:to-orange-700 transition-all shadow-md hover:shadow-lg">
                 <i class="fas fa-chart-bar text-2xl mb-2"></i>
                 <div class="font-medium">Order Summary</div>
+            </a>
+            <a href="{% url 'etailoring:admin_reports_page' %}" class="bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-xl p-4 text-center hover:from-pink-600 hover:to-pink-700 transition-all shadow-md hover:shadow-lg">
+                <i class="fas fa-chart-pie text-2xl mb-2"></i>
+                <div class="font-medium">Admin Reports</div>
             </a>
             <a href="{% url 'etailoring:inventory_management' %}" class="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl p-4 text-center hover:from-purple-600 hover:to-purple-700 transition-all shadow-md hover:shadow-lg">
                 <i class="fas fa-boxes text-2xl mb-2"></i>
