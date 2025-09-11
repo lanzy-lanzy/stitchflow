@@ -318,17 +318,17 @@ class TailorReportGenerator:
 
                 monthly_table_data.append([
                     month_name,
-                    f"₱{paid:,.2f}",
-                    f"₱{pending:,.2f}",
-                    f"₱{total:,.2f}"
+                    f"PHP {paid:,.2f}",
+                    f"PHP {pending:,.2f}",
+                    f"PHP {total:,.2f}"
                 ])
 
             # Add totals row
             monthly_table_data.append([
                 'TOTAL',
-                f"₱{total_paid_all:,.2f}",
-                f"₱{total_pending_all:,.2f}",
-                f"₱{total_paid_all + total_pending_all:,.2f}"
+                f"PHP {total_paid_all:,.2f}",
+                f"PHP {total_pending_all:,.2f}",
+                f"PHP {total_paid_all + total_pending_all:,.2f}"
             ])
 
             monthly_table = Table(monthly_table_data, colWidths=[2*inch, 1.5*inch, 1.5*inch, 1.5*inch])
@@ -406,11 +406,11 @@ class TailorReportGenerator:
         
         # Commission summary table
         commission_data = [
-            ['Total Paid Commissions:', f"₱{total_paid:,.2f}"],
-            ['Pending Commissions:', f"₱{total_pending:,.2f}"],
+            ['Total Paid Commissions:', f"PHP {total_paid:,.2f}"],
+            ['Pending Commissions:', f"PHP {total_pending:,.2f}"],
             ['Total Commission Count:', str(total_commissions)],
-            ['Average Commission:', f"₱{avg_commission:,.2f}"],
-            ['Total Potential Earnings:', f"₱{total_paid + total_pending:,.2f}"],
+            ['Average Commission:', f"PHP {avg_commission:,.2f}"],
+            ['Total Potential Earnings:', f"PHP {total_paid + total_pending:,.2f}"],
         ]
         
         commission_table = Table(commission_data, colWidths=[3*inch, 2*inch])
