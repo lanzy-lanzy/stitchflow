@@ -15,11 +15,46 @@
             <button id="restockBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center">
                 <i class="fas fa-plus-circle mr-2"></i>Restock Item
             </button>
+            <button onclick="updateLowStockCount()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                <i class="fas fa-sync mr-2"></i> Update Counts
+            </button>
         </div>
     </div>
     
+    <!-- Low Stock Alerts Section -->
+    <div id="lowStockAlertsSection" class="mb-8 hidden alert-slide-in">
+        <div class="bg-gradient-to-r from-orange-50 to-red-50 border-l-4 border-orange-400 rounded-xl p-4 md:p-6 shadow-lg">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-exclamation-triangle text-orange-500 text-xl md:text-2xl"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-lg font-semibold text-orange-800">
+                            Low Stock Alerts
+                        </h3>
+                        <p class="text-sm text-orange-700">
+                            Items requiring immediate attention
+                        </p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                    <button id="toggleLowStockFilter" class="bg-orange-500 text-white px-3 md:px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors flex items-center text-sm flex-1 sm:flex-none justify-center">
+                        <i class="fas fa-filter mr-2"></i><span class="hidden sm:inline">Show Only Low Stock</span><span class="sm:hidden">Filter</span>
+                    </button>
+                    <button id="dismissAlertsBtn" class="bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="lowStockAlertsList" class="space-y-3">
+                <!-- Low stock alerts will be populated here -->
+            </div>
+        </div>
+    </div>
+
     <!-- Inventory Summary -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-6 shadow-md">
             <h3 class="text-lg font-semibold text-blue-800 mb-2 flex items-center">
                 <i class="fas fa-fabric mr-2"></i> Total Fabrics
@@ -32,23 +67,38 @@
             </h3>
             <div class="text-3xl font-bold text-purple-700" id="totalAccessories">0</div>
         </div>
-        <div class="bg-gradient-to-r from-red-50 to-red-100 rounded-xl p-6 shadow-md">
-            <h3 class="text-lg font-semibold text-red-800 mb-2 flex items-center">
+        <div class="bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl p-6 shadow-md cursor-pointer hover:shadow-lg transition-shadow" id="lowStockCard">
+            <h3 class="text-lg font-semibold text-orange-800 mb-2 flex items-center">
                 <i class="fas fa-exclamation-triangle mr-2"></i> Low Stock Items
             </h3>
-            <div class="text-3xl font-bold text-red-700" id="lowStockItems">0</div>
+            <div class="text-3xl font-bold text-orange-700" id="lowStockItems">0</div>
+            <div class="text-xs text-orange-600 mt-1">Click to view alerts</div>
+        </div>
+        <div class="bg-gradient-to-r from-red-50 to-red-100 rounded-xl p-6 shadow-md">
+            <h3 class="text-lg font-semibold text-red-800 mb-2 flex items-center">
+                <i class="fas fa-times-circle mr-2"></i> Out of Stock
+            </h3>
+            <div class="text-3xl font-bold text-red-700" id="outOfStockItems">0</div>
         </div>
     </div>
     
     <!-- Fabric Inventory -->
     <div class="mb-8">
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
             <h3 class="text-xl font-semibold text-gray-800 flex items-center">
                 <i class="fas fa-tshirt text-blue-600 mr-2"></i> Fabric Inventory
+                <span id="fabricFilterIndicator" class="ml-2 px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full hidden">
+                    Low Stock Filter Active
+                </span>
             </h3>
-            <button id="addFabricBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center">
-                <i class="fas fa-plus mr-2"></i>Add Fabric
-            </button>
+            <div class="flex flex-wrap gap-2">
+                <button id="clearFabricFilter" class="bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600 transition-colors text-sm hidden">
+                    <i class="fas fa-times mr-1"></i>Clear Filter
+                </button>
+                <button id="addFabricBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center">
+                    <i class="fas fa-plus mr-2"></i>Add Fabric
+                </button>
+            </div>
         </div>
         <div class="overflow-x-auto rounded-lg shadow">
             <table class="min-w-full bg-white border border-gray-200">
@@ -90,13 +140,21 @@
     
     <!-- Accessory Inventory -->
     <div>
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
             <h3 class="text-xl font-semibold text-gray-800 flex items-center">
                 <i class="fas fa-puzzle-piece text-purple-600 mr-2"></i> Accessory Inventory
+                <span id="accessoryFilterIndicator" class="ml-2 px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full hidden">
+                    Low Stock Filter Active
+                </span>
             </h3>
-            <button id="addAccessoryBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center">
-                <i class="fas fa-plus mr-2"></i>Add Accessory
-            </button>
+            <div class="flex flex-wrap gap-2">
+                <button id="clearAccessoryFilter" class="bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600 transition-colors text-sm hidden">
+                    <i class="fas fa-times mr-1"></i>Clear Filter
+                </button>
+                <button id="addAccessoryBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center">
+                    <i class="fas fa-plus mr-2"></i>Add Accessory
+                </button>
+            </div>
         </div>
         <div class="overflow-x-auto rounded-lg shadow">
             <table class="min-w-full bg-white border border-gray-200">
@@ -283,10 +341,24 @@
     let fabricCurrentPage = 1;
     let fabricTotalPages = 1;
     let fabricTotalRecords = 0;
-    
+
     let accessoryCurrentPage = 1;
     let accessoryTotalPages = 1;
     let accessoryTotalRecords = 0;
+
+    // Filter states
+    let fabricLowStockFilter = false;
+    let accessoryLowStockFilter = false;
+
+    // Store all data for filtering
+    let allFabrics = [];
+    let allAccessories = [];
+
+    // Store counts
+    let fabricLowStockCount = 0;
+    let fabricOutOfStockCount = 0;
+    let accessoryLowStockCount = 0;
+    let accessoryOutOfStockCount = 0;
     
     // Load inventory data when page loads
     document.addEventListener('DOMContentLoaded', function() {
@@ -478,12 +550,40 @@
                 loadAccessoryData();
             }
         });
-        
+
         document.getElementById('accessoryNextPage').addEventListener('click', function() {
             if (accessoryCurrentPage < accessoryTotalPages) {
                 accessoryCurrentPage++;
                 loadAccessoryData();
             }
+        });
+
+        // Low stock alert functionality
+        document.getElementById('lowStockCard').addEventListener('click', function() {
+            toggleLowStockAlerts();
+        });
+
+        document.getElementById('dismissAlertsBtn').addEventListener('click', function() {
+            document.getElementById('lowStockAlertsSection').classList.add('hidden');
+        });
+
+        document.getElementById('toggleLowStockFilter').addEventListener('click', function() {
+            toggleLowStockFilter();
+        });
+
+        // Filter buttons
+        document.getElementById('clearFabricFilter').addEventListener('click', function() {
+            fabricLowStockFilter = false;
+            document.getElementById('fabricFilterIndicator').classList.add('hidden');
+            document.getElementById('clearFabricFilter').classList.add('hidden');
+            loadFabricData();
+        });
+
+        document.getElementById('clearAccessoryFilter').addEventListener('click', function() {
+            accessoryLowStockFilter = false;
+            document.getElementById('accessoryFilterIndicator').classList.add('hidden');
+            document.getElementById('clearAccessoryFilter').classList.add('hidden');
+            loadAccessoryData();
         });
     });
     
@@ -499,7 +599,10 @@
         console.log('Loading inventory data...');
         loadFabricData();
         loadAccessoryData();
-        updateLowStockCount();
+        // Also call the low stock count update
+        setTimeout(() => {
+            updateLowStockCount();
+        }, 1000); // Give time for data to load
     }
     
     function loadFabricData() {
@@ -518,47 +621,97 @@
             return response.json();
         })
         .then(data => {
-            const fabrics = data.results || data;
+            let fabrics = data.results || data;
+            allFabrics = fabrics; // Store all fabrics for filtering
             console.log('Received fabrics data:', fabrics);
+
+            // Count low stock and out of stock fabrics from all data
+            fabricLowStockCount = 0;
+            fabricOutOfStockCount = 0;
+            allFabrics.forEach(fabric => {
+                const quantity = parseFloat(fabric.quantity);
+                const threshold = parseFloat(fabric.low_stock_threshold);
+                if (quantity === 0) {
+                    fabricOutOfStockCount++;
+                } else if (quantity <= threshold) {
+                    fabricLowStockCount++;
+                }
+            });
+
+            // Apply low stock filter if active
+            if (fabricLowStockFilter) {
+                fabrics = fabrics.filter(fabric => fabric.quantity <= fabric.low_stock_threshold);
+            }
+
             const fabricTableBody = document.getElementById('fabricTableBody');
             fabricTableBody.innerHTML = '';
-            
+
             if (fabrics.length === 0) {
-                fabricTableBody.innerHTML = '<tr><td colspan="7" class="py-4 px-4 text-center text-gray-500">No fabrics found</td></tr>';
+                const message = fabricLowStockFilter ? 'No low stock fabrics found' : 'No fabrics found';
+                fabricTableBody.innerHTML = `<tr><td colspan="7" class="py-4 px-4 text-center text-gray-500">${message}</td></tr>`;
                 document.getElementById('totalFabrics').textContent = '0';
                 updateFabricPagination(0, 1, 0);
                 return;
             }
-            
+
             // Update total fabrics count
-            document.getElementById('totalFabrics').textContent = data.count !== undefined ? data.count : fabrics.length;
-            
-            let lowStockCount = parseInt(document.getElementById('lowStockItems').textContent) || 0;
-            
+            document.getElementById('totalFabrics').textContent = data.count !== undefined ? data.count : allFabrics.length;
+
             fabrics.forEach(fabric => {
                 const isLowStock = fabric.quantity <= fabric.low_stock_threshold;
-                if (isLowStock) lowStockCount++;
-                
+                const isOutOfStock = fabric.quantity === 0;
+
                 const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50';
+                // Enhanced row styling for low stock items
+                if (isOutOfStock) {
+                    row.className = 'hover:bg-red-50 bg-red-25 border-l-4 border-red-400';
+                } else if (isLowStock) {
+                    row.className = 'hover:bg-orange-50 bg-orange-25 border-l-4 border-orange-400';
+                } else {
+                    row.className = 'hover:bg-gray-50';
+                }
+
+                // Enhanced status display
+                let statusBadge = '';
+                if (isOutOfStock) {
+                    statusBadge = '<span class="px-2 py-1 rounded-full text-xs bg-red-100 text-red-800 font-semibold flex items-center"><i class="fas fa-times-circle mr-1"></i>Out of Stock</span>';
+                } else if (isLowStock) {
+                    statusBadge = '<span class="px-2 py-1 rounded-full text-xs bg-orange-100 text-orange-800 font-semibold flex items-center"><i class="fas fa-exclamation-triangle mr-1"></i>Low Stock</span>';
+                } else {
+                    statusBadge = '<span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 flex items-center"><i class="fas fa-check-circle mr-1"></i>In Stock</span>';
+                }
+
+                // Enhanced quantity display with threshold info
+                const quantityDisplay = `
+                    <div class="flex flex-col">
+                        <span class="font-medium ${isOutOfStock ? 'text-red-600' : isLowStock ? 'text-orange-600' : ''}">${fabric.quantity} ${fabric.unit_type}</span>
+                        <span class="text-xs text-gray-500">Min: ${fabric.low_stock_threshold}</span>
+                    </div>
+                `;
+
                 row.innerHTML = `
-                    <td class="py-2 px-4 border-b">${fabric.name}</td>
-                    <td class="py-2 px-4 border-b">${fabric.description || 'N/A'}</td>
-                    <td class="py-2 px-4 border-b">${fabric.get_unit_type_display || fabric.unit_type}</td>
-                    <td class="py-2 px-4 border-b">${fabric.quantity} ${fabric.unit_type}</td>
-                    <td class="py-2 px-4 border-b">₱${fabric.price_per_unit}</td>
-                    <td class="py-2 px-4 border-b">
-                        <span class="px-2 py-1 rounded-full text-xs ${isLowStock ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
-                            ${isLowStock ? 'Low Stock' : 'In Stock'}
-                        </span>
+                    <td class="py-3 px-4 border-b">
+                        <div class="flex items-center">
+                            ${isLowStock ? '<i class="fas fa-exclamation-triangle text-orange-500 mr-2"></i>' : ''}
+                            ${isOutOfStock ? '<i class="fas fa-times-circle text-red-500 mr-2"></i>' : ''}
+                            <span class="font-medium">${fabric.name}</span>
+                        </div>
                     </td>
-                    <td class="py-2 px-4 border-b">
-                        <button class="text-indigo-600 hover:text-indigo-900 mr-2 edit-fabric" data-id="${fabric.id}" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="text-red-600 hover:text-red-900 delete-fabric" data-id="${fabric.id}" title="Delete">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                    <td class="py-3 px-4 border-b">${fabric.description || 'N/A'}</td>
+                    <td class="py-3 px-4 border-b">${fabric.get_unit_type_display || fabric.unit_type}</td>
+                    <td class="py-3 px-4 border-b">${quantityDisplay}</td>
+                    <td class="py-3 px-4 border-b">₱${fabric.price_per_unit}</td>
+                    <td class="py-3 px-4 border-b">${statusBadge}</td>
+                    <td class="py-3 px-4 border-b">
+                        <div class="flex items-center space-x-2">
+                            ${isLowStock ? '<button class="text-green-600 hover:text-green-900 restock-fabric" data-id="' + fabric.id + '" title="Quick Restock"><i class="fas fa-plus-circle"></i></button>' : ''}
+                            <button class="text-indigo-600 hover:text-indigo-900 edit-fabric" data-id="${fabric.id}" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="text-red-600 hover:text-red-900 delete-fabric" data-id="${fabric.id}" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </td>
                 `;
                 fabricTableBody.appendChild(row);
@@ -578,13 +731,23 @@
                     editFabric(fabricId);
                 });
             });
-            
+
             document.querySelectorAll('.delete-fabric').forEach(button => {
                 button.addEventListener('click', function() {
                     const fabricId = this.getAttribute('data-id');
                     deleteFabric(fabricId);
                 });
             });
+
+            document.querySelectorAll('.restock-fabric').forEach(button => {
+                button.addEventListener('click', function() {
+                    const fabricId = this.getAttribute('data-id');
+                    openQuickRestockModal('fabric', fabricId);
+                });
+            });
+
+            // Update summary counts after fabric data is loaded
+            updateSummaryCounts();
         })
         .catch(error => {
             console.error('Error loading fabrics:', error);
@@ -608,43 +771,96 @@
             return response.json();
         })
         .then(data => {
-            const accessories = data.results || data;
+            let accessories = data.results || data;
+            allAccessories = accessories; // Store all accessories for filtering
             console.log('Received accessories data:', accessories);
+
+            // Count low stock and out of stock accessories from all data
+            accessoryLowStockCount = 0;
+            accessoryOutOfStockCount = 0;
+            allAccessories.forEach(accessory => {
+                const quantity = parseInt(accessory.quantity);
+                const threshold = parseInt(accessory.low_stock_threshold);
+                if (quantity === 0) {
+                    accessoryOutOfStockCount++;
+                } else if (quantity <= threshold) {
+                    accessoryLowStockCount++;
+                }
+            });
+
+            // Apply low stock filter if active
+            if (accessoryLowStockFilter) {
+                accessories = accessories.filter(accessory => accessory.quantity <= accessory.low_stock_threshold);
+            }
+
             const accessoryTableBody = document.getElementById('accessoryTableBody');
             accessoryTableBody.innerHTML = '';
-            
+
             if (accessories.length === 0) {
-                accessoryTableBody.innerHTML = '<tr><td colspan="6" class="py-4 px-4 text-center text-gray-500">No accessories found</td></tr>';
+                const message = accessoryLowStockFilter ? 'No low stock accessories found' : 'No accessories found';
+                accessoryTableBody.innerHTML = `<tr><td colspan="6" class="py-4 px-4 text-center text-gray-500">${message}</td></tr>`;
                 document.getElementById('totalAccessories').textContent = '0';
                 updateAccessoryPagination(0, 1, 0);
                 return;
             }
-            
+
             // Update total accessories count
-            document.getElementById('totalAccessories').textContent = data.count !== undefined ? data.count : accessories.length;
-            
+            document.getElementById('totalAccessories').textContent = data.count !== undefined ? data.count : allAccessories.length;
+
             accessories.forEach(accessory => {
                 const isLowStock = accessory.quantity <= accessory.low_stock_threshold;
-                
+                const isOutOfStock = accessory.quantity === 0;
+
                 const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50';
+                // Enhanced row styling for low stock items
+                if (isOutOfStock) {
+                    row.className = 'hover:bg-red-50 bg-red-25 border-l-4 border-red-400';
+                } else if (isLowStock) {
+                    row.className = 'hover:bg-orange-50 bg-orange-25 border-l-4 border-orange-400';
+                } else {
+                    row.className = 'hover:bg-gray-50';
+                }
+
+                // Enhanced status display
+                let statusBadge = '';
+                if (isOutOfStock) {
+                    statusBadge = '<span class="px-2 py-1 rounded-full text-xs bg-red-100 text-red-800 font-semibold flex items-center"><i class="fas fa-times-circle mr-1"></i>Out of Stock</span>';
+                } else if (isLowStock) {
+                    statusBadge = '<span class="px-2 py-1 rounded-full text-xs bg-orange-100 text-orange-800 font-semibold flex items-center"><i class="fas fa-exclamation-triangle mr-1"></i>Low Stock</span>';
+                } else {
+                    statusBadge = '<span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800 flex items-center"><i class="fas fa-check-circle mr-1"></i>In Stock</span>';
+                }
+
+                // Enhanced quantity display with threshold info
+                const quantityDisplay = `
+                    <div class="flex flex-col">
+                        <span class="font-medium ${isOutOfStock ? 'text-red-600' : isLowStock ? 'text-orange-600' : ''}">${accessory.quantity} units</span>
+                        <span class="text-xs text-gray-500">Min: ${accessory.low_stock_threshold}</span>
+                    </div>
+                `;
+
                 row.innerHTML = `
-                    <td class="py-2 px-4 border-b">${accessory.name}</td>
-                    <td class="py-2 px-4 border-b">${accessory.description || 'N/A'}</td>
-                    <td class="py-2 px-4 border-b">${accessory.quantity} units</td>
-                    <td class="py-2 px-4 border-b">₱${accessory.price_per_unit}</td>
-                    <td class="py-2 px-4 border-b">
-                        <span class="px-2 py-1 rounded-full text-xs ${isLowStock ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
-                            ${isLowStock ? 'Low Stock' : 'In Stock'}
-                        </span>
+                    <td class="py-3 px-4 border-b">
+                        <div class="flex items-center">
+                            ${isLowStock ? '<i class="fas fa-exclamation-triangle text-orange-500 mr-2"></i>' : ''}
+                            ${isOutOfStock ? '<i class="fas fa-times-circle text-red-500 mr-2"></i>' : ''}
+                            <span class="font-medium">${accessory.name}</span>
+                        </div>
                     </td>
-                    <td class="py-2 px-4 border-b">
-                        <button class="text-indigo-600 hover:text-indigo-900 mr-2 edit-accessory" data-id="${accessory.id}" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="text-red-600 hover:text-red-900 delete-accessory" data-id="${accessory.id}" title="Delete">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                    <td class="py-3 px-4 border-b">${accessory.description || 'N/A'}</td>
+                    <td class="py-3 px-4 border-b">${quantityDisplay}</td>
+                    <td class="py-3 px-4 border-b">₱${accessory.price_per_unit}</td>
+                    <td class="py-3 px-4 border-b">${statusBadge}</td>
+                    <td class="py-3 px-4 border-b">
+                        <div class="flex items-center space-x-2">
+                            ${isLowStock ? '<button class="text-green-600 hover:text-green-900 restock-accessory" data-id="' + accessory.id + '" title="Quick Restock"><i class="fas fa-plus-circle"></i></button>' : ''}
+                            <button class="text-indigo-600 hover:text-indigo-900 edit-accessory" data-id="${accessory.id}" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="text-red-600 hover:text-red-900 delete-accessory" data-id="${accessory.id}" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </td>
                 `;
                 accessoryTableBody.appendChild(row);
@@ -664,18 +880,116 @@
                     editAccessory(accessoryId);
                 });
             });
-            
+
             document.querySelectorAll('.delete-accessory').forEach(button => {
                 button.addEventListener('click', function() {
                     const accessoryId = this.getAttribute('data-id');
                     deleteAccessory(accessoryId);
                 });
             });
+
+            document.querySelectorAll('.restock-accessory').forEach(button => {
+                button.addEventListener('click', function() {
+                    const accessoryId = this.getAttribute('data-id');
+                    openQuickRestockModal('accessory', accessoryId);
+                });
+            });
+
+            // Update summary cards after accessory data is loaded
+            updateSummaryCounts();
         })
         .catch(error => {
             console.error('Error loading accessories:', error);
             document.getElementById('accessoryTableBody').innerHTML = '<tr><td colspan="6" class="py-4 px-4 text-center text-red-500">Error loading accessory data: ' + error.message + '</td></tr>';
         });
+    }
+
+    function updateSummaryCounts() {
+        console.log('updateSummaryCounts called');
+        // Update the summary cards with the counted values
+        const totalLowStock = fabricLowStockCount + accessoryLowStockCount;
+        const totalOutOfStock = fabricOutOfStockCount + accessoryOutOfStockCount;
+
+        console.log('Updating summary counts:', {
+            fabricLowStock: fabricLowStockCount,
+            accessoryLowStock: accessoryLowStockCount,
+            totalLowStock: totalLowStock,
+            totalOutOfStock: totalOutOfStock
+        });
+
+        document.getElementById('lowStockItems').textContent = totalLowStock;
+        document.getElementById('outOfStockItems').textContent = totalOutOfStock;
+
+        // Update low stock alerts if there are any items
+        if (totalLowStock > 0 || totalOutOfStock > 0) {
+            updateLowStockAlertsFromCounts();
+        } else {
+            document.getElementById('lowStockAlertsSection').classList.add('hidden');
+        }
+    }
+
+    function updateLowStockAlertsFromCounts() {
+        // Build low stock items array from stored data
+        let lowStockItems = [];
+
+        // Add fabric items
+        allFabrics.forEach(fabric => {
+            const quantity = parseFloat(fabric.quantity);
+            const threshold = parseFloat(fabric.low_stock_threshold);
+            if (quantity === 0) {
+                lowStockItems.push({
+                    type: 'fabric',
+                    name: fabric.name,
+                    quantity: quantity,
+                    threshold: threshold,
+                    unit: fabric.unit_type,
+                    id: fabric.id,
+                    status: 'out_of_stock'
+                });
+            } else if (quantity <= threshold) {
+                lowStockItems.push({
+                    type: 'fabric',
+                    name: fabric.name,
+                    quantity: quantity,
+                    threshold: threshold,
+                    unit: fabric.unit_type,
+                    id: fabric.id,
+                    status: 'low_stock'
+                });
+            }
+        });
+
+        // Add accessory items
+        allAccessories.forEach(accessory => {
+            const quantity = parseInt(accessory.quantity);
+            const threshold = parseInt(accessory.low_stock_threshold);
+            if (quantity === 0) {
+                lowStockItems.push({
+                    type: 'accessory',
+                    name: accessory.name,
+                    quantity: quantity,
+                    threshold: threshold,
+                    unit: 'units',
+                    id: accessory.id,
+                    status: 'out_of_stock'
+                });
+            } else if (quantity <= threshold) {
+                lowStockItems.push({
+                    type: 'accessory',
+                    name: accessory.name,
+                    quantity: quantity,
+                    threshold: threshold,
+                    unit: 'units',
+                    id: accessory.id,
+                    status: 'low_stock'
+                });
+            }
+        });
+
+        if (lowStockItems.length > 0) {
+            updateLowStockAlerts(lowStockItems);
+            document.getElementById('lowStockAlertsSection').classList.remove('hidden');
+        }
     }
     
     function updateFabricPagination(total, current, perPage) {
@@ -744,44 +1058,330 @@
     }
     
     function updateLowStockCount() {
+        console.log('Starting updateLowStockCount...');
         // Count low stock items from both fabrics and accessories
         let lowStockCount = 0;
-        
-        // Count low stock fabrics
-        fetch('/api/admin/fabrics/', {
-            headers: getAuthHeaders(),
-            credentials: 'include'
-        })
-        .then(response => response.json())
-        .then(fabrics => {
+        let outOfStockCount = 0;
+        let lowStockItems = [];
+
+        // Fetch ALL fabrics and accessories (not paginated) for counting
+        Promise.all([
+            fetchAllFabrics(),
+            fetchAllAccessories()
+        ])
+        .then(([fabrics, accessories]) => {
+            console.log('All fabrics for counting:', fabrics);
+            console.log('All accessories for counting:', accessories);
+
+            // Process fabrics
             fabrics.forEach(fabric => {
-                if (fabric.quantity <= fabric.low_stock_threshold) {
+                const quantity = parseFloat(fabric.quantity);
+                const threshold = parseFloat(fabric.low_stock_threshold);
+
+                if (quantity === 0) {
+                    outOfStockCount++;
+                    lowStockItems.push({
+                        type: 'fabric',
+                        name: fabric.name,
+                        quantity: quantity,
+                        threshold: threshold,
+                        unit: fabric.unit_type,
+                        id: fabric.id,
+                        status: 'out_of_stock'
+                    });
+                } else if (quantity <= threshold) {
                     lowStockCount++;
+                    lowStockItems.push({
+                        type: 'fabric',
+                        name: fabric.name,
+                        quantity: quantity,
+                        threshold: threshold,
+                        unit: fabric.unit_type,
+                        id: fabric.id,
+                        status: 'low_stock'
+                    });
                 }
             });
-            
-            // Count low stock accessories
-            return fetch('/api/admin/accessories/', {
-                headers: getAuthHeaders(),
-                credentials: 'include'
-            });
-        })
-        .then(response => response.json())
-        .then(accessories => {
+
+            // Process accessories
             accessories.forEach(accessory => {
-                if (accessory.quantity <= accessory.low_stock_threshold) {
+                const quantity = parseInt(accessory.quantity);
+                const threshold = parseInt(accessory.low_stock_threshold);
+
+                if (quantity === 0) {
+                    outOfStockCount++;
+                    lowStockItems.push({
+                        type: 'accessory',
+                        name: accessory.name,
+                        quantity: quantity,
+                        threshold: threshold,
+                        unit: 'units',
+                        id: accessory.id,
+                        status: 'out_of_stock'
+                    });
+                } else if (quantity <= threshold) {
                     lowStockCount++;
+                    lowStockItems.push({
+                        type: 'accessory',
+                        name: accessory.name,
+                        quantity: quantity,
+                        threshold: threshold,
+                        unit: 'units',
+                        id: accessory.id,
+                        status: 'low_stock'
+                    });
                 }
             });
-            
-            // Update the display
-            document.getElementById('lowStockItems').textContent = lowStockCount;
+
+            console.log('Final counts - Low stock:', lowStockCount, 'Out of stock:', outOfStockCount);
+            console.log('Low stock items:', lowStockItems);
+
+            // Update the displays
+            const lowStockElement = document.getElementById('lowStockItems');
+            const outOfStockElement = document.getElementById('outOfStockItems');
+
+            if (lowStockElement) {
+                lowStockElement.textContent = lowStockCount;
+                console.log('Updated low stock element to:', lowStockCount);
+            } else {
+                console.error('lowStockItems element not found!');
+            }
+
+            if (outOfStockElement) {
+                outOfStockElement.textContent = outOfStockCount;
+                console.log('Updated out of stock element to:', outOfStockCount);
+            } else {
+                console.error('outOfStockItems element not found!');
+            }
+
+            // Show/hide low stock alerts section
+            if (lowStockItems.length > 0) {
+                updateLowStockAlerts(lowStockItems);
+                document.getElementById('lowStockAlertsSection').classList.remove('hidden');
+            } else {
+                document.getElementById('lowStockAlertsSection').classList.add('hidden');
+            }
         })
         .catch(error => {
             console.error('Error counting low stock items:', error);
+            // Set default values on error
+            document.getElementById('lowStockItems').textContent = '0';
+            document.getElementById('outOfStockItems').textContent = '0';
         });
     }
-    
+
+    function updateLowStockAlerts(lowStockItems) {
+        const alertsList = document.getElementById('lowStockAlertsList');
+        alertsList.innerHTML = '';
+
+        // Sort items by severity (out of stock first, then low stock)
+        lowStockItems.sort((a, b) => {
+            if (a.status === 'out_of_stock' && b.status !== 'out_of_stock') return -1;
+            if (a.status !== 'out_of_stock' && b.status === 'out_of_stock') return 1;
+            return 0;
+        });
+
+        lowStockItems.forEach(item => {
+            const alertDiv = document.createElement('div');
+            const isOutOfStock = item.status === 'out_of_stock';
+
+            alertDiv.className = `flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-lg border gap-3 sm:gap-0 ${
+                isOutOfStock
+                    ? 'bg-red-50 border-red-200 out-of-stock-alert'
+                    : 'bg-orange-50 border-orange-200 low-stock-alert'
+            }`;
+
+            alertDiv.innerHTML = `
+                <div class="flex items-center flex-1">
+                    <div class="flex-shrink-0">
+                        <i class="fas ${isOutOfStock ? 'fa-times-circle text-red-500' : 'fa-exclamation-triangle text-orange-500'} text-lg"></i>
+                    </div>
+                    <div class="ml-3 flex-1">
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                            <span class="font-medium ${isOutOfStock ? 'text-red-800' : 'text-orange-800'}">${item.name}</span>
+                            <span class="px-2 py-1 text-xs rounded-full w-fit ${
+                                item.type === 'fabric'
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : 'bg-purple-100 text-purple-800'
+                            }">${item.type}</span>
+                        </div>
+                        <div class="text-sm ${isOutOfStock ? 'text-red-600' : 'text-orange-600'} mt-1">
+                            <span class="block sm:inline">Current: <span class="font-medium">${item.quantity} ${item.unit}</span></span>
+                            <span class="block sm:inline sm:ml-2">Minimum: <span class="font-medium">${item.threshold} ${item.unit}</span></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+                    <button class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 transition-colors restock-quick flex items-center"
+                            data-type="${item.type}" data-id="${item.id}">
+                        <i class="fas fa-plus mr-1"></i><span class="hidden sm:inline">Restock</span><span class="sm:hidden">+</span>
+                    </button>
+                    <button class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors view-item flex items-center"
+                            data-type="${item.type}" data-id="${item.id}">
+                        <i class="fas fa-eye mr-1"></i><span class="hidden sm:inline">View</span><span class="sm:hidden">👁</span>
+                    </button>
+                </div>
+            `;
+
+            alertsList.appendChild(alertDiv);
+        });
+
+        // Add event listeners for restock and view buttons
+        document.querySelectorAll('.restock-quick').forEach(button => {
+            button.addEventListener('click', function() {
+                const type = this.getAttribute('data-type');
+                const id = this.getAttribute('data-id');
+                openQuickRestockModal(type, id);
+            });
+        });
+
+        document.querySelectorAll('.view-item').forEach(button => {
+            button.addEventListener('click', function() {
+                const type = this.getAttribute('data-type');
+                const id = this.getAttribute('data-id');
+                if (type === 'fabric') {
+                    editFabric(id);
+                } else {
+                    editAccessory(id);
+                }
+            });
+        });
+    }
+
+    function toggleLowStockAlerts() {
+        const alertsSection = document.getElementById('lowStockAlertsSection');
+        if (alertsSection.classList.contains('hidden')) {
+            alertsSection.classList.remove('hidden');
+            // Scroll to alerts section
+            alertsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            alertsSection.classList.add('hidden');
+        }
+    }
+
+    function toggleLowStockFilter() {
+        fabricLowStockFilter = !fabricLowStockFilter;
+        accessoryLowStockFilter = !accessoryLowStockFilter;
+
+        // Update filter indicators
+        if (fabricLowStockFilter) {
+            document.getElementById('fabricFilterIndicator').classList.remove('hidden');
+            document.getElementById('clearFabricFilter').classList.remove('hidden');
+        } else {
+            document.getElementById('fabricFilterIndicator').classList.add('hidden');
+            document.getElementById('clearFabricFilter').classList.add('hidden');
+        }
+
+        if (accessoryLowStockFilter) {
+            document.getElementById('accessoryFilterIndicator').classList.remove('hidden');
+            document.getElementById('clearAccessoryFilter').classList.remove('hidden');
+        } else {
+            document.getElementById('accessoryFilterIndicator').classList.add('hidden');
+            document.getElementById('clearAccessoryFilter').classList.add('hidden');
+        }
+
+        // Reload data with filters
+        loadFabricData();
+        loadAccessoryData();
+
+        // Update button text
+        const button = document.getElementById('toggleLowStockFilter');
+        if (fabricLowStockFilter) {
+            button.innerHTML = '<i class="fas fa-times mr-2"></i>Show All Items';
+            button.className = 'bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors flex items-center text-sm';
+        } else {
+            button.innerHTML = '<i class="fas fa-filter mr-2"></i>Show Only Low Stock';
+            button.className = 'bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors flex items-center text-sm';
+        }
+    }
+
+    function openQuickRestockModal(type, id) {
+        // Pre-populate the restock modal with the selected item
+        document.getElementById('itemType').value = type;
+
+        // Trigger the item dropdown population
+        populateItemDropdowns();
+
+        // Set the selected item after a short delay to ensure dropdown is populated
+        setTimeout(() => {
+            document.getElementById('itemId').value = `${type}-${id}`;
+        }, 100);
+
+        // Show the modal
+        document.getElementById('restockModal').classList.remove('hidden');
+        document.getElementById('restockModal').classList.add('flex');
+
+        // Focus on quantity input
+        setTimeout(() => {
+            document.getElementById('restockQuantity').focus();
+        }, 200);
+    }
+
+    // Helper functions to fetch all items (not paginated)
+    async function fetchAllFabrics() {
+        let allFabrics = [];
+        let page = 1;
+        let hasMore = true;
+
+        while (hasMore) {
+            try {
+                const response = await fetch(`/api/admin/fabrics/?page=${page}`, {
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
+                });
+                const data = await response.json();
+
+                if (data.results) {
+                    // Paginated response
+                    allFabrics = allFabrics.concat(data.results);
+                    hasMore = data.next !== null;
+                    page++;
+                } else {
+                    // Non-paginated response
+                    allFabrics = data;
+                    hasMore = false;
+                }
+            } catch (error) {
+                console.error('Error fetching fabrics page', page, ':', error);
+                hasMore = false;
+            }
+        }
+
+        return allFabrics;
+    }
+
+    async function fetchAllAccessories() {
+        let allAccessories = [];
+        let page = 1;
+        let hasMore = true;
+
+        while (hasMore) {
+            try {
+                const response = await fetch(`/api/admin/accessories/?page=${page}`, {
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
+                });
+                const data = await response.json();
+
+                if (data.results) {
+                    // Paginated response
+                    allAccessories = allAccessories.concat(data.results);
+                    hasMore = data.next !== null;
+                    page++;
+                } else {
+                    // Non-paginated response
+                    allAccessories = data;
+                    hasMore = false;
+                }
+            } catch (error) {
+                console.error('Error fetching accessories page', page, ':', error);
+                hasMore = false;
+            }
+        }
+
+        return allAccessories;
+    }
+
     // Fabric management functions
     function openFabricModal(fabric = null) {
         document.getElementById('fabricModal').classList.remove('hidden');
