@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from decimal import Decimal
+import logging
 
 class UserExtension(models.Model):
     ROLE_CHOICES = [
@@ -11,7 +12,7 @@ class UserExtension(models.Model):
     
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
-    phone_number = models.CharField(max_length=15)
+    phone_number = models.CharField(max_length=20)
     
     def __str__(self):
         return f"{self.user.username} - {self.role}"
@@ -19,7 +20,7 @@ class UserExtension(models.Model):
 
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    phone_number = models.CharField(max_length=15)
+    phone_number = models.CharField(max_length=20)
     address = models.TextField()
     measurements = models.TextField(default='{}', blank=True)
 
@@ -59,9 +60,39 @@ class Customer(models.Model):
 
 class Tailor(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    phone_number = models.CharField(max_length=15)
+    phone_number = models.CharField(max_length=20)
     specialty = models.CharField(max_length=100)
+    # Legacy percentage-based commission (kept for compatibility).
     commission_rate = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('10.00'))
+
+    # New fixed tariff-based commission mapping (amounts in currency units).
+    # Keys correspond to garment_type codes used on Order.garment_type (upper-case).
+    COMMISSION_TARIFFS = {
+        'BLOUSE': Decimal('180.00'),
+        'SKIRT': Decimal('150.00'),
+        'PANTS': Decimal('160.00'),
+        # Include POLO as an explicit key in case external callers use it; orders using POLO
+        # may be represented as 'OTHERS' in the current choices — see fallback handling.
+        'POLO': Decimal('250.00'),
+    }
+
+    def get_commission_amount(self, garment_type):
+        """
+        Return the fixed commission amount for the given garment_type.
+
+        Behavior:
+        - If a fixed tariff exists for the provided garment_type (case-insensitive), return it.
+        - If not found, fall back to the legacy percentage-based calculation
+          (commission_rate% of the order total) by returning None here so callers
+          can decide (we return None to signal "no fixed tariff").
+        """
+        if not garment_type:
+            return None
+        key = str(garment_type).upper()
+        if key in self.COMMISSION_TARIFFS:
+            return self.COMMISSION_TARIFFS[key]
+        # No fixed tariff defined for this garment type
+        return None
     
     def __str__(self):
         return f"{self.user.username} (Tailor)"
@@ -106,6 +137,9 @@ class Accessory(models.Model):
     quantity = models.IntegerField(default=0)
     price_per_unit = models.DecimalField(max_digits=10, decimal_places=2)
     low_stock_threshold = models.IntegerField(default=10)
+    # Which garment types this accessory is applicable to. When empty, accessory
+    # is treated as universally applicable to any garment.
+    applicable_garments = models.ManyToManyField('GarmentType', blank=True)
     
     @property
     def is_low_stock(self):
@@ -113,6 +147,22 @@ class Accessory(models.Model):
     
     def __str__(self):
         return self.name
+
+
+class GarmentType(models.Model):
+    """Represents a garment type (code) that accessories can be associated with.
+
+    Codes should match the `Order.GARMENT_TYPE_CHOICES` values (e.g. 'BLOUSE',
+    'SKIRT', 'PANTS', etc.).
+    """
+    code = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+    class Meta:
+        ordering = ['code']
 
 
 class Order(models.Model):
@@ -146,6 +196,7 @@ class Order(models.Model):
 
     GARMENT_TYPE_CHOICES = [
         ('BLOUSE', 'Blouse'),
+        ('POLO', 'Polo'),
         ('PANTS', 'Pants'),
         ('SKIRT', 'Skirt'),
         ('DRESS', 'Dress'),
@@ -168,7 +219,8 @@ class Order(models.Model):
     garment_type = models.CharField(max_length=10, choices=GARMENT_TYPE_CHOICES, default='OTHERS')
     quantity = models.PositiveIntegerField(default=1)
     fabric_type = models.CharField(max_length=100, blank=True)
-    accessories_preference = models.CharField(max_length=500, blank=True)
+    # Note: `accessories_preference` (free-text) removed in favor of `accessories` M2M and
+    # `accessories_ids` payload on the API. Use `accessories` relationship instead.
     color_design_preference = models.TextField(blank=True)
     order_date = models.DateField(auto_now_add=True, null=True)
     due_date = models.DateField(null=True, blank=True)
@@ -186,6 +238,10 @@ class Order(models.Model):
     down_payment_status = models.CharField(max_length=10, choices=DOWN_PAYMENT_STATUS_CHOICES, default='PENDING')
     down_payment_paid_at = models.DateTimeField(null=True, blank=True)
     remaining_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    # Flag to indicate whether inventory has already been deducted for this order.
+    # This prevents double-deduction when signals fire multiple times during
+    # order creation/updates.
+    inventory_deducted = models.BooleanField(default=False)
 
     # Comprehensive measurement fields for different garment types
     # Blouse/Shirt/Top measurements
@@ -373,3 +429,80 @@ class Commission(models.Model):
     
     def __str__(self):
         return f"Commission for {self.tailor.user.username} - Order {self.order.id}"
+
+
+# --- Inventory deduction hooks -------------------------------------------------
+logger = logging.getLogger(__name__)
+
+
+def _attempt_deduct_inventory(order):
+    """
+    Try to deduct inventory for an order if not already deducted.
+
+    This function performs a runtime import of InventoryManager to avoid a
+    circular import at module import time (business_logic imports models).
+    It will only deduct when InventoryManager.check_inventory_for_garment(order)
+    returns (True, message). If inventory is insufficient, it logs a warning
+    and leaves the order unchanged (so the caller/admin can resolve inventory
+    before retrying).
+    """
+    if not order:
+        return
+
+    try:
+        # Avoid circular import by importing here
+        from .business_logic import InventoryManager
+    except Exception as e:
+        logger.exception('Failed to import InventoryManager for inventory deduction: %s', e)
+        return
+
+    # If we've already deducted, nothing to do
+    if getattr(order, 'inventory_deducted', False):
+        return
+
+    # Ensure order has a fabric and required related data
+    if not getattr(order, 'fabric', None):
+        logger.debug('Order %s has no fabric set yet; skipping inventory deduction', getattr(order, 'id', 'unknown'))
+        return
+
+    # Run the inventory check
+    try:
+        has_inventory, message = InventoryManager.check_inventory_for_garment(order)
+    except Exception as e:
+        logger.exception('Inventory check failed for Order %s: %s', getattr(order, 'id', 'unknown'), e)
+        return
+
+    if not has_inventory:
+        # Not enough inventory; log and return. Admin/user should resolve.
+        logger.warning('Insufficient inventory for Order %s: %s', getattr(order, 'id', 'unknown'), message)
+        return
+
+    # Deduct inventory and mark the order so we don't deduct again.
+    try:
+        InventoryManager.deduct_inventory_for_garment(order)
+        order.inventory_deducted = True
+        # Save the flag only to avoid triggering heavy side-effects
+        order.save(update_fields=['inventory_deducted'])
+        logger.info('Inventory deducted for Order %s', order.id)
+    except Exception as e:
+        logger.exception('Failed to deduct inventory for Order %s: %s', getattr(order, 'id', 'unknown'), e)
+
+
+# Connect signals: handle post_save and m2m_changed so deduction occurs once
+from django.db.models.signals import post_save, m2m_changed
+from django.dispatch import receiver
+
+
+@receiver(post_save, sender=Order)
+def order_post_save(sender, instance, created, **kwargs):
+    # Attempt deduction after save; accessories m2m may not be set yet, but
+    # _attempt_deduct_inventory will no-op until everything needed is present.
+    _attempt_deduct_inventory(instance)
+
+
+@receiver(m2m_changed, sender=Order.accessories.through)
+def order_accessories_changed(sender, instance, action, **kwargs):
+    # When accessories are added/changed, try to deduct (post_add ensures
+    # the related accessories are present).
+    if action in ('post_add', 'post_remove', 'post_clear'):
+        _attempt_deduct_inventory(instance)

@@ -234,6 +234,37 @@
             </button>
         </div>
 
+        <!-- Sales Report -->
+        <div class="report-card bg-white rounded-xl p-6 shadow-lg border border-gray-100 slide-up">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-3">
+                    <i class="fas fa-receipt text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Sales Report</h3>
+                    <p class="text-gray-600 text-sm">Detailed sales listing and revenue breakdown</p>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Order-level export</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Revenue by day</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Top tailors by revenue</span>
+                    <i class="fas fa-check text-green-500"></i>
+                </div>
+            </div>
+            <div class="flex space-x-2 mt-4">
+                <button onclick="generateSalesReport()" class="flex-1 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white py-2 px-4 rounded-lg hover:from-yellow-600 hover:to-yellow-700 transition-all">Generate Report</button>
+                <button onclick="exportSalesCSV()" class="flex-1 bg-white border border-yellow-300 text-yellow-700 py-2 px-4 rounded-lg hover:bg-yellow-50 transition-all">Export CSV</button>
+            </div>
+        </div>
+
         <!-- Financial Report -->
         <div class="report-card bg-white rounded-xl p-6 shadow-lg border border-gray-100 slide-up">
             <div class="flex items-center space-x-4 mb-4">
@@ -683,6 +714,10 @@ function generateCustomerReport() {
     generateReport('customer', 'Customer Analytics Report');
 }
 
+function generateSalesReport() {
+    generateReport('sales', 'Sales Report');
+}
+
 function generateInventoryReport() {
     generateReport('inventory', 'Inventory Status Report');
 }
@@ -917,6 +952,34 @@ function generateCustomReport() {
         isGenerating = false;
         hideLoadingModal();
     }, 1500);
+}
+
+// Export sales as CSV (respects selected date range)
+function exportSalesCSV() {
+    const params = new URLSearchParams();
+    if (selectedPeriod === 'custom') {
+        const dateFrom = document.getElementById('dateFrom').value;
+        const dateTo = document.getElementById('dateTo').value;
+        if (!dateFrom || !dateTo) {
+            showNotification('Please select both start and end dates for custom range.', 'warning');
+            return;
+        }
+        params.append('date_from', dateFrom);
+        params.append('date_to', dateTo);
+    } else {
+        params.append('period', selectedPeriod);
+    }
+
+    params.append('format', 'csv');
+    const url = '/admin-reports/generate/sales/?' + params.toString();
+
+    // Trigger download in new tab
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 // Modal management functions

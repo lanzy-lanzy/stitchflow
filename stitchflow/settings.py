@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-vk4@gf@iq041+kcn2i$djuu+1)1i(*bb&*)#7cu$t79exj1yeu
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['testserver', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['testserver', '127.0.0.1', 'localhost','*']
 
 
 # Application definition
@@ -152,3 +152,8 @@ REST_FRAMEWORK = {
 LOGIN_URL = 'etailoring:login'
 LOGIN_REDIRECT_URL = 'etailoring:homepage'
 LOGOUT_REDIRECT_URL = 'etailoring:homepage'
+
+# Semaphore SMS Configuration
+# Replace 'your-api-key-here' with your actual Semaphore API key
+SEMAPHORE_API_KEY = os.getenv('SEMAPHORE_API_KEY', 'fa0f4ff77ba74de0b8e74be14735e951')
+SEMAPHORE_SENDER_NAME = 'elsenior'

@@ -90,110 +90,88 @@
 </div>
 
 <script>
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        const nextUrl = document.getElementById('next_url').value;
-        const statusDiv = document.getElementById('loginStatus');
-        const message = document.getElementById('loginMessage');
-        
-        // Get CSRF token from the form
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        
-        statusDiv.classList.remove('hidden');
-        message.className = 'text-sm text-blue-600';
-        message.textContent = 'Logging in...';
-        
-        // First, get an API token
-        fetch('/api/login/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify({
-                'username': username,
-                'password': password
-            })
-        })
-        .then(response => {
-            if (response.ok) {
-                return response.json();
-            } else {
-                throw new Error('Failed to get API token');
-            }
-        })
-        .then(data => {
-            // Store token in both session and local storage
-            const token = data.token;
-            sessionStorage.setItem('authToken', token);
-            localStorage.setItem('authToken', token);
-            
-            message.className = 'text-sm text-green-600';
-            message.textContent = 'Login successful! Redirecting...';
-            
-            // Redirect to appropriate page
-            if (nextUrl && nextUrl.trim() !== '') {
-                // If there's a next URL, append token as query param
-                const separator = nextUrl.includes('?') ? '&' : '?';
-                window.location.href = `${nextUrl}${separator}token=${token}`;
-            } else {
-                // Otherwise redirect to homepage or dashboard based on role
-                if (data.role === 'ADMIN') {
-                    window.location.href = '/admin-dashboard/';
-                } else if (data.role === 'TAILOR') {
-                    window.location.href = '/tailor-dashboard/';
-                } else {
-                    window.location.href = '/';
-                }
-            }
-        })
-        .catch(error => {
-            console.error('Error during login:', error);
-            
-            // Fallback to regular form submission
-            message.className = 'text-sm text-orange-600';
-            message.textContent = 'Using session authentication...';
-            
-            // Do Django session auth (form-based) directly
-            fetch('/login/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': csrfToken
-                },
-                body: new URLSearchParams({
-                    'username': username,
-                    'password': password,
-                    'next': nextUrl
-                })
-            })
-            .then(response => {
-                if (response.ok) {
-                    message.className = 'text-sm text-green-600';
-                    message.textContent = 'Login successful! Redirecting...';
-                    
-                    // If there's a next URL to redirect to
-                    if (nextUrl && nextUrl.trim() !== '') {
-                        window.location.href = nextUrl;
-                        return;
-                    }
-                    
-                    // Otherwise redirect to homepage and let server handle role-based redirect
-                    window.location.href = '/';
-                } else {
-                    message.className = 'text-sm text-red-600';
-                    message.textContent = 'Login failed. Please check your username and password.';
-                }
-            })
-            .catch(error => {
-                console.error('Error during session login:', error);
-                message.className = 'text-sm text-red-600';
-                message.textContent = 'An error occurred during login. Please try again.';
-            });
-        });
+  document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const nextUrl = document.getElementById('next_url').value;
+    const statusDiv = document.getElementById('loginStatus');
+    const message = document.getElementById('loginMessage');
+
+    // Get CSRF token from the form
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    // Fallback: submit the regular HTML form so the browser handles cookies and server redirects
+    // This ensures that if the API approach fails for any reason, the server-side session login will still work
+    const form = document.getElementById('loginForm');
+    statusDiv.classList.remove('hidden');
+    message.className = 'text-sm text-blue-600';
+    message.textContent = 'Logging in...';
+
+    // First, get an API token. Include credentials so the session cookie set by the server is applied.
+    fetch('/api/login/', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken
+      },
+      body: JSON.stringify({
+        'username': username,
+        'password': password
+      })
+    })
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error('Failed to get API token');
+      }
+    })
+    .then(data => {
+      // Store token in both session and local storage (useful for API calls)
+      const token = data.token;
+      if (token) {
+        sessionStorage.setItem('authToken', token);
+        localStorage.setItem('authToken', token);
+      }
+
+      message.className = 'text-sm text-green-600';
+      message.textContent = 'Login successful! Redirecting...';
+
+      // Normalize role check (case-insensitive) and handle missing role gracefully
+      const role = (data.role || '').toString().trim().toLowerCase();
+
+      if (nextUrl && nextUrl.trim() !== '') {
+        // If there's a next URL, append token as query param (if available)
+        const separator = nextUrl.includes('?') ? '&' : '?';
+        window.location.href = token ? `${nextUrl}${separator}token=${token}` : nextUrl;
+        return;
+      }
+
+      if (role === 'admin') {
+        window.location.href = '/admin-dashboard/';
+      } else if (role === 'tailor') {
+        // Redirect to tailor dashboard
+        window.location.href = '/tailor-dashboard/';
+      } else {
+        // If role is missing or unknown, fall back to server-side redirect so session login takes effect
+        // Redirecting to '/' will let the server detect the logged-in user's role and redirect appropriately.
+        window.location.href = '/';
+      }
+    })
+    .catch(error => {
+      console.error('Error during login:', error);
+
+      // Fallback to regular form submission using session authentication
+      message.className = 'text-sm text-orange-600';
+      message.textContent = 'Using session authentication...';
+
+        // Make sure hidden 'next' value is set
+        document.getElementById('next_url').value = nextUrl || '';
+        form.submit();
     });
+  });
 </script>
 {% endblock %}

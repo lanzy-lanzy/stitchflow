@@ -5,8 +5,8 @@
 {% block content %}
 <div class="bg-primary-cream rounded-xl shadow-lg p-6 border border-primary-beige">
     <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-text-dark flex items-center">
-            <i class="fas fa-credit-card text-text-medium mr-2"></i> Manage Customer Payments
+        <h2 class="text-3xl font-bold text-primary-rose flex items-center">
+            <i class="fas fa-credit-card mr-2"></i> Manage Payments
         </h2>
         <div class="flex space-x-2">
             <button id="refreshBtn" class="bg-primary-beige text-text-dark px-4 py-2 rounded-lg hover:bg-primary-peach transition-colors flex items-center">
@@ -16,34 +16,27 @@
     </div>
     
     <!-- Payment Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div class="bg-gradient-to-r from-red-50 to-red-100 rounded-lg p-4 shadow">
             <h4 class="text-md font-semibold text-red-800 mb-2 flex items-center">
-                <i class="fas fa-exclamation-circle mr-2"></i> Pending Payments
+                <i class="fas fa-exclamation-circle mr-2"></i> Pending
             </h4>
             <div class="text-2xl font-bold text-red-700" id="pendingPaymentsCount">0</div>
             <div class="text-sm text-red-600" id="pendingPaymentsAmount">₱0.00</div>
         </div>
         <div class="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-lg p-4 shadow">
             <h4 class="text-md font-semibold text-yellow-800 mb-2 flex items-center">
-                <i class="fas fa-clock mr-2"></i> Down Payment Paid
+                <i class="fas fa-clock mr-2"></i> Partial
             </h4>
             <div class="text-2xl font-bold text-yellow-700" id="downPaymentCount">0</div>
             <div class="text-sm text-yellow-600" id="downPaymentAmount">₱0.00</div>
         </div>
         <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4 shadow">
             <h4 class="text-md font-semibold text-green-800 mb-2 flex items-center">
-                <i class="fas fa-check-circle mr-2"></i> Fully Paid
+                <i class="fas fa-check-circle mr-2"></i> Completed
             </h4>
             <div class="text-2xl font-bold text-green-700" id="fullPaymentCount">0</div>
             <div class="text-sm text-green-600" id="fullPaymentAmount">₱0.00</div>
-        </div>
-        <div class="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4 shadow">
-            <h4 class="text-md font-semibold text-blue-800 mb-2 flex items-center">
-                <i class="fas fa-chart-line mr-2"></i> Total Revenue
-            </h4>
-            <div class="text-2xl font-bold text-blue-700" id="totalRevenue">₱0.00</div>
-            <div class="text-sm text-blue-600">All completed payments</div>
         </div>
     </div>
     
@@ -51,32 +44,31 @@
     <div class="mb-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-                <label class="block text-text-dark mb-2">Payment Status</label>
+                <label class="block text-text-dark mb-2 text-sm font-medium">Status</label>
                 <select id="paymentStatusFilter" class="w-full px-3 py-2 border border-primary-beige rounded-lg focus:ring-2 focus:ring-primary-rose focus:border-primary-rose bg-primary-cream text-text-dark">
-                    <option value="">All Payment Status</option>
-                    <option value="PENDING">Payment Pending</option>
-                    <option value="DOWN_PAYMENT_PAID">Down Payment Paid</option>
-                    <option value="PAID">Fully Paid</option>
+                    <option value="">All Statuses</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="DOWN_PAYMENT_PAID">Partial</option>
+                    <option value="PAID">Completed</option>
                 </select>
             </div>
             <div>
-                <label class="block text-text-dark mb-2">Customer</label>
+                <label class="block text-text-dark mb-2 text-sm font-medium">Customer</label>
                 <select id="customerFilter" class="w-full px-3 py-2 border border-primary-beige rounded-lg focus:ring-2 focus:ring-primary-rose focus:border-primary-rose bg-primary-cream text-text-dark">
                     <option value="">All Customers</option>
-                    <!-- Customers will be loaded here -->
                 </select>
             </div>
             <div>
-                <label class="block text-text-dark mb-2">Date Range</label>
+                <label class="block text-text-dark mb-2 text-sm font-medium">From Date</label>
                 <input type="date" id="dateFromFilter" class="w-full px-3 py-2 border border-primary-beige rounded-lg focus:ring-2 focus:ring-primary-rose focus:border-primary-rose bg-primary-cream text-text-dark">
             </div>
         </div>
-        <div class="mt-4">
-            <button id="applyFiltersBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                Apply Filters
+        <div class="mt-4 flex gap-2">
+            <button id="applyFiltersBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium">
+                Apply
             </button>
-            <button id="clearFiltersBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ml-2">
-                Clear Filters
+            <button id="clearFiltersBtn" class="bg-gray-400 text-white px-4 py-2 rounded-lg hover:bg-gray-500 transition-colors text-sm font-medium">
+                Clear
             </button>
         </div>
     </div>
@@ -85,21 +77,19 @@
     <div class="overflow-x-auto rounded-lg shadow">
         <table class="min-w-full bg-white border border-gray-200">
             <thead>
-                <tr class="bg-gradient-to-r from-green-50 to-green-100">
-                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Order ID</th>
-                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Customer</th>
-                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Total Amount</th>
-                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Down Payment</th>
-                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Remaining Balance</th>
-                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Payment Status</th>
-                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Created At</th>
-                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Actions</th>
+                <tr class="bg-text-dark text-white">
+                    <th class="py-3 px-4 border-b text-left font-semibold">Order</th>
+                    <th class="py-3 px-4 border-b text-left font-semibold">Customer</th>
+                    <th class="py-3 px-4 border-b text-right font-semibold">Total</th>
+                    <th class="py-3 px-4 border-b text-right font-semibold">Paid</th>
+                    <th class="py-3 px-4 border-b text-right font-semibold">Balance</th>
+                    <th class="py-3 px-4 border-b text-center font-semibold">Status</th>
+                    <th class="py-3 px-4 border-b text-center font-semibold">Actions</th>
                 </tr>
             </thead>
             <tbody id="paymentTableBody">
-                <!-- Payment data will be loaded here -->
                 <tr>
-                    <td colspan="8" class="py-4 px-4 text-center text-gray-500">Loading payment data...</td>
+                    <td colspan="7" class="py-4 px-4 text-center text-gray-500">Loading...</td>
                 </tr>
             </tbody>
         </table>
@@ -107,372 +97,433 @@
     
     <!-- Pagination -->
     <div class="flex justify-between items-center mt-6">
-        <div class="text-gray-600">
-            Showing <span id="startRecord">0</span> to <span id="endRecord">0</span> of <span id="totalRecords">0</span> records
+        <div class="text-sm text-gray-600">
+            <span id="startRecord">0</span>-<span id="endRecord">0</span> of <span id="totalRecords">0</span>
         </div>
         <div class="flex space-x-2">
-            <button id="prevPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors" disabled>
+            <button id="prevPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors text-sm" disabled>
                 Previous
             </button>
-            <button id="nextPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors" disabled>
+            <button id="nextPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors text-sm" disabled>
                 Next
             </button>
         </div>
     </div>
 </div>
 
+<!-- Payment Modal -->
+<div id="paymentModalOverlay" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+        <h3 class="text-lg font-semibold mb-4">Process Payment</h3>
+        <div class="bg-gray-50 p-3 rounded mb-4 text-sm">
+            <div class="mb-2"><span class="font-medium">Order:</span> <span id="paymentModalOrderId">#0</span></div>
+            <div><span class="font-medium">Type:</span> <span id="paymentModalType">-</span></div>
+        </div>
+        
+        <label class="block text-sm font-medium text-gray-700 mb-2">Amount</label>
+        <input id="paymentModalAmount" type="number" step="0.01" min="0" class="w-full px-3 py-2 border border-gray-300 rounded mb-4 focus:ring-2 focus:ring-primary-rose" />
+
+        <div class="flex justify-end space-x-2">
+            <button id="paymentModalCancel" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm font-medium">Cancel</button>
+            <button id="paymentModalConfirm" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium">Confirm</button>
+        </div>
+    </div>
+</div>
+
 <script>
-    // Get CSRF token
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    
-    // Current page and pagination info
     let currentPage = 1;
     let totalPages = 1;
-    let totalRecords = 0;
     
-    // Initialize authentication token from URL parameter if present
     document.addEventListener('DOMContentLoaded', function() {
-        // Check if auth token is in URL (e.g., after login redirect)
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
-        
         if (token) {
-            // Store token in both session and local storage
             sessionStorage.setItem('authToken', token);
             localStorage.setItem('authToken', token);
-            
-            // Remove token from URL to avoid leaking it in browser history
             window.history.replaceState({}, document.title, window.location.pathname);
         }
         
-        // Load data
         loadPaymentData();
         loadCustomerFilterData();
         loadPaymentSummary();
     });
     
-    // Refresh button
-    document.getElementById('refreshBtn').addEventListener('click', function() {
-        loadPaymentData();
-        loadPaymentSummary();
-    });
-    
-    // Apply filters button
-    document.getElementById('applyFiltersBtn').addEventListener('click', function() {
+    document.getElementById('refreshBtn').addEventListener('click', () => {
         currentPage = 1;
         loadPaymentData();
         loadPaymentSummary();
     });
     
-    // Clear filters button
-    document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+    document.getElementById('applyFiltersBtn').addEventListener('click', () => {
+        currentPage = 1;
+        loadPaymentData();
+    });
+    
+    document.getElementById('clearFiltersBtn').addEventListener('click', () => {
         document.getElementById('paymentStatusFilter').value = '';
         document.getElementById('customerFilter').value = '';
         document.getElementById('dateFromFilter').value = '';
         currentPage = 1;
         loadPaymentData();
-        loadPaymentSummary();
     });
     
-    // Pagination buttons
-    document.getElementById('prevPage').addEventListener('click', function() {
+    document.getElementById('prevPage').addEventListener('click', () => {
         if (currentPage > 1) {
             currentPage--;
             loadPaymentData();
         }
     });
     
-    document.getElementById('nextPage').addEventListener('click', function() {
+    document.getElementById('nextPage').addEventListener('click', () => {
         if (currentPage < totalPages) {
             currentPage++;
             loadPaymentData();
         }
     });
     
+    function getAuthHeaders() {
+        const authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+        const headers = {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+        };
+        if (authToken) {
+            headers['Authorization'] = 'Token ' + authToken;
+        }
+        return headers;
+    }
+    
     function loadPaymentData() {
-        // Build query parameters
-        const params = new URLSearchParams();
-        params.append('page', currentPage);
-        
-        const paymentStatusFilter = document.getElementById('paymentStatusFilter').value;
-        if (paymentStatusFilter) {
-            params.append('payment_status', paymentStatusFilter);
-        }
-        
-        const customerFilter = document.getElementById('customerFilter').value;
-        if (customerFilter) {
-            params.append('customer', customerFilter);
-        }
-        
-        const dateFromFilter = document.getElementById('dateFromFilter').value;
-        if (dateFromFilter) {
-            params.append('date_from', dateFromFilter);
-        }
-        
-        // Get token from session storage first, then local storage as fallback
-        let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
-        
+        const params = new URLSearchParams({
+            page: currentPage,
+            payment_status: document.getElementById('paymentStatusFilter').value || '',
+            customer: document.getElementById('customerFilter').value || '',
+            date_from: document.getElementById('dateFromFilter').value || ''
+        });
+
         fetch(`/api/admin/orders/?${params.toString()}`, {
-            headers: {
-                'Authorization': 'Token ' + (authToken || ''),
-                'X-CSRFToken': csrfToken,
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             credentials: 'include'
         })
         .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to load payment data: ' + response.status);
-            }
+            if (!response.ok) throw new Error('Failed to load payment data');
             return response.json();
         })
         .then(data => {
             const orders = data.results || data;
-            const paymentTableBody = document.getElementById('paymentTableBody');
-            paymentTableBody.innerHTML = '';
+            const tbody = document.getElementById('paymentTableBody');
+            tbody.innerHTML = '';
             
             if (!orders || orders.length === 0) {
-                paymentTableBody.innerHTML = '<tr><td colspan="8" class="py-4 px-4 text-center text-gray-500">No payment records found.</td></tr>';
-                updatePagination(0, 1, 0);
+                tbody.innerHTML = '<tr><td colspan="7" class="py-4 px-4 text-center text-gray-500">No records found</td></tr>';
+                updatePagination(0, 1, 10);
                 return;
             }
             
             orders.forEach(order => {
                 const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50';
+                // If status is PAID, balance should be 0 (regardless of remaining_balance in data)
+                const isPaid = order.payment_status === 'PAID';
+                const balance = isPaid ? 0 : parseFloat(order.remaining_balance || 0);
+                const paid = parseFloat(order.total_amount || 0) - balance;
+                
+                row.className = 'hover:bg-gray-50 border-b';
                 row.innerHTML = `
-                    <td class="py-2 px-4 border-b">#${order.id}</td>
-                    <td class="py-2 px-4 border-b">${order.customer && order.customer.user ? `${order.customer.user.first_name} ${order.customer.user.last_name}` : 'Unknown Customer'}</td>
-                    <td class="py-2 px-4 border-b">${PricingManager.formatCurrency(order.total_amount || 0)}</td>
-                    <td class="py-2 px-4 border-b">${PricingManager.formatCurrency(order.down_payment_amount || 0)}</td>
-                    <td class="py-2 px-4 border-b">${PricingManager.formatCurrency(order.remaining_balance || 0)}</td>
-                    <td class="py-2 px-4 border-b">
-                        <span class="px-2 py-1 rounded-full text-xs ${getPaymentStatusColorClass(order.payment_status)}">
-                            ${getPaymentStatusDisplay(order.payment_status)}
+                    <td class="py-3 px-4 font-medium">#${order.id}</td>
+                    <td class="py-3 px-4">${order.customer && order.customer.user ? `${order.customer.user.first_name} ${order.customer.user.last_name}` : 'Unknown'}</td>
+                    <td class="py-3 px-4 text-right">${PricingManager.formatCurrency(order.total_amount || 0)}</td>
+                    <td class="py-3 px-4 text-right text-green-700 font-medium">${PricingManager.formatCurrency(paid)}</td>
+                    <td class="py-3 px-4 text-right ${balance > 0 ? 'text-red-700 font-medium' : 'text-green-700'}">${PricingManager.formatCurrency(balance)}</td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(order.payment_status)}">
+                            ${getStatusDisplay(order.payment_status)}
                         </span>
                     </td>
-                    <td class="py-2 px-4 border-b">${order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}</td>
-                    <td class="py-2 px-4 border-b">
-                        ${getPaymentActions(order)}
+                    <td class="py-3 px-4 text-center">
+                        ${getActionButtons(order)}
                     </td>
                 `;
-                paymentTableBody.appendChild(row);
+                tbody.appendChild(row);
             });
             
-            // Update pagination info
             if (data.count !== undefined) {
                 updatePagination(data.count, currentPage, 10);
-            } else {
-                updatePagination(orders.length, 1, orders.length);
             }
             
-            // Add event listeners to action buttons
-            addPaymentActionListeners();
+            addActionListeners();
         })
         .catch(error => {
-            console.error('Error loading payment data:', error);
-            document.getElementById('paymentTableBody').innerHTML = '<tr><td colspan="8" class="py-4 px-4 text-center text-red-500">Error loading payment data. Please refresh the page.</td></tr>';
+            console.error('Error:', error);
+            document.getElementById('paymentTableBody').innerHTML = '<tr><td colspan="7" class="py-4 px-4 text-center text-red-500">Error loading data</td></tr>';
         });
     }
-
-    function getPaymentActions(order) {
+    
+    function getStatusClass(status) {
+        const classes = {
+            'PENDING': 'bg-red-100 text-red-800',
+            'DOWN_PAYMENT_PAID': 'bg-yellow-100 text-yellow-800',
+            'PAID': 'bg-green-100 text-green-800'
+        };
+        return classes[status] || 'bg-gray-100 text-gray-800';
+    }
+    
+    function getStatusDisplay(status) {
+        const display = {
+            'PENDING': 'Pending',
+            'DOWN_PAYMENT_PAID': 'Partial',
+            'PAID': 'Completed'
+        };
+        return display[status] || 'Unknown';
+    }
+    
+    function getActionButtons(order) {
+        let buttons = '';
         if (order.payment_status === 'PENDING') {
-            return `
-                <button class="text-blue-600 hover:text-blue-900 mr-2 process-down-payment" data-order-id="${order.id}" title="Process Down Payment">
-                    <i class="fas fa-money-bill-wave"></i> Down Payment
-                </button>
-                <button class="text-green-600 hover:text-green-900 process-full-payment" data-order-id="${order.id}" title="Process Full Payment">
-                    <i class="fas fa-credit-card"></i> Full Payment
-                </button>
-            `;
+            buttons = `<button class="text-green-600 hover:underline text-sm process-full-payment font-medium" data-order-id="${order.id}">Pay Full</button>`;
         } else if (order.payment_status === 'DOWN_PAYMENT_PAID') {
-            return `
-                <button class="text-green-600 hover:text-green-900 process-remaining-payment" data-order-id="${order.id}" title="Process Remaining Payment">
-                    <i class="fas fa-credit-card"></i> Remaining Balance
-                </button>
-            `;
+            buttons = `<button class="text-green-600 hover:underline text-sm process-remaining-payment font-medium" data-order-id="${order.id}">Pay Balance</button>`;
         } else {
-            return `
-                <span class="text-green-600 font-medium">
-                    <i class="fas fa-check-circle"></i> Paid
-                </span>
-            `;
+            buttons = `<span class="text-green-600 text-sm font-medium">✓ Paid</span>`;
         }
+        buttons += ` <button class="text-blue-600 hover:underline text-sm print-receipt font-medium ml-2" data-order-id="${order.id}">Print</button>`;
+        return buttons;
     }
-
-    function getPaymentStatusColorClass(paymentStatus) {
-        switch(paymentStatus) {
-            case 'PENDING':
-                return 'bg-red-100 text-red-800';
-            case 'DOWN_PAYMENT_PAID':
-                return 'bg-yellow-100 text-yellow-800';
-            case 'PAID':
-                return 'bg-green-100 text-green-800';
-            default:
-                return 'bg-gray-100 text-gray-800';
-        }
-    }
-
-    function getPaymentStatusDisplay(paymentStatus) {
-        switch(paymentStatus) {
-            case 'PENDING':
-                return 'Payment Pending';
-            case 'DOWN_PAYMENT_PAID':
-                return 'Down Payment Paid';
-            case 'PAID':
-                return 'Fully Paid';
-            default:
-                return 'Unknown';
-        }
-    }
-
-    function addPaymentActionListeners() {
-        // Process down payment
-        document.querySelectorAll('.process-down-payment').forEach(button => {
-            button.addEventListener('click', function() {
+    
+    function addActionListeners() {
+        document.querySelectorAll('.process-full-payment').forEach(btn => {
+            btn.addEventListener('click', async function() {
                 const orderId = this.getAttribute('data-order-id');
-                processDownPayment(orderId);
+                const resp = await fetch(`/api/admin/orders/${orderId}/`, {
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
+                });
+                const order = resp.ok ? await resp.json() : {};
+                showPaymentModal(orderId, 'FULL_PAYMENT', order.total_amount || 0);
             });
         });
 
-        // Process full payment
-        document.querySelectorAll('.process-full-payment').forEach(button => {
-            button.addEventListener('click', function() {
+        document.querySelectorAll('.process-remaining-payment').forEach(btn => {
+            btn.addEventListener('click', async function() {
                 const orderId = this.getAttribute('data-order-id');
-                processFullPayment(orderId);
+                const resp = await fetch(`/api/admin/orders/${orderId}/`, {
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
+                });
+                const order = resp.ok ? await resp.json() : {};
+                showPaymentModal(orderId, 'REMAINING_PAYMENT', order.remaining_balance || 0);
             });
         });
 
-        // Process remaining payment
-        document.querySelectorAll('.process-remaining-payment').forEach(button => {
-            button.addEventListener('click', function() {
+        document.querySelectorAll('.print-receipt').forEach(btn => {
+            btn.addEventListener('click', async function() {
                 const orderId = this.getAttribute('data-order-id');
-                processRemainingPayment(orderId);
+                const resp = await fetch(`/api/admin/orders/${orderId}/`, {
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
+                });
+                const order = resp.ok ? await resp.json() : { id: orderId };
+                printOrderReceipt(order);
             });
         });
     }
-
-    function processDownPayment(orderId) {
-        if (confirm('Are you sure you want to mark the down payment as received?')) {
-            processPayment(orderId, 'DOWN_PAYMENT');
+    
+    function printOrderReceipt(order) {
+        if (!order) return;
+        
+        // If status is PAID, balance must be 0 (fix backend inconsistency)
+        const isPaid = order.payment_status === 'PAID';
+        const balance = isPaid ? 0 : parseFloat(order.remaining_balance || 0);
+        const hasBalance = balance > 0;
+        
+        const w = window.open('', '_blank');
+        if (!w) {
+            alert('Popup blocked. Please allow popups to print receipts.');
+            return;
         }
+
+        const html = `
+            <html>
+            <head>
+                <title>Receipt - Order #${order.id}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 30px; max-width: 500px; margin: 0 auto; }
+                    .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 15px; }
+                    .header h1 { margin: 0; font-size: 24px; }
+                    .header p { margin: 5px 0; color: #666; }
+                    .order-info { margin-bottom: 20px; }
+                    .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+                    .row-label { font-weight: 600; }
+                    .amount { text-align: right; font-weight: 600; }
+                    .total-row { border-bottom: 2px solid #333; padding: 10px 0; font-size: 18px; margin-top: 10px; }
+                    .balance-warning { background-color: #fff3cd; border: 2px solid #ff6b6b; padding: 12px; margin-top: 15px; border-radius: 5px; color: #d9534f; font-weight: bold; text-align: center; }
+                    .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+                    .status-paid { color: #28a745; }
+                    .status-pending { color: #dc3545; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>El Senior Dumingag</h1>
+                    <p>Order Receipt</p>
+                </div>
+                
+                <div class="order-info">
+                    <div class="row">
+                        <span class="row-label">Order ID:</span>
+                        <span>#${order.id}</span>
+                    </div>
+                    <div class="row">
+                        <span class="row-label">Customer:</span>
+                        <span>${order.customer && order.customer.user ? (order.customer.user.first_name + ' ' + order.customer.user.last_name) : 'N/A'}</span>
+                    </div>
+                    <div class="row">
+                        <span class="row-label">Date:</span>
+                        <span>${order.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}</span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <span class="row-label">Total Amount:</span>
+                    <span class="amount">₱${Number(order.total_amount || 0).toFixed(2)}</span>
+                </div>
+                ${(!isPaid && Number(order.down_payment_amount || 0) > 0) ? `
+                <div class="row">
+                    <span class="row-label">Down Payment:</span>
+                    <span class="amount">₱${Number(order.down_payment_amount || 0).toFixed(2)}</span>
+                </div>
+                ` : ''}
+                <div class="row">
+                    <span class="row-label">Amount Paid:</span>
+                    <span class="amount" style="color: #28a745;">₱${Number((order.total_amount || 0) - balance).toFixed(2)}</span>
+                </div>
+                
+                <div class="total-row">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Remaining Balance:</span>
+                        <span class="amount">₱${Number(balance).toFixed(2)}</span>
+                    </div>
+                </div>
+
+                ${hasBalance ? `
+                    <div class="balance-warning">
+                        ⚠️ OUTSTANDING BALANCE<br>
+                        Amount Due: ₱${Number(balance).toFixed(2)}
+                    </div>
+                ` : ''}
+
+                <div class="footer">
+                    <p>Thank you for your business!</p>
+                    <p>Printed on: ${new Date().toLocaleString()}</p>
+                </div>
+
+                <script>window.onload = function(){ window.print(); };<\/script>
+            </body>
+            </html>
+        `;
+
+        w.document.write(html);
+        w.document.close();
     }
+    
+    function showPaymentModal(orderId, type, amount) {
+        const overlay = document.getElementById('paymentModalOverlay');
+        document.getElementById('paymentModalOrderId').textContent = `#${orderId}`;
+        document.getElementById('paymentModalType').textContent = type === 'FULL_PAYMENT' ? 'Full Payment' : 'Remaining Balance';
+        document.getElementById('paymentModalAmount').value = Number(amount).toFixed(2);
 
-    function processFullPayment(orderId) {
-        if (confirm('Are you sure you want to mark the full payment as received?')) {
-            processPayment(orderId, 'FULL_PAYMENT');
-        }
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+
+        const cancelBtn = document.getElementById('paymentModalCancel');
+        const confirmBtn = document.getElementById('paymentModalConfirm');
+        
+        const onCancel = () => {
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+            cancelBtn.removeEventListener('click', onCancel);
+            confirmBtn.removeEventListener('click', onConfirm);
+        };
+
+        const onConfirm = () => {
+            const amt = parseFloat(document.getElementById('paymentModalAmount').value) || 0;
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+            cancelBtn.removeEventListener('click', onCancel);
+            confirmBtn.removeEventListener('click', onConfirm);
+            processPayment(orderId, type, amt);
+        };
+
+        cancelBtn.addEventListener('click', onCancel);
+        confirmBtn.addEventListener('click', onConfirm);
     }
-
-    function processRemainingPayment(orderId) {
-        if (confirm('Are you sure you want to mark the remaining balance as received?')) {
-            processPayment(orderId, 'REMAINING_PAYMENT');
-        }
-    }
-
-    function processPayment(orderId, paymentType) {
-        let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
-
+    
+    function processPayment(orderId, type, amount) {
         fetch(`/api/admin/orders/${orderId}/process-payment/`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken,
-                'Authorization': 'Token ' + (authToken || '')
-            },
+            headers: getAuthHeaders(),
             credentials: 'include',
             body: JSON.stringify({
-                payment_type: paymentType
+                payment_type: type,
+                amount: amount
             })
         })
         .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to process payment: ' + response.status);
-            }
+            if (!response.ok) throw new Error('Failed to process payment');
             return response.json();
         })
-        .then(data => {
+        .then(() => {
             alert('Payment processed successfully!');
             loadPaymentData();
             loadPaymentSummary();
         })
         .catch(error => {
-            console.error('Error processing payment:', error);
-            alert('Error processing payment: ' + error.message);
+            alert('Error: ' + error.message);
         });
     }
-
+    
     function loadPaymentSummary() {
-        let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
-
         fetch('/api/admin/payment-summary/', {
-            headers: {
-                'Authorization': 'Token ' + (authToken || ''),
-                'X-CSRFToken': csrfToken,
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             credentials: 'include'
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to load payment summary');
-            }
-            return response.json();
-        })
+        .then(response => response.ok ? response.json() : null)
         .then(data => {
+            if (!data) return;
             document.getElementById('pendingPaymentsCount').textContent = data.pending_count || 0;
             document.getElementById('pendingPaymentsAmount').textContent = PricingManager.formatCurrency(data.pending_amount || 0);
             document.getElementById('downPaymentCount').textContent = data.down_payment_count || 0;
             document.getElementById('downPaymentAmount').textContent = PricingManager.formatCurrency(data.down_payment_amount || 0);
             document.getElementById('fullPaymentCount').textContent = data.full_payment_count || 0;
             document.getElementById('fullPaymentAmount').textContent = PricingManager.formatCurrency(data.full_payment_amount || 0);
-            document.getElementById('totalRevenue').textContent = PricingManager.formatCurrency(data.total_revenue || 0);
         })
-        .catch(error => {
-            console.error('Error loading payment summary:', error);
-        });
+        .catch(error => console.error('Error loading summary:', error));
     }
-
+    
     function loadCustomerFilterData() {
-        let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
-
         fetch('/api/admin/customers/', {
-            headers: {
-                'Authorization': 'Token ' + (authToken || ''),
-                'X-CSRFToken': csrfToken,
-                'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             credentials: 'include'
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to load customers');
-            }
-            return response.json();
-        })
+        .then(response => response.ok ? response.json() : null)
         .then(customers => {
-            const customerFilter = document.getElementById('customerFilter');
+            if (!customers) return;
+            const select = document.getElementById('customerFilter');
             customers.forEach(customer => {
                 const option = document.createElement('option');
                 option.value = customer.id;
                 option.textContent = `${customer.user.first_name} ${customer.user.last_name}`;
-                customerFilter.appendChild(option);
+                select.appendChild(option);
             });
         })
-        .catch(error => {
-            console.error('Error loading customers for filter:', error);
-        });
+        .catch(error => console.error('Error loading customers:', error));
     }
-
+    
     function updatePagination(total, current, perPage) {
-        totalRecords = total;
-        currentPage = current;
         totalPages = Math.ceil(total / perPage);
-
         document.getElementById('startRecord').textContent = total === 0 ? 0 : ((current - 1) * perPage) + 1;
         document.getElementById('endRecord').textContent = Math.min(current * perPage, total);
         document.getElementById('totalRecords').textContent = total;
-
         document.getElementById('prevPage').disabled = current === 1;
         document.getElementById('nextPage').disabled = current === totalPages;
     }

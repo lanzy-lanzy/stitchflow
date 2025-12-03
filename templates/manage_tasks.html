@@ -8,85 +8,123 @@
         <h2 class="text-2xl font-bold text-gray-800 flex items-center">
             <i class="fas fa-tasks text-green-600 mr-2"></i> Manage Tasks
         </h2>
-        <div class="flex space-x-2">
-            <button id="refreshBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center">
-                <i class="fas fa-sync-alt mr-2"></i>Refresh
-            </button>
-        </div>
+        <button id="refreshBtn"
+            class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center">
+            <i class="fas fa-sync-alt mr-2"></i>Refresh
+        </button>
     </div>
-    
+
     <!-- Filter Options -->
-    <div class="mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-                <label class="block text-gray-700 mb-2">Status</label>
-                <select id="statusFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-200 focus:border-green-500">
+    <div class="mb-6 bg-white border border-gray-200 rounded-lg p-4">
+        <div class="flex flex-wrap items-end gap-3">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-2">Status</label>
+                <select id="statusFilter"
+                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
                     <option value="">All Statuses</option>
                     <option value="ASSIGNED">Assigned</option>
                     <option value="IN_PROGRESS">In Progress</option>
                     <option value="COMPLETED">Completed</option>
                 </select>
             </div>
-            <div>
-                <label class="block text-gray-700 mb-2">Tailor</label>
-                <select id="tailorFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-200 focus:border-green-500">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-2">Tailor</label>
+                <select id="tailorFilter"
+                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
                     <option value="">All Tailors</option>
-                    <!-- Tailors will be loaded here -->
                 </select>
             </div>
-            <div>
-                <label class="block text-gray-700 mb-2">Order</label>
-                <select id="orderFilter" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-200 focus:border-green-500">
+            <div class="flex-1 min-w-[200px]">
+                <label class="block text-xs font-semibold text-gray-600 uppercase mb-2">Order</label>
+                <select id="orderFilter"
+                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
                     <option value="">All Orders</option>
-                    <!-- Orders will be loaded here -->
                 </select>
             </div>
-        </div>
-        <div class="mt-4">
-            <button id="applyFiltersBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors">
-                Apply Filters
-            </button>
-            <button id="clearFiltersBtn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ml-2">
-                Clear Filters
-            </button>
+            <div class="flex gap-2">
+                <button id="applyFiltersBtn"
+                    class="bg-green-600 text-white px-5 py-2 text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+                    Apply
+                </button>
+                <button id="clearFiltersBtn"
+                    class="bg-gray-500 text-white px-5 py-2 text-sm font-medium rounded-lg hover:bg-gray-600 transition-colors">
+                    Reset
+                </button>
+            </div>
         </div>
     </div>
-    
+
     <!-- Task Table -->
-    <div class="overflow-x-auto rounded-lg shadow">
-        <table class="min-w-full bg-white border border-gray-200">
+    <div class="overflow-x-auto rounded-lg border border-gray-200">
+        <table class="min-w-full bg-white">
             <thead>
-                <tr class="bg-gradient-to-r from-green-50 to-green-100">
-                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">ID</th>
-                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Order</th>
-                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Customer</th>
-                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Tailor</th>
-                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Status</th>
-                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Assigned At</th>
-                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Completed At</th>
-                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Actions</th>
+                <tr class="bg-gray-100 border-b border-gray-200">
+                    <th class="py-3 px-4 text-left text-gray-700 font-semibold text-sm">Order</th>
+                    <th class="py-3 px-4 text-left text-gray-700 font-semibold text-sm">Customer</th>
+                    <th class="py-3 px-4 text-left text-gray-700 font-semibold text-sm">Tailor</th>
+                    <th class="py-3 px-4 text-left text-gray-700 font-semibold text-sm">Status</th>
+                    <th class="py-3 px-4 text-left text-gray-700 font-semibold text-sm">Date</th>
+                    <th class="py-3 px-4 text-center text-gray-700 font-semibold text-sm">Actions</th>
                 </tr>
             </thead>
             <tbody id="taskTableBody">
                 <!-- Task data will be loaded here -->
                 <tr>
-                    <td colspan="8" class="py-4 px-4 text-center text-gray-500">Loading task data...</td>
+                    <td colspan="6" class="py-4 px-4 text-center text-gray-500">Loading task data...</td>
                 </tr>
             </tbody>
         </table>
     </div>
-    
+
     <!-- Pagination -->
     <div class="flex justify-between items-center mt-6">
         <div class="text-gray-600">
-            Showing <span id="startRecord">0</span> to <span id="endRecord">0</span> of <span id="totalRecords">0</span> records
+            Showing <span id="startRecord">0</span> to <span id="endRecord">0</span> of <span id="totalRecords">0</span>
+            records
         </div>
         <div class="flex space-x-2">
-            <button id="prevPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors" disabled>
+            <button id="prevPage"
+                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors"
+                disabled>
                 Previous
             </button>
-            <button id="nextPage" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors" disabled>
+            <button id="nextPage"
+                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors"
+                disabled>
                 Next
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Task Details Modal -->
+<div id="taskModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-screen overflow-y-auto">
+        <!-- Modal Header -->
+        <div class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-gray-900">Task Details</h3>
+            <button onclick="closeTaskModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="px-6 py-6" id="taskDetailsContent">
+            <!-- Content will be loaded here -->
+            <div class="flex justify-center items-center py-8">
+                <i class="fas fa-spinner fa-spin text-2xl text-green-600"></i>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="border-t border-gray-200 px-6 py-4 bg-gray-50 flex justify-end gap-2">
+            <button onclick="closeTaskModal()"
+                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors">
+                Close
+            </button>
+            <button id="editTaskBtn" onclick="editTaskFromModal()"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                Edit Task
             </button>
         </div>
     </div>
@@ -95,101 +133,98 @@
 <script>
     // Get CSRF token
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    
+
     // Current page and pagination info
     let currentPage = 1;
     let totalPages = 1;
     let totalRecords = 0;
-    
+
     // Initialize authentication token from URL parameter if present
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // Check if auth token is in URL (e.g., after login redirect)
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
-        
+
         if (token) {
             // Store token in both session and local storage
             sessionStorage.setItem('authToken', token);
             localStorage.setItem('authToken', token);
-            
+
             // Remove token from URL to avoid leaking it in browser history
             const newUrl = window.location.pathname;
             window.history.replaceState({}, document.title, newUrl);
-            
+
             console.log('Authentication token set from URL parameter');
         }
-        
+
         // Load data
         loadTaskData();
         loadTailorFilterData();
         loadOrderFilterData();
     });
-    
+
     // Refresh button
-    document.getElementById('refreshBtn').addEventListener('click', function() {
+    document.getElementById('refreshBtn').addEventListener('click', function () {
         currentPage = 1;
         loadTaskData();
     });
-    
+
     // Apply filters button
-    document.getElementById('applyFiltersBtn').addEventListener('click', function() {
+    document.getElementById('applyFiltersBtn').addEventListener('click', function () {
         currentPage = 1;
         loadTaskData();
     });
-    
+
     // Clear filters button
-    document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+    document.getElementById('clearFiltersBtn').addEventListener('click', function () {
         document.getElementById('statusFilter').value = '';
         document.getElementById('tailorFilter').value = '';
         document.getElementById('orderFilter').value = '';
         currentPage = 1;
         loadTaskData();
     });
-    
+
     // Pagination buttons
-    document.getElementById('prevPage').addEventListener('click', function() {
+    document.getElementById('prevPage').addEventListener('click', function () {
         if (currentPage > 1) {
             currentPage--;
             loadTaskData();
         }
     });
-    
-    document.getElementById('nextPage').addEventListener('click', function() {
+
+    document.getElementById('nextPage').addEventListener('click', function () {
         if (currentPage < totalPages) {
             currentPage++;
             loadTaskData();
         }
     });
-    
+
     function loadTaskData() {
         // Build query parameters
         const params = new URLSearchParams();
         params.append('page', currentPage);
-        
+
         const statusFilter = document.getElementById('statusFilter').value;
         if (statusFilter) {
             params.append('status', statusFilter);
         }
-        
+
         const tailorFilter = document.getElementById('tailorFilter').value;
         if (tailorFilter) {
             params.append('tailor', tailorFilter);
         }
-        
+
         const orderFilter = document.getElementById('orderFilter').value;
         if (orderFilter) {
             params.append('order', orderFilter);
         }
-        
+
         // Get token from session storage first, then local storage as fallback
         let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
-        
-        // If no token is found, check if we can get it from the cookie
-        if (!authToken) {
-            // Log authentication state for debugging
-            console.log('No auth token found in storage, using session authentication');
-        }
-        
+
+        console.log('Loading tasks with params:', params.toString());
+        console.log('Auth token present:', !!authToken);
+
         // Fetch task data from API with pagination
         fetch(`/api/admin/tasks/?${params.toString()}`, {
             headers: {
@@ -197,143 +232,137 @@
                 'X-CSRFToken': csrfToken,
                 ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
             },
-            credentials: 'include' // Include cookies for session authentication
+            credentials: 'include'
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to fetch tasks: ' + response.status);
-            }
-            return response.json();
-        })
-        .then(data => {
-            const tasks = data.results || data; // Handle both paginated and non-paginated responses
-            const taskTableBody = document.getElementById('taskTableBody');
-            taskTableBody.innerHTML = '';
-            
-            if (tasks.length === 0) {
-                taskTableBody.innerHTML = '<tr><td colspan="8" class="py-4 px-4 text-center text-gray-500">No tasks found</td></tr>';
-                updatePagination(0, 1, 0);
-                return;
-            }
-            
-            tasks.forEach(task => {
-                const row = document.createElement('tr');
-                row.className = 'hover:bg-gray-50';
-                row.innerHTML = `
-                    <td class="py-2 px-4 border-b">${task.id}</td>
-                    <td class="py-2 px-4 border-b">Order #${task.order || 'N/A'}</td>
-                    <td class="py-2 px-4 border-b">${task.customer_name || 'N/A'}</td>
-                    <td class="py-2 px-4 border-b">${task.tailor && task.tailor.user ? `${task.tailor.user.first_name} ${task.tailor.user.last_name}` : 'Unassigned'}</td>
-                    <td class="py-2 px-4 border-b">
-                        <span class="px-2 py-1 rounded-full text-xs ${getStatusColorClass(task.status)}">
-                            ${task.status || 'UNKNOWN'}
-                        </span>
-                    </td>
-                    <td class="py-2 px-4 border-b">${task.assigned_at ? new Date(task.assigned_at).toLocaleDateString() : 'N/A'}</td>
-                    <td class="py-2 px-4 border-b">${task.completed_at ? new Date(task.completed_at).toLocaleDateString() : 'N/A'}</td>
-                    <td class="py-2 px-4 border-b">
-                        <button class="text-indigo-600 hover:text-indigo-900 mr-2 view-task" data-id="${task.id}" title="View">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="text-blue-600 hover:text-blue-900 mr-2 edit-task" data-id="${task.id}" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        ${task.status === 'COMPLETED' ?
-                        `<button class="text-blue-600 hover:text-blue-900 mr-2 approve-task" data-task-id="${task.id}" title="Approve Task & Create Commission">
-                            <i class="fas fa-thumbs-up"></i>
-                        </button>
-                        <button class="text-green-600 hover:text-green-900 mr-2 process-payment" data-order-id="${task.order}" title="Process Payment">
-                            <i class="fas fa-money-bill-wave"></i>
-                        </button>` :
-                        task.status === 'APPROVED' ?
-                        `<button class="text-green-600 hover:text-green-900 mr-2 process-payment" data-order-id="${task.order}" title="Process Payment">
-                            <i class="fas fa-money-bill-wave"></i>
-                        </button>
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('API Response data:', data);
+                const tasks = data.results || data; // Handle both paginated and non-paginated responses
+                const taskTableBody = document.getElementById('taskTableBody');
+                taskTableBody.innerHTML = '';
+
+                if (!tasks || tasks.length === 0) {
+                    taskTableBody.innerHTML = '<tr><td colspan="6" class="py-4 px-4 text-center text-gray-500">No tasks found</td></tr>';
+                    updatePagination(0, 1, 0);
+                    return;
+                }
+
+                tasks.forEach((task) => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b border-gray-200 hover:bg-gray-50 transition-colors';
+
+                    // Get action buttons based on status
+                    let actionButtons = '';
+                    if (task.status === 'COMPLETED') {
+                        actionButtons = `
+                        <button class="text-blue-600 hover:text-blue-900 approve-task" data-task-id="${task.id}" title="Approve Task">
+                            <i class="fas fa-check-circle"></i>
+                        </button>`;
+                    } else if (task.status === 'APPROVED') {
+                        actionButtons = `
                         <button class="text-purple-600 hover:text-purple-900 pay-commission" data-task-id="${task.id}" title="Pay Commission">
                             <i class="fas fa-coins"></i>
-                        </button>` :
-                        `<button class="text-green-600 hover:text-green-900 complete-task" data-id="${task.id}" title="Complete">
+                        </button>`;
+                    } else {
+                        actionButtons = `
+                        <button class="text-green-600 hover:text-green-900 complete-task" data-id="${task.id}" title="Mark Complete">
                             <i class="fas fa-check"></i>
-                        </button>`}
+                        </button>`;
+                    }
+
+                    // Determine the display date
+                    const displayDate = task.completed_at ? new Date(task.completed_at).toLocaleDateString() :
+                        new Date(task.assigned_at).toLocaleDateString();
+
+                    row.innerHTML = `
+                    <td class="py-3 px-4 font-semibold text-gray-900 text-sm">Order #${task.order || 'N/A'}</td>
+                    <td class="py-3 px-4 text-gray-700 text-sm">${task.customer_name || 'N/A'}</td>
+                    <td class="py-3 px-4 text-gray-700 text-sm">${task.tailor && task.tailor.user ? `${task.tailor.user.first_name} ${task.tailor.user.last_name}` : 'Unassigned'}</td>
+                    <td class="py-3 px-4">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium ${getStatusColorClass(task.status)}">
+                            ${(task.status || 'UNKNOWN').replace('_', ' ')}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-gray-600 text-sm">${displayDate}</td>
+                    <td class="py-3 px-4 text-center">
+                        <div class="flex justify-center items-center gap-3">
+                            <button class="text-gray-500 hover:text-gray-900 view-task transition-colors" data-id="${task.id}" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="text-blue-600 hover:text-blue-900 edit-task transition-colors" data-id="${task.id}" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            ${actionButtons}
+                        </div>
                     </td>
                 `;
-                taskTableBody.appendChild(row);
-            });
-            
-            // Update pagination info
-            if (data.count !== undefined) {
-                updatePagination(data.count, currentPage, 10);
-            } else {
-                updatePagination(tasks.length, 1, tasks.length);
-            }
-            
-            // Add event listeners to action buttons
-            document.querySelectorAll('.view-task').forEach(button => {
-                button.addEventListener('click', function() {
-                    const taskId = this.getAttribute('data-id');
-                    viewTask(taskId);
+                    taskTableBody.appendChild(row);
                 });
-            });
-            
-            document.querySelectorAll('.edit-task').forEach(button => {
-                button.addEventListener('click', function() {
-                    const taskId = this.getAttribute('data-id');
-                    editTask(taskId);
-                });
-            });
-            
-            document.querySelectorAll('.complete-task').forEach(button => {
-                button.addEventListener('click', function() {
-                    const taskId = this.getAttribute('data-id');
-                    completeTask(taskId);
-                });
-            });
-            
-            // Add event listeners for task approval, payment processing and commission payment
-            document.querySelectorAll('.approve-task').forEach(button => {
-                button.addEventListener('click', function() {
-                    const taskId = this.getAttribute('data-task-id');
-                    approveTask(taskId);
-                });
-            });
 
-            document.querySelectorAll('.process-payment').forEach(button => {
-                button.addEventListener('click', function() {
-                    const orderId = this.getAttribute('data-order-id');
-                    processCustomerPayment(orderId);
-                });
-            });
+                // Update pagination info
+                if (data.count !== undefined) {
+                    updatePagination(data.count, currentPage, 10);
+                } else {
+                    updatePagination(tasks.length, 1, tasks.length);
+                }
 
-            document.querySelectorAll('.pay-commission').forEach(button => {
-                button.addEventListener('click', function() {
-                    const taskId = this.getAttribute('data-task-id');
-                    payCommission(taskId);
-                });
+                // Add event listeners to action buttons using event delegation (only once per load)
+                setupTaskTableListeners();
+            })
+            .catch(error => {
+                console.error('Error loading tasks:', error);
+                const errorMsg = `Error: ${error.message}`;
+                document.getElementById('taskTableBody').innerHTML = `<tr><td colspan="6" class="py-4 px-4 text-center text-red-500">${errorMsg}</td></tr>`;
+                showNotification(errorMsg, 'error');
             });
-        })
-        .catch(error => {
-            console.error('Error loading tasks:', error);
-            document.getElementById('taskTableBody').innerHTML = '<tr><td colspan="8" class="py-4 px-4 text-center text-red-500">Error loading task data: ' + error.message + '</td></tr>';
+    }
+
+    function setupTaskTableListeners() {
+        const taskTableBody = document.getElementById('taskTableBody');
+
+        // Remove existing listeners by cloning
+        const newTableBody = taskTableBody.cloneNode(true);
+        taskTableBody.parentNode.replaceChild(newTableBody, taskTableBody);
+
+        // Add new listener to the new element
+        newTableBody.addEventListener('click', function (e) {
+            const viewBtn = e.target.closest('.view-task');
+            const editBtn = e.target.closest('.edit-task');
+            const completeBtn = e.target.closest('.complete-task');
+            const approveBtn = e.target.closest('.approve-task');
+            const commissionBtn = e.target.closest('.pay-commission');
+
+            if (viewBtn) viewTask(viewBtn.getAttribute('data-id'));
+            else if (editBtn) editTask(editBtn.getAttribute('data-id'));
+            else if (completeBtn) completeTask(completeBtn.getAttribute('data-id'));
+            else if (approveBtn) approveTask(approveBtn.getAttribute('data-task-id'));
+            else if (commissionBtn) payCommission(commissionBtn.getAttribute('data-task-id'));
         });
     }
-    
+
     function updatePagination(total, current, perPage) {
         totalRecords = total;
         currentPage = current;
         totalPages = Math.ceil(total / perPage);
-        
+
         document.getElementById('startRecord').textContent = ((current - 1) * perPage) + 1;
         document.getElementById('endRecord').textContent = Math.min(current * perPage, total);
         document.getElementById('totalRecords').textContent = total;
-        
+
         document.getElementById('prevPage').disabled = current === 1;
         document.getElementById('nextPage').disabled = current === totalPages;
     }
-    
+
     function loadTailorFilterData() {
         // Get token from session storage first, then local storage as fallback
         let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
-        
+
         // Fetch tailor data for filter dropdown
         fetch('/api/admin/tailors/', {
             headers: {
@@ -343,30 +372,30 @@
             },
             credentials: 'include' // Include cookies for session authentication
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to fetch tailors: ' + response.status);
-            }
-            return response.json();
-        })
-        .then(tailors => {
-            const tailorFilter = document.getElementById('tailorFilter');
-            tailors.forEach(tailor => {
-                const option = document.createElement('option');
-                option.value = tailor.id;
-                option.textContent = `${tailor.user.first_name} ${tailor.user.last_name}`;
-                tailorFilter.appendChild(option);
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch tailors: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(tailors => {
+                const tailorFilter = document.getElementById('tailorFilter');
+                tailors.forEach(tailor => {
+                    const option = document.createElement('option');
+                    option.value = tailor.id;
+                    option.textContent = `${tailor.user.first_name} ${tailor.user.last_name}`;
+                    tailorFilter.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading tailors for filter:', error);
             });
-        })
-        .catch(error => {
-            console.error('Error loading tailors for filter:', error);
-        });
     }
-    
+
     function loadOrderFilterData() {
         // Get token from session storage first, then local storage as fallback
         let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
-        
+
         // Fetch order data for filter dropdown
         fetch('/api/admin/orders/', {
             headers: {
@@ -376,34 +405,34 @@
             },
             credentials: 'include' // Include cookies for session authentication
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to fetch orders: ' + response.status);
-            }
-            return response.json();
-        })
-        .then(orders => {
-            const orderFilter = document.getElementById('orderFilter');
-            orders.forEach(order => {
-                const option = document.createElement('option');
-                option.value = order.id;
-                
-                let customerName = 'Unknown Customer';
-                if (order.customer && order.customer.user) {
-                    customerName = `${order.customer.user.first_name} ${order.customer.user.last_name}`;
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch orders: ' + response.status);
                 }
-                
-                option.textContent = `Order #${order.id} - ${customerName}`;
-                orderFilter.appendChild(option);
+                return response.json();
+            })
+            .then(orders => {
+                const orderFilter = document.getElementById('orderFilter');
+                orders.forEach(order => {
+                    const option = document.createElement('option');
+                    option.value = order.id;
+
+                    let customerName = 'Unknown Customer';
+                    if (order.customer && order.customer.user) {
+                        customerName = `${order.customer.user.first_name} ${order.customer.user.last_name}`;
+                    }
+
+                    option.textContent = `Order #${order.id} - ${customerName}`;
+                    orderFilter.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading orders for filter:', error);
             });
-        })
-        .catch(error => {
-            console.error('Error loading orders for filter:', error);
-        });
     }
 
     function getStatusColorClass(status) {
-        switch(status) {
+        switch (status) {
             case 'ASSIGNED':
                 return 'bg-blue-100 text-blue-800';
             case 'IN_PROGRESS':
@@ -414,150 +443,228 @@
                 return 'bg-gray-100 text-gray-800';
         }
     }
-    
+
     function viewTask(taskId) {
-        // View task details (would show a modal or redirect to task detail page)
-        alert('View task functionality would be implemented here. Task ID: ' + taskId);
+        // Fetch task details and show in modal
+        let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+
+        fetch(`/api/admin/tasks/${taskId}/`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
+            },
+            credentials: 'include'
+        })
+            .then(response => {
+                if (!response.ok) throw new Error('Failed to fetch task details');
+                return response.json();
+            })
+            .then(task => {
+                displayTaskModal(task);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error loading task details: ' + error.message, 'error');
+            });
     }
-    
+
+    function displayTaskModal(task) {
+        const statusColor = getStatusColorClass(task.status);
+        const tailor = task.tailor && task.tailor.user
+            ? `${task.tailor.user.first_name} ${task.tailor.user.last_name}`
+            : 'Unassigned';
+
+        const assignedDate = task.assigned_at ? new Date(task.assigned_at).toLocaleString() : 'N/A';
+        const completedDate = task.completed_at ? new Date(task.completed_at).toLocaleString() : 'N/A';
+
+        const content = `
+            <div class="space-y-6">
+                <!-- Header with Task ID and Status -->
+                <div class="pb-4 border-b border-gray-200">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="text-2xl font-bold text-gray-900">Task #${task.id}</h4>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium ${statusColor}">
+                            ${(task.status || 'UNKNOWN').replace('_', ' ')}
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Order & Customer Info -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm font-semibold text-gray-700">Order #</label>
+                        <p class="text-lg text-gray-900 mt-1">${task.order || 'N/A'}</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-semibold text-gray-700">Customer</label>
+                        <p class="text-lg text-gray-900 mt-1">${task.customer_name || 'N/A'}</p>
+                    </div>
+                </div>
+                
+                <!-- Tailor Info -->
+                <div>
+                    <label class="text-sm font-semibold text-gray-700">Assigned Tailor</label>
+                    <p class="text-lg text-gray-900 mt-1">${tailor}</p>
+                </div>
+                
+                <!-- Dates -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-sm font-semibold text-gray-700">Assigned Date</label>
+                        <p class="text-gray-900 mt-1">${assignedDate}</p>
+                    </div>
+                    <div>
+                        <label class="text-sm font-semibold text-gray-700">Completed Date</label>
+                        <p class="text-gray-900 mt-1">${completedDate}</p>
+                    </div>
+                </div>
+                
+                <!-- Description if available -->
+                ${task.description ? `
+                    <div>
+                        <label class="text-sm font-semibold text-gray-700">Notes</label>
+                        <p class="text-gray-700 mt-2 p-3 bg-gray-50 rounded-lg">${task.description}</p>
+                    </div>
+                ` : ''}
+                
+                <!-- Additional Info -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p class="text-sm text-blue-900"><strong>Task ID:</strong> ${task.id}</p>
+                    ${task.tailor ? `<p class="text-sm text-blue-900 mt-2"><strong>Tailor ID:</strong> ${task.tailor.id}</p>` : ''}
+                </div>
+            </div>
+        `;
+
+        document.getElementById('taskDetailsContent').innerHTML = content;
+        document.getElementById('editTaskBtn').setAttribute('data-task-id', task.id);
+        document.getElementById('taskModal').classList.remove('hidden');
+    }
+
+    function closeTaskModal() {
+        document.getElementById('taskModal').classList.add('hidden');
+    }
+
+    function editTaskFromModal() {
+        const taskId = document.getElementById('editTaskBtn').getAttribute('data-task-id');
+        closeTaskModal();
+        editTask(taskId);
+    }
+
+    // Close modal when clicking outside
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById('taskModal');
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) {
+                closeTaskModal();
+            }
+        });
+    });
+
     function editTask(taskId) {
-        // Edit task (would show a modal or redirect to edit page)
-        alert('Edit task functionality would be implemented here. Task ID: ' + taskId);
+        // Redirect to task edit page
+        window.location.href = `/admin/tasks/${taskId}/edit/`;
     }
-    
+
     function completeTask(taskId) {
-        if (confirm('Are you sure you want to mark this task as completed?')) {
-            // Get token from session storage first, then local storage as fallback
-            let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
-            
-            // Update task status via API
-            fetch(`/api/admin/tasks/${taskId}/`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken,
-                    ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
-                },
-                credentials: 'include', // Include cookies for session authentication
-                body: JSON.stringify({
-                    status: 'COMPLETED',
-                    completed_at: new Date().toISOString()
-                })
+        if (!confirm('Mark this task as completed?')) return;
+
+        let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+
+        fetch(`/api/admin/tasks/${taskId}/`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                status: 'COMPLETED',
+                completed_at: new Date().toISOString()
             })
+        })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to update task: ' + response.status);
-                }
+                if (!response.ok) throw new Error('Failed to update task');
                 return response.json();
             })
-            .then(data => {
-                alert('Task marked as completed!');
-                loadTaskData(); // Refresh the table
+            .then(() => {
+                loadTaskData();
+                showNotification('Task marked as completed', 'success');
             })
             .catch(error => {
-                console.error('Error completing task:', error);
-                alert('Error completing task: ' + error.message);
+                console.error('Error:', error);
+                showNotification('Error completing task: ' + error.message, 'error');
             });
-        }
     }
-    
-    // Process customer payment for an order
-    function processCustomerPayment(orderId) {
-        if (confirm('Are you sure you want to mark this order as paid?')) {
-            // Get token from session storage first, then local storage as fallback
-            let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
-            
-            // Process payment via the API endpoint
-            fetch(`/api/admin/orders/${orderId}/process-payment/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken,
-                    ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
-                },
-                credentials: 'include' // Include cookies for session authentication
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to process payment: ' + response.status);
-                }
-                return response.json();
-            })
-            .then(data => {
-                alert('Order marked as paid!');
-                loadTaskData(); // Refresh the table
-            })
-            .catch(error => {
-                console.error('Error processing payment:', error);
-                alert('Error processing payment: ' + error.message);
-            });
-        }
-    }
-    
-    // Approve a completed task and create commission
+
+
     function approveTask(taskId) {
-        if (confirm('Are you sure you want to approve this task? This will create a commission for the tailor.')) {
-            // Get token from session storage first, then local storage as fallback
-            let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+        if (!confirm('Approve this task and create commission?')) return;
 
-            // Approve task via the API endpoint
-            fetch(`/api/admin/tasks/${taskId}/approve/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken,
-                    ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
-                },
-                credentials: 'include' // Include cookies for session authentication
-            })
+        let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+
+        fetch(`/api/admin/tasks/${taskId}/approve/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
+            },
+            credentials: 'include'
+        })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to approve task: ' + response.status);
-                }
+                if (!response.ok) throw new Error('Failed to approve task');
                 return response.json();
             })
             .then(data => {
-                alert(`Task approved successfully! Commission of ₱${data.commission_amount} created for the tailor.`);
-                loadTaskData(); // Refresh the table
+                loadTaskData();
+                showNotification(`Task approved! Commission: ₱${data.commission_amount}. Customer notified via SMS.`, 'success');
             })
             .catch(error => {
-                console.error('Error approving task:', error);
-                alert('Error approving task: ' + error.message);
+                console.error('Error:', error);
+                showNotification('Error approving task: ' + error.message, 'error');
             });
-        }
     }
 
-    // Pay commission for a completed task
     function payCommission(taskId) {
-        if (confirm('Are you sure you want to pay the commission for this task?')) {
-            // Get token from session storage first, then local storage as fallback
-            let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
-            
-            // Pay commission via the API endpoint
-            fetch(`/api/admin/tasks/${taskId}/pay-commission/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken,
-                    ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
-                },
-                credentials: 'include' // Include cookies for session authentication
-            })
+        if (!confirm('Pay commission for this task?')) return;
+
+        let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+
+        fetch(`/api/admin/tasks/${taskId}/pay-commission/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                ...(authToken ? { 'Authorization': 'Token ' + authToken } : {})
+            },
+            credentials: 'include'
+        })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to pay commission: ' + response.status);
-                }
+                if (!response.ok) throw new Error('Failed to pay commission');
                 return response.json();
             })
-            .then(data => {
-                alert('Commission paid successfully!');
-                loadTaskData(); // Refresh the table
+            .then(() => {
+                loadTaskData();
+                showNotification('Commission paid successfully', 'success');
             })
             .catch(error => {
-                console.error('Error paying commission:', error);
-                alert('Error paying commission: ' + error.message);
+                console.error('Error:', error);
+                showNotification('Error paying commission: ' + error.message, 'error');
             });
-        }
+    }
+
+    function showNotification(message, type) {
+        // Create a simple notification (you can enhance this with a toast library)
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 px-4 py-3 rounded-lg text-white ${type === 'success' ? 'bg-green-600' : 'bg-red-600'} shadow-lg z-50`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
     }
 </script>
 {% endblock %}

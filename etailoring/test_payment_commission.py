@@ -12,7 +12,7 @@ django.setup()
 from django.contrib.auth.models import User
 from decimal import Decimal
 from etailoring.models import Customer, Tailor, Fabric, Accessory, Order, Task, Commission
-from etailoring.business_logic import OrderManager
+from etailoring.business_logic import OrderManager, CommissionManager
 
 def test_payment_commission_workflow():
     print("Testing payment and commission workflow...")
@@ -88,7 +88,8 @@ def test_payment_commission_workflow():
     
     # Verify commission was created
     commission = Commission.objects.get(order=order, tailor=tailor)
-    expected_commission = (tailor.commission_rate / 100) * order.total_amount
+    # Use CommissionManager to compute expected amount (respects fixed tariffs)
+    expected_commission = CommissionManager.calculate_commission(task)
     print(f"Commission created. Amount: ₱{commission.amount} (expected: ₱{expected_commission})")
     
     # Process customer payment

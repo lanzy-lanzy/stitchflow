@@ -367,3 +367,22 @@ def deduct_inventory(request, order_id=None):
             {'detail': str(e)},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def deduction_report(request, order_id):
+    """
+    Return a detailed deduction report for a specific order without mutating inventory.
+    """
+    from .models import Order
+    try:
+        order = Order.objects.get(id=order_id)
+    except Order.DoesNotExist:
+        return Response({'detail': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        report = InventoryManager.get_deduction_report(order)
+        return Response({'report': report})
+    except Exception as e:
+        return Response({'detail': str(e)}, status=status.HTTP_400_BAD_REQUEST)

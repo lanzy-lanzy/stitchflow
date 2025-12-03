@@ -2,14 +2,16 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import (
     UserExtension, Customer, Tailor, Fabric, 
-    Accessory, Order, Task, Commission
+    Accessory, Order, Task, Commission, GarmentType
 )
 
 
 class UserSerializer(serializers.ModelSerializer):
+    # Allow password to be provided when creating users via nested serializers
+    password = serializers.CharField(write_only=True, required=False)
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'password']
         read_only_fields = ['id']
 
 
@@ -102,6 +104,17 @@ class TailorSerializer(serializers.ModelSerializer):
         user_data = validated_data.pop('user')
         user = User.objects.create_user(**user_data)
         tailor = Tailor.objects.create(user=user, **validated_data)
+        # Ensure a UserExtension is created so the login/role logic can detect tailors
+        try:
+            UserExtension.objects.create(
+                user=user,
+                role='TAILOR',
+                phone_number=tailor.phone_number or ''
+            )
+        except Exception:
+            # If extension creation fails for any reason, continue without raising so API doesn't break
+            pass
+
         return tailor
 
 
@@ -119,14 +132,58 @@ class FabricSerializer(serializers.ModelSerializer):
 
 class AccessorySerializer(serializers.ModelSerializer):
     is_low_stock = serializers.ReadOnlyField()
+    applicable_garments = serializers.SlugRelatedField(
+        many=True,
+        slug_field='code',
+        queryset=GarmentType.objects.all(),
+        required=False,
+        allow_null=True
+    )
     
     class Meta:
         model = Accessory
         fields = [
             'id', 'name', 'description', 
             'quantity', 'price_per_unit', 'low_stock_threshold', 'is_low_stock'
+            , 'applicable_garments'
         ]
         read_only_fields = ['id', 'is_low_stock']
+    
+    def create(self, validated_data):
+        """Create accessory with applicable garments."""
+        applicable_garments = validated_data.pop('applicable_garments', [])
+        accessory = Accessory.objects.create(**validated_data)
+        
+        # Set the M2M relationship for applicable_garments
+        if applicable_garments:
+            accessory.applicable_garments.set(applicable_garments)
+        
+        return accessory
+    
+    def update(self, instance, validated_data):
+        """Update accessory with applicable garments."""
+        applicable_garments = validated_data.pop('applicable_garments', None)
+        
+        # Update all other fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        instance.save()
+        
+        # Update M2M relationship if provided
+        if applicable_garments is not None:
+            instance.applicable_garments.set(applicable_garments)
+        
+        return instance
+
+
+class GarmentTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GarmentType
+        fields = ['id', 'code', 'name']
+        read_only_fields = ['id']
+
+
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -154,8 +211,7 @@ class OrderSerializer(serializers.ModelSerializer):
         write_only=True
     )
 
-    # New preference fields for static pricing model
-    accessories_preference = serializers.CharField(max_length=500, required=False, allow_blank=True)
+    # (Removed) accessories_preference free-text field is deprecated; use accessories_ids instead.
 
     # Payment option field (not stored in model, used for processing)
     payment_option = serializers.ChoiceField(
@@ -175,8 +231,8 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'customer', 'customer_id', 'fabric', 'fabric_id', 'accessories', 'accessories_ids',
             'category', 'category_display', 'garment_type', 'garment_type_display', 'quantity',
-            'fabric_type', 'color_design_preference', 'accessories_preference', 'payment_option', 'order_date', 'due_date',
-            'total_amount', 'status', 'payment_status', 'paid_at', 'created_at', 'updated_at',
+            'fabric_type', 'color_design_preference', 'payment_option', 'order_date', 'due_date',
+            'total_amount', 'down_payment_amount', 'down_payment_status', 'down_payment_paid_at', 'remaining_balance', 'status', 'payment_status', 'paid_at', 'created_at', 'updated_at',
             # Measurement fields
             'neck_circumference', 'shoulder_width', 'chest_bust_circumference',
             'upper_bust_circumference', 'under_bust_circumference', 'waist_circumference',
@@ -193,6 +249,8 @@ class OrderSerializer(serializers.ModelSerializer):
         from django.utils import timezone
         from datetime import timedelta
         from .business_logic import OrderManager, PricingManager
+        from decimal import Decimal
+        from .business_logic import InventoryManager
 
         # Extract accessories data and payment option before creating order
         accessories = validated_data.pop('accessories', [])
@@ -210,14 +268,18 @@ class OrderSerializer(serializers.ModelSerializer):
         total_amount = PricingManager.calculate_order_total(garment_type, quantity)
         validated_data['total_amount'] = total_amount
 
-        # Calculate down payment (50% of total)
+        # Calculate down payment (50% of total) and remaining balance
         down_payment_amount = PricingManager.calculate_down_payment(total_amount)
+        # By default, assume a down payment flow: down_payment = 50% and remaining = total - down
         validated_data['down_payment_amount'] = down_payment_amount
         validated_data['remaining_balance'] = total_amount - down_payment_amount
 
         # Handle payment option
         if payment_option == 'FULL_PAYMENT':
-            # Customer is paying in full
+            # Customer is paying in full at creation. Treat the down payment as the full amount
+            # so that remaining_balance becomes zero and statuses reflect a fully paid order.
+            validated_data['down_payment_amount'] = total_amount
+            validated_data['remaining_balance'] = Decimal('0.00')
             validated_data['payment_status'] = 'PAID'
             validated_data['paid_at'] = timezone.now()
             validated_data['down_payment_status'] = 'PAID'
@@ -229,12 +291,50 @@ class OrderSerializer(serializers.ModelSerializer):
 
         # For static pricing model, we need to assign default fabric and accessories
         # if not provided, based on availability
-        if not validated_data.get('fabric'):
+        # Determine fabric to use (selected or default) so we can pre-check inventory
+        from .models import Fabric, Accessory
+        chosen_fabric = validated_data.get('fabric')
+        if not chosen_fabric:
             # Get the first available fabric (this could be enhanced with better logic)
-            from .models import Fabric
             available_fabric = Fabric.objects.filter(quantity__gt=0).first()
             if available_fabric:
+                chosen_fabric = available_fabric
                 validated_data['fabric'] = available_fabric
+
+        # Before creating the order, perform an inventory availability check using
+        # the chosen fabric and accessories (or defaults) so we can surface an
+        # immediate validation error and avoid creating and then deleting orders.
+        # Determine accessories to use for the check
+        accessories_for_check = accessories
+        if not accessories_for_check:
+            available_accessories = list(Accessory.objects.filter(quantity__gt=0)[:2])
+            if available_accessories:
+                accessories_for_check = available_accessories
+
+        # Run requirements check
+        try:
+            requirements = InventoryManager.get_inventory_requirements(garment_type)
+            fabric_needed = requirements['fabric_units'] * quantity
+            accessories_needed = requirements['accessories_units'] * quantity
+
+            if chosen_fabric is None:
+                raise serializers.ValidationError({'fabric': 'No fabric available to fulfill this order.'})
+
+            if chosen_fabric.quantity < fabric_needed:
+                raise serializers.ValidationError({'fabric': f'Insufficient fabric: {chosen_fabric.name}. Need {fabric_needed}, have {chosen_fabric.quantity}.'})
+
+            # Check each selected accessory has enough quantity
+            for accessory in accessories_for_check:
+                if accessory.quantity < accessories_needed:
+                    raise serializers.ValidationError({'accessories': f'Insufficient accessory: {accessory.name}. Need {accessories_needed}, have {accessory.quantity}.'})
+        except serializers.ValidationError:
+            # Re-raise serializer validation errors
+            raise
+        except Exception:
+            # If inventory manager or requirements check fails unexpectedly, allow
+            # OrderManager.process_order_creation to perform the authoritative check
+            # and raise the appropriate ValidationError later.
+            pass
 
         # Create the order instance without accessories
         order = Order.objects.create(**validated_data)

@@ -159,6 +159,17 @@ class CommissionManager:
         """
         order = task.order
         tailor = task.tailor
+        # Prefer fixed tariff defined on the tailor. If no fixed tariff exists for
+        # the garment_type, fall back to legacy percentage-based calculation.
+        try:
+            fixed = tailor.get_commission_amount(order.garment_type)
+        except Exception:
+            fixed = None
+
+        if fixed is not None:
+            return fixed
+
+        # Legacy fallback: use percentage of order total
         return (tailor.commission_rate / 100) * order.total_amount
     
     @staticmethod
@@ -236,6 +247,60 @@ class InventoryManager:
         for accessory in order.accessories.all():
             accessory.quantity -= accessories_needed
             accessory.save()
+
+        # Return a summary report of what was deducted for audit purposes
+        report = {
+            'order_id': order.id,
+            'fabric': {
+                'id': order.fabric.id,
+                'name': order.fabric.name,
+                'deducted_units': float(fabric_needed),
+                'remaining': float(order.fabric.quantity)
+            },
+            'accessories': [
+                {
+                    'id': accessory.id,
+                    'name': accessory.name,
+                    'deducted_units': int(accessories_needed),
+                    'remaining': int(accessory.quantity)
+                }
+                for accessory in order.accessories.all()
+            ]
+        }
+
+        return report
+
+    @staticmethod
+    def get_deduction_report(order):
+        """
+        Return a report (without mutating inventory) describing how much fabric
+        and accessories would be deducted for the given order. Useful for
+        audit and preview endpoints.
+        """
+        requirements = InventoryManager.get_inventory_requirements(order.garment_type)
+        fabric_needed = requirements['fabric_units'] * order.quantity
+        accessories_needed = requirements['accessories_units'] * order.quantity
+
+        report = {
+            'order_id': order.id,
+            'fabric': {
+                'id': order.fabric.id if order.fabric else None,
+                'name': order.fabric.name if order.fabric else None,
+                'required_units': float(fabric_needed),
+                'available': float(order.fabric.quantity) if order.fabric else 0
+            },
+            'accessories': [
+                {
+                    'id': accessory.id,
+                    'name': accessory.name,
+                    'required_units': int(accessories_needed),
+                    'available': int(accessory.quantity)
+                }
+                for accessory in order.accessories.all()
+            ]
+        }
+
+        return report
 
     # Legacy methods for backward compatibility
     @staticmethod

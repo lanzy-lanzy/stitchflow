@@ -26,11 +26,11 @@
                             <div class="flex items-center justify-between mb-4">
                                 <label class="block text-sm font-medium text-gray-700">Customer *</label>
                                 <div class="flex bg-gray-100 rounded-lg p-1">
-                                    <button type="button" id="existingCustomerTab"
+                                    <button type="button" id="existingCustomerTab" onclick="switchToExistingCustomer()"
                                         class="px-3 py-1 text-sm font-medium rounded-md bg-white text-gray-900 shadow-sm">
                                         Select Existing
                                     </button>
-                                    <button type="button" id="newCustomerTab"
+                                    <button type="button" id="newCustomerTab" onclick="switchToNewCustomer()"
                                         class="px-3 py-1 text-sm font-medium rounded-md text-gray-500 hover:text-gray-900">
                                         Create New
                                     </button>
@@ -96,6 +96,7 @@
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             <option value="">Select a garment type</option>
                             <option value="BLOUSE">Blouse</option>
+                            <option value="POLO">Polo</option>
                             <option value="PANTS">Pants</option>
                             <option value="SKIRT">Skirt</option>
                             <option value="DRESS">Dress</option>
@@ -110,26 +111,40 @@
                     </div>
                     <div>
                         <label for="fabric_type" class="block text-sm font-medium text-gray-700 mb-1">Fabric Type/Details</label>
-                        <input type="text" id="fabric_type" name="fabric_type" placeholder="e.g., Cotton blend, Polyester"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-                        <div class="mt-1 text-sm text-gray-500">Specify fabric preferences. Actual fabric will be selected from available inventory.</div>
+                        <select id="fabric_type" name="fabric_type" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                            <option value="">Select a fabric</option>
+                            <option>Peach Twill</option>
+                            <option>Alpha Genna</option>
+                            <option>Katrina</option>
+                            <option>Gabardine</option>
+                            <option>Denim</option>
+                            <option>Linen</option>
+                            <option>Cotton</option>
+                            <option>Satin</option>
+                            <option>Silk</option>
+                            <option value="__other">Other (specify)</option>
+                        </select>
+                        <input type="text" id="fabric_type_other" name="fabric_type_other" placeholder="Specify other fabric"
+                            class="w-full mt-2 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 hidden">
+                        <div class="mt-1 text-sm text-gray-500">Select a fabric for faster order creation. Choose "Other" to type a custom fabric.</div>
                     </div>
-                    <div>
-                        <label for="accessories_preference" class="block text-sm font-medium text-gray-700 mb-1">Accessories Preference</label>
-                        <input type="text" id="accessories_preference" name="accessories_preference" placeholder="e.g., Buttons, Zippers, Lace trim"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-                        <div class="mt-1 text-sm text-gray-500">Specify accessory preferences. Actual accessories will be selected from available inventory.</div>
-                    </div>
+                    <div class="md:col-span-2">
+                         <label class="block text-sm font-medium text-gray-700 mb-3">Accessories (select one or more)</label>
+                         <div id="accessories_container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-4 bg-gray-50 rounded-lg border border-gray-300">
+                             <p class="col-span-full text-gray-500">Loading accessories...</p>
+                         </div>
+                         <div class="mt-2 text-sm text-gray-500">Choose accessories to include with this order. Quantities will be deducted from inventory on creation.</div>
+                     </div>
                     <div>
                         <label for="color_design_preference" class="block text-sm font-medium text-gray-700 mb-1">Color/Design Preference</label>
                         <textarea id="color_design_preference" name="color_design_preference" rows="2" placeholder="Describe preferred colors, patterns, or design details"
                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
                     </div>
                     <div>
-                        <label for="due_date" class="block text-sm font-medium text-gray-700 mb-1">Due Date *</label>
-                        <input type="date" id="due_date" name="due_date" required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-                    </div>
+                         <label for="due_date" class="block text-sm font-medium text-gray-700 mb-1">Expected Delivery Date *</label>
+                         <input type="date" id="due_date" name="due_date" required
+                             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                     </div>
                     <div>
                         <label for="tailor" class="block text-sm font-medium text-gray-700 mb-1">Assign to Tailor (Optional)</label>
                         <select id="tailor" name="tailor"
@@ -251,37 +266,37 @@
                         <h4 class="text-sm font-semibold text-gray-600 mb-3">Blouse/Top Measurements</h4>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label for="neck_circumference" class="block text-sm font-medium text-gray-700 mb-1">Neck Circumference</label>
+                                <label for="neck_circumference" class="block text-sm font-medium text-gray-700 mb-1">Neck Circumference (cm)</label>
                                 <input type="number" id="neck_circumference" name="neck_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="shoulder_width" class="block text-sm font-medium text-gray-700 mb-1">Shoulder Width</label>
+                                <label for="shoulder_width" class="block text-sm font-medium text-gray-700 mb-1">Shoulder Width (cm)</label>
                                 <input type="number" id="shoulder_width" name="shoulder_width" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="chest_bust_circumference" class="block text-sm font-medium text-gray-700 mb-1">Chest/Bust Circumference</label>
+                                <label for="chest_bust_circumference" class="block text-sm font-medium text-gray-700 mb-1">Chest/Bust Circumference (cm)</label>
                                 <input type="number" id="chest_bust_circumference" name="chest_bust_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="upper_bust_circumference" class="block text-sm font-medium text-gray-700 mb-1">Upper Bust Circumference</label>
+                                <label for="upper_bust_circumference" class="block text-sm font-medium text-gray-700 mb-1">Upper Bust Circumference (cm)</label>
                                 <input type="number" id="upper_bust_circumference" name="upper_bust_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="under_bust_circumference" class="block text-sm font-medium text-gray-700 mb-1">Under Bust Circumference</label>
+                                <label for="under_bust_circumference" class="block text-sm font-medium text-gray-700 mb-1">Under Bust Circumference (cm)</label>
                                 <input type="number" id="under_bust_circumference" name="under_bust_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="waist_circumference" class="block text-sm font-medium text-gray-700 mb-1">Waist Circumference</label>
+                                <label for="waist_circumference" class="block text-sm font-medium text-gray-700 mb-1">Waist Circumference (cm)</label>
                                 <input type="number" id="waist_circumference" name="waist_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="armhole_circumference" class="block text-sm font-medium text-gray-700 mb-1">Armhole Circumference</label>
+                                <label for="armhole_circumference" class="block text-sm font-medium text-gray-700 mb-1">Armhole Circumference (cm)</label>
                                 <input type="number" id="armhole_circumference" name="armhole_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
@@ -296,12 +311,12 @@
                                 </select>
                             </div>
                             <div>
-                                <label for="bicep_circumference" class="block text-sm font-medium text-gray-700 mb-1">Bicep Circumference</label>
+                                <label for="bicep_circumference" class="block text-sm font-medium text-gray-700 mb-1">Bicep Circumference (cm)</label>
                                 <input type="number" id="bicep_circumference" name="bicep_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="wrist_circumference" class="block text-sm font-medium text-gray-700 mb-1">Wrist Circumference</label>
+                                <label for="wrist_circumference" class="block text-sm font-medium text-gray-700 mb-1">Wrist Circumference (cm)</label>
                                 <input type="number" id="wrist_circumference" name="wrist_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
@@ -323,57 +338,57 @@
                         <h4 class="text-sm font-semibold text-gray-600 mb-3">Pants/Trousers Measurements</h4>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label for="waist_circumference_pants" class="block text-sm font-medium text-gray-700 mb-1">Waist Circumference</label>
+                                <label for="waist_circumference_pants" class="block text-sm font-medium text-gray-700 mb-1">Waist Circumference (cm)</label>
                                 <input type="number" id="waist_circumference_pants" name="waist_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="high_hip_circumference" class="block text-sm font-medium text-gray-700 mb-1">High Hip Circumference</label>
+                                <label for="high_hip_circumference" class="block text-sm font-medium text-gray-700 mb-1">High Hip Circumference (cm)</label>
                                 <input type="number" id="high_hip_circumference" name="high_hip_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="full_hip_circumference" class="block text-sm font-medium text-gray-700 mb-1">Full Hip Circumference</label>
+                                <label for="full_hip_circumference" class="block text-sm font-medium text-gray-700 mb-1">Full Hip Circumference (cm)</label>
                                 <input type="number" id="full_hip_circumference" name="full_hip_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="thigh_circumference" class="block text-sm font-medium text-gray-700 mb-1">Thigh Circumference</label>
+                                <label for="thigh_circumference" class="block text-sm font-medium text-gray-700 mb-1">Thigh Circumference (cm)</label>
                                 <input type="number" id="thigh_circumference" name="thigh_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="knee_circumference" class="block text-sm font-medium text-gray-700 mb-1">Knee Circumference</label>
+                                <label for="knee_circumference" class="block text-sm font-medium text-gray-700 mb-1">Knee Circumference (cm)</label>
                                 <input type="number" id="knee_circumference" name="knee_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="calf_circumference" class="block text-sm font-medium text-gray-700 mb-1">Calf Circumference</label>
+                                <label for="calf_circumference" class="block text-sm font-medium text-gray-700 mb-1">Calf Circumference (cm)</label>
                                 <input type="number" id="calf_circumference" name="calf_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="ankle_circumference" class="block text-sm font-medium text-gray-700 mb-1">Ankle Circumference</label>
+                                <label for="ankle_circumference" class="block text-sm font-medium text-gray-700 mb-1">Ankle Circumference (cm)</label>
                                 <input type="number" id="ankle_circumference" name="ankle_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="inseam_crotch_to_ankle" class="block text-sm font-medium text-gray-700 mb-1">Inseam (Crotch to Ankle)</label>
+                                <label for="inseam_crotch_to_ankle" class="block text-sm font-medium text-gray-700 mb-1">Inseam (Crotch to Ankle) (cm)</label>
                                 <input type="number" id="inseam_crotch_to_ankle" name="inseam_crotch_to_ankle" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="outseam_waist_to_ankle" class="block text-sm font-medium text-gray-700 mb-1">Outseam (Waist to Ankle)</label>
+                                <label for="outseam_waist_to_ankle" class="block text-sm font-medium text-gray-700 mb-1">Outseam (Waist to Ankle) (cm)</label>
                                 <input type="number" id="outseam_waist_to_ankle" name="outseam_waist_to_ankle" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="front_rise" class="block text-sm font-medium text-gray-700 mb-1">Front Rise</label>
+                                <label for="front_rise" class="block text-sm font-medium text-gray-700 mb-1">Front Rise (cm)</label>
                                 <input type="number" id="front_rise" name="front_rise" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="back_rise" class="block text-sm font-medium text-gray-700 mb-1">Back Rise</label>
+                                <label for="back_rise" class="block text-sm font-medium text-gray-700 mb-1">Back Rise (cm)</label>
                                 <input type="number" id="back_rise" name="back_rise" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
@@ -385,27 +400,27 @@
                         <h4 class="text-sm font-semibold text-gray-600 mb-3">Skirt/Dress Measurements</h4>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label for="waist_circumference_skirt" class="block text-sm font-medium text-gray-700 mb-1">Waist Circumference</label>
+                                <label for="waist_circumference_skirt" class="block text-sm font-medium text-gray-700 mb-1">Waist Circumference (cm)</label>
                                 <input type="number" id="waist_circumference_skirt" name="waist_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="high_hip_circumference_skirt" class="block text-sm font-medium text-gray-700 mb-1">High Hip Circumference</label>
+                                <label for="high_hip_circumference_skirt" class="block text-sm font-medium text-gray-700 mb-1">High Hip Circumference (cm)</label>
                                 <input type="number" id="high_hip_circumference_skirt" name="high_hip_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="full_hip_circumference_skirt" class="block text-sm font-medium text-gray-700 mb-1">Full Hip Circumference</label>
+                                <label for="full_hip_circumference_skirt" class="block text-sm font-medium text-gray-700 mb-1">Full Hip Circumference (cm)</label>
                                 <input type="number" id="full_hip_circumference_skirt" name="full_hip_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="skirt_dress_length" class="block text-sm font-medium text-gray-700 mb-1">Skirt/Dress Length</label>
+                                <label for="skirt_dress_length" class="block text-sm font-medium text-gray-700 mb-1">Skirt/Dress Length (cm)</label>
                                 <input type="number" id="skirt_dress_length" name="skirt_dress_length" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="hem_circumference" class="block text-sm font-medium text-gray-700 mb-1">Hem Circumference (optional)</label>
+                                <label for="hem_circumference" class="block text-sm font-medium text-gray-700 mb-1">Hem Circumference (optional) (cm)</label>
                                 <input type="number" id="hem_circumference" name="hem_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
@@ -417,27 +432,27 @@
                         <h4 class="text-sm font-semibold text-gray-600 mb-3">Jacket/Coat Measurements</h4>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label for="neck_circumference_jacket" class="block text-sm font-medium text-gray-700 mb-1">Neck Circumference</label>
+                                <label for="neck_circumference_jacket" class="block text-sm font-medium text-gray-700 mb-1">Neck Circumference (cm)</label>
                                 <input type="number" id="neck_circumference_jacket" name="neck_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="shoulder_width_jacket" class="block text-sm font-medium text-gray-700 mb-1">Shoulder Width</label>
+                                <label for="shoulder_width_jacket" class="block text-sm font-medium text-gray-700 mb-1">Shoulder Width (cm)</label>
                                 <input type="number" id="shoulder_width_jacket" name="shoulder_width" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="chest_bust_circumference_jacket" class="block text-sm font-medium text-gray-700 mb-1">Chest/Bust Circumference</label>
+                                <label for="chest_bust_circumference_jacket" class="block text-sm font-medium text-gray-700 mb-1">Chest/Bust Circumference (cm)</label>
                                 <input type="number" id="chest_bust_circumference_jacket" name="chest_bust_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="waist_circumference_jacket" class="block text-sm font-medium text-gray-700 mb-1">Waist Circumference</label>
+                                <label for="waist_circumference_jacket" class="block text-sm font-medium text-gray-700 mb-1">Waist Circumference (cm)</label>
                                 <input type="number" id="waist_circumference_jacket" name="waist_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="full_hip_circumference_jacket" class="block text-sm font-medium text-gray-700 mb-1">Hip Circumference</label>
+                                <label for="full_hip_circumference_jacket" class="block text-sm font-medium text-gray-700 mb-1">Hip Circumference (cm)</label>
                                 <input type="number" id="full_hip_circumference_jacket" name="full_hip_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
@@ -452,17 +467,17 @@
                                 </select>
                             </div>
                             <div>
-                                <label for="bicep_circumference_jacket" class="block text-sm font-medium text-gray-700 mb-1">Bicep Circumference</label>
+                                <label for="bicep_circumference_jacket" class="block text-sm font-medium text-gray-700 mb-1">Bicep Circumference (cm)</label>
                                 <input type="number" id="bicep_circumference_jacket" name="bicep_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="wrist_circumference_jacket" class="block text-sm font-medium text-gray-700 mb-1">Wrist Circumference</label>
+                                <label for="wrist_circumference_jacket" class="block text-sm font-medium text-gray-700 mb-1">Wrist Circumference (cm)</label>
                                 <input type="number" id="wrist_circumference_jacket" name="wrist_circumference" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
                             <div>
-                                <label for="jacket_length_shoulder_to_hem" class="block text-sm font-medium text-gray-700 mb-1">Jacket Length (Shoulder to Hem)</label>
+                                <label for="jacket_length_shoulder_to_hem" class="block text-sm font-medium text-gray-700 mb-1">Jacket Length (Shoulder to Hem) (cm)</label>
                                 <input type="number" id="jacket_length_shoulder_to_hem" name="jacket_length_shoulder_to_hem" step="0.1"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
                             </div>
@@ -485,10 +500,26 @@
     </div>
 </div>
 
+    <!-- Global modal for displaying reports and errors -->
+    <div id="globalModal" class="fixed inset-0 hidden items-center justify-center bg-black bg-opacity-50 z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="globalModalTitle" class="text-lg font-semibold">Modal Title</h3>
+                <button id="globalModalClose" class="text-gray-500 hover:text-gray-900">✕</button>
+            </div>
+            <div id="globalModalBody" class="text-sm text-gray-800 whitespace-pre-wrap"></div>
+            <div class="mt-4 text-right">
+                <button id="globalModalOk" class="px-4 py-2 bg-green-600 text-white rounded-lg">OK</button>
+            </div>
+        </div>
+    </div>
+
 <script>
     // Get CSRF token from the form and store in session
     const csrfTokenElement = document.querySelector('[name="csrfmiddlewaretoken"]');
     const csrfToken = csrfTokenElement ? csrfTokenElement.value : '';
+    // Max number of accessories allowed to be selected in the UI
+    const MAX_ACCESSORIES_SELECT = 3;
     
     // Store token in sessionStorage for other requests
     if (csrfToken) {
@@ -514,17 +545,73 @@
         }
     }
 
+    // Fallback tab switcher functions exposed on window so onclick attributes work
+    // These are defensive: they perform the same toggling as initializeCustomerTabs
+    window.switchToExistingCustomer = function() {
+        try {
+            const existingTab = document.getElementById('existingCustomerTab');
+            const newTab = document.getElementById('newCustomerTab');
+            const existingSection = document.getElementById('existingCustomerSection');
+            const newSection = document.getElementById('newCustomerSection');
+            const customerSelect = document.getElementById('customer');
+
+            if (!existingTab || !newTab || !existingSection || !newSection || !customerSelect) return;
+
+            existingTab.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+            existingTab.classList.remove('text-gray-500');
+            newTab.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+            newTab.classList.add('text-gray-500');
+
+            existingSection.classList.remove('hidden');
+            newSection.classList.add('hidden');
+
+            customerSelect.required = true;
+            clearNewCustomerFields();
+            setNewCustomerFieldsRequired(false);
+        } catch (err) {
+            console.error('switchToExistingCustomer error', err);
+        }
+    };
+
+    window.switchToNewCustomer = function() {
+        try {
+            const existingTab = document.getElementById('existingCustomerTab');
+            const newTab = document.getElementById('newCustomerTab');
+            const existingSection = document.getElementById('existingCustomerSection');
+            const newSection = document.getElementById('newCustomerSection');
+            const customerSelect = document.getElementById('customer');
+
+            if (!existingTab || !newTab || !existingSection || !newSection || !customerSelect) return;
+
+            newTab.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+            newTab.classList.remove('text-gray-500');
+            existingTab.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+            existingTab.classList.add('text-gray-500');
+
+            newSection.classList.remove('hidden');
+            existingSection.classList.add('hidden');
+
+            customerSelect.required = false;
+            customerSelect.value = '';
+            setNewCustomerFieldsRequired(true);
+
+            const basicMeasurementsEl = document.getElementById('basicMeasurements');
+            if (basicMeasurementsEl) {
+                basicMeasurementsEl.innerHTML = '<p>Customer measurements will be available after creating the new customer</p>';
+            }
+        } catch (err) {
+            console.error('switchToNewCustomer error', err);
+        }
+    };
+
     // Load customers and tailors when page loads
     document.addEventListener('DOMContentLoaded', function() {
-        loadCustomers();
-        loadTailors(); // Load tailors for assignment
-
-        // Set default due date (7 days from now)
+        // Set default expected delivery date (7 days from now)
         const today = new Date();
         const defaultDueDate = new Date(today.getTime() + (7 * 24 * 60 * 60 * 1000));
         document.getElementById('due_date').value = defaultDueDate.toISOString().split('T')[0];
 
-        // Set minimum due date to today
+        // Set minimum expected delivery date to today
         document.getElementById('due_date').min = today.toISOString().split('T')[0];
 
         // Initialize customer section tabs
@@ -544,72 +631,113 @@
             radio.addEventListener('change', updatePaymentAmountDisplay);
         });
 
-        // Add event listeners for pricing updates
-        document.getElementById('garment_type').addEventListener('change', function() {
-            updatePricingDisplay();
-            updatePaymentAmountDisplay();
-        });
-        document.getElementById('quantity').addEventListener('change', function() {
-            updatePricingDisplay();
-            updatePaymentAmountDisplay();
-        });
+        // Add event listeners for pricing updates (guard in case elements are missing)
+        const garmentTypeEl = document.getElementById('garment_type');
+        if (garmentTypeEl) {
+            garmentTypeEl.addEventListener('change', function() {
+                updatePricingDisplay();
+                updatePaymentAmountDisplay();
+            });
+        }
+        const quantityEl = document.getElementById('quantity');
+        if (quantityEl) {
+            quantityEl.addEventListener('change', function() {
+                updatePricingDisplay();
+                updatePaymentAmountDisplay();
+            });
+        }
 
-        // Check if we're creating an order for a specific customer
-        const customerId = localStorage.getItem('lastCreatedCustomerId');
-        if (customerId) {
-            setTimeout(() => {
+        // Load customers with callback to handle pre-selected customer
+        loadCustomersWithCallback(function(customerId) {
+            if (customerId) {
                 document.getElementById('customer').value = customerId;
                 loadCustomerMeasurements(customerId);
-            }, 500); // Small delay to ensure customers are loaded
-        }
+            }
+        });
+        
+        loadTailors(); // Load tailors for assignment (without filter initially)
+        loadFabrics(); // Load fabrics for selection
+        loadAccessories(); // Load accessories for selection
     });
     
-    // Handle customer selection to load measurements
-    document.getElementById('customer').addEventListener('change', function() {
-        // Clear error styling
-        this.classList.remove('border-red-500');
+    // Handle customer selection to load measurements (guard if element missing)
+    const customerEl = document.getElementById('customer');
+    if (customerEl) {
+        customerEl.addEventListener('change', function() {
+            // Clear error styling
+            this.classList.remove('border-red-500');
 
-        const customerId = this.value;
-        if (customerId) {
-            loadCustomerMeasurements(customerId);
+            const customerId = this.value;
+            if (customerId) {
+                loadCustomerMeasurements(customerId);
 
-            // Auto-populate measurements if garment type is already selected
-            const garmentType = document.getElementById('garment_type').value;
-            if (garmentType) {
-                // Small delay to ensure measurements are loaded first
-                setTimeout(() => {
-                    if (window.customerMeasurements && Object.keys(window.customerMeasurements).length > 0) {
-                        autoPopulateOrderMeasurements();
-                    }
-                }, 500);
+                // Auto-populate measurements if garment type is already selected
+                const garmentTypeEl2 = document.getElementById('garment_type');
+                const garmentType = garmentTypeEl2 ? garmentTypeEl2.value : null;
+                if (garmentType) {
+                    // Small delay to ensure measurements are loaded first
+                    setTimeout(() => {
+                        if (window.customerMeasurements && Object.keys(window.customerMeasurements).length > 0) {
+                            autoPopulateOrderMeasurements();
+                        }
+                    }, 500);
+                }
+            } else {
+                const basicMeasurementsEl = document.getElementById('basicMeasurements');
+                if (basicMeasurementsEl) {
+                    basicMeasurementsEl.innerHTML = '<p>Select a customer to view their basic measurements</p>';
+                }
+                window.customerMeasurements = {};
             }
-        } else {
-            const basicMeasurementsEl = document.getElementById('basicMeasurements');
-            if (basicMeasurementsEl) {
-                basicMeasurementsEl.innerHTML = '<p>Select a customer to view their basic measurements</p>';
-            }
-            window.customerMeasurements = {};
-        }
-    });
+        });
+    }
 
     // Handle garment type selection to show relevant measurement fields and update pricing
     document.getElementById('garment_type').addEventListener('change', function() {
-        // Clear error styling
-        this.classList.remove('border-red-500');
+         // Clear error styling
+         this.classList.remove('border-red-500');
 
-        const garmentType = this.value;
-        showMeasurementFields(garmentType);
-        updatePricingDisplay();
+         const garmentType = this.value;
+         showMeasurementFields(garmentType);
+         updatePricingDisplay();
+         
+         // Load tailors filtered by garment type
+         loadTailors(garmentType);
 
-        // Auto-populate measurements if customer is selected and has measurements
-        const customerId = document.getElementById('customer').value;
-        if (customerId && window.customerMeasurements && Object.keys(window.customerMeasurements).length > 0) {
-            // Small delay to ensure measurement fields are shown first
-            setTimeout(() => {
-                autoPopulateOrderMeasurements();
-            }, 100);
-        }
-    });
+         // Auto-populate measurements if customer is selected and has measurements
+         const customerId = document.getElementById('customer').value;
+         if (customerId && window.customerMeasurements && Object.keys(window.customerMeasurements).length > 0) {
+             // Small delay to ensure measurement fields are shown first
+             setTimeout(() => {
+                 autoPopulateOrderMeasurements();
+             }, 100);
+         }
+         // Filter accessories to show only those relevant to this garment type
+         try {
+             filterAccessoriesByGarment(garmentType);
+         } catch (e) {
+             // ignore
+         }
+     });
+
+    // Fabric type select: show/hide 'other' text input when appropriate
+    const fabricSelect = document.getElementById('fabric_type');
+    const fabricOther = document.getElementById('fabric_type_other');
+    if (fabricSelect) {
+        fabricSelect.addEventListener('change', function() {
+            if (this.value === '__other') {
+                if (fabricOther) fabricOther.classList.remove('hidden');
+                // set required to ensure user supplies the other fabric
+                if (fabricOther) fabricOther.setAttribute('required', 'required');
+            } else {
+                if (fabricOther) {
+                    fabricOther.classList.add('hidden');
+                    fabricOther.removeAttribute('required');
+                    fabricOther.value = '';
+                }
+            }
+        });
+    }
 
     // Handle quantity change to update total amount
     document.getElementById('quantity').addEventListener('change', function() {
@@ -668,9 +796,9 @@
 
 
         if (!dueDate) {
-            showStatusMessage('Please select a due date', 'error');
-            return;
-        }
+             showStatusMessage('Please select an expected delivery date', 'error');
+             return;
+         }
 
         // Total amount is automatically calculated, just ensure it's valid
         if (!totalAmount || totalAmount <= 0) {
@@ -690,8 +818,34 @@
             category: category,
             garment_type: garmentType,
             quantity: parseInt(quantity),
-            fabric_type: document.getElementById('fabric_type').value,
-            accessories_preference: document.getElementById('accessories_preference').value,
+            fabric_type: (function(){
+                const sel = document.getElementById('fabric_type');
+                const other = document.getElementById('fabric_type_other');
+                if (!sel) return '';
+                if (sel.value === '__other') {
+                    return other ? other.value.trim() : '';
+                }
+                // If fabrics were loaded from API, sel.value will be the fabric id; use the display text for fabric_type
+                try {
+                    const idx = sel.selectedIndex;
+                    return (idx >= 0 && sel.options[idx]) ? sel.options[idx].text : sel.value;
+                } catch (e) {
+                    return sel.value;
+                }
+            })(),
+            fabric_id: (function(){
+                const sel = document.getElementById('fabric_type');
+                if (!sel) return null;
+                if (sel.value === '__other' || sel.value === '') return null;
+                // If value is numeric id, return it as int, otherwise null
+                const v = sel.value;
+                return isNaN(Number(v)) ? null : Number(v);
+            })(),
+            accessories_ids: (function(){
+                const sel = document.getElementById('accessories_select');
+                if (!sel) return [];
+                return Array.from(sel.selectedOptions).map(o => Number(o.value));
+            })(),
             color_design_preference: document.getElementById('color_design_preference').value,
             due_date: dueDate,
             total_amount: totalAmount,
@@ -700,6 +854,13 @@
             ...measurementData
         };
         
+        // Enforce accessory selection limit
+        const selectedAccessories = orderData.accessories_ids || [];
+        if (selectedAccessories.length > MAX_ACCESSORIES_SELECT) {
+            showModal('Accessory selection limit', `Please select at most ${MAX_ACCESSORIES_SELECT} accessories.`);
+            return;
+        }
+
         // Debug log
         console.log('Submitting order data:', orderData);
         
@@ -707,13 +868,19 @@
         const tailorId = document.getElementById('tailor').value;
         
         // Submit the data
+        // Build headers and include Authorization only when a token exists to avoid sending a blank Token header
+        const createOrderHeaders = {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        };
+        const createAuthToken = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+        if (createAuthToken) {
+            createOrderHeaders['Authorization'] = 'Token ' + createAuthToken;
+        }
+
         fetch('/api/admin/orders/', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Token ' + (localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || ''),
-                'X-CSRFToken': csrfToken
-            },
+            headers: createOrderHeaders,
             credentials: 'include',
             body: JSON.stringify(orderData)
         })
@@ -768,11 +935,24 @@
                     return response.json();
                 })
                 .then(assignData => {
-                    showStatusMessage('Order created and assigned to tailor successfully!', 'success');
+                    const managePaymentsUrl = '{% url "etailoring:manage_payments" %}';
+                    let message = 'Order created and assigned to tailor successfully!';
+                    if (order && order.down_payment_amount && Number(order.down_payment_amount) > 0) {
+                        const paidText = order.down_payment_status === 'PAID' ? 'paid' : 'pending';
+                        message = `Order created. Down payment: ₱${Number(order.down_payment_amount).toFixed(2)} (${paidText}). <a href="${managePaymentsUrl}" class="font-medium underline">Manage Payments</a>`;
+                    }
+                    showStatusMessage(message, 'success');
                     return order; // Return original order data
                 });
             } else {
-                showStatusMessage('Order created successfully!', 'success');
+                const managePaymentsUrl = '{% url "etailoring:manage_payments" %}';
+                if (order && order.down_payment_amount && Number(order.down_payment_amount) > 0) {
+                    const paidText = order.down_payment_status === 'PAID' ? 'paid' : 'pending';
+                    const message = `Order created. Down payment: ₱${Number(order.down_payment_amount).toFixed(2)} (${paidText}). <a href="${managePaymentsUrl}" class="font-medium underline">Manage Payments</a>`;
+                    showStatusMessage(message, 'success');
+                } else {
+                    showStatusMessage('Order created successfully!', 'success');
+                }
                 return order;
             }
         })
@@ -783,11 +963,120 @@
             if (basicMeasurementsEl) {
                 basicMeasurementsEl.innerHTML = '<p>Select a customer to view their basic measurements</p>';
             }
-            
-            // Redirect to admin dashboard after a short delay
+
+            // After creating the order, automatically process the down payment if applicable
+            // and provide a printable receipt for the created order.
+            (async function autoHandlePostCreate(createdOrder, paymentOption) {
+                try {
+                    const orderId = createdOrder.id;
+                    const downAmount = Number(createdOrder.down_payment_amount || 0);
+
+                    // Only process a down payment if the user did NOT select Full Payment.
+                    // When Full Payment is selected we will process the full payment instead
+                    // and remove the down payment so receipts don't show it.
+                    if (paymentOption !== 'FULL_PAYMENT' && downAmount > 0 && createdOrder.down_payment_status !== 'PAID') {
+                        const authToken = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+                        const payHeaders = {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        };
+                        if (authToken) payHeaders['Authorization'] = 'Token ' + authToken;
+
+                        const resp = await fetch(`/api/admin/orders/${orderId}/process-payment/`, {
+                            method: 'POST',
+                            headers: payHeaders,
+                            credentials: 'include',
+                            body: JSON.stringify({ payment_type: 'DOWN_PAYMENT' })
+                        });
+
+                        if (resp.ok) {
+                            const paymentResult = await resp.json();
+                            console.log('Down payment processed:', paymentResult);
+                            // Update createdOrder object to reflect paid down payment
+                            createdOrder.down_payment_status = paymentResult.down_payment_status || 'PAID';
+                            createdOrder.payment_status = paymentResult.payment_status || createdOrder.payment_status;
+                        } else {
+                            console.warn('Down payment processing failed, server responded with', resp.status);
+                        }
+                    }
+
+                    // If the user selected Full Payment when creating the order, process it immediately
+                    if (paymentOption === 'FULL_PAYMENT') {
+                        try {
+                            const authToken2 = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+                            const payHeaders2 = {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrfToken
+                            };
+                            if (authToken2) payHeaders2['Authorization'] = 'Token ' + authToken2;
+
+                            const respFull = await fetch(`/api/admin/orders/${orderId}/process-payment/`, {
+                                method: 'POST',
+                                headers: payHeaders2,
+                                credentials: 'include',
+                                body: JSON.stringify({ payment_type: 'FULL_PAYMENT' })
+                            });
+
+                            if (respFull.ok) {
+                                const paymentResultFull = await respFull.json();
+                                console.log('Full payment processed:', paymentResultFull);
+                                // Update createdOrder to reflect full payment so receipt shows zero balance
+                                createdOrder.payment_status = paymentResultFull.payment_status || 'PAID';
+                                createdOrder.down_payment_status = 'PAID';
+                                // Remove the down payment entry when full payment was chosen so
+                                // the receipt does not show a separate down payment amount.
+                                createdOrder.down_payment_amount = 0;
+                                createdOrder.remaining_balance = 0;
+                            } else {
+                                console.warn('Full payment processing failed, server responded with', respFull.status);
+                            }
+                        } catch (err) {
+                            console.error('Error processing full payment:', err);
+                        }
+                    }
+
+                    // Build a simple printable receipt and expose a Print button in the UI
+                    const receiptBtnId = 'printReceiptBtn';
+                    // Remove old button if exists
+                    const oldBtn = document.getElementById(receiptBtnId);
+                    if (oldBtn) oldBtn.remove();
+
+                    const receiptBtn = document.createElement('button');
+                    receiptBtn.id = receiptBtnId;
+                    receiptBtn.className = 'mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700';
+                    receiptBtn.textContent = 'Print Receipt';
+                    receiptBtn.addEventListener('click', function() {
+                        printOrderReceipt(createdOrder);
+                    });
+
+                    // Also add a Manage Payments link/button next to receipt
+                    const manageLink = document.createElement('a');
+                    manageLink.href = '{% url "etailoring:manage_payments" %}';
+                    manageLink.className = 'ml-3 mt-4 inline-block px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700';
+                    manageLink.textContent = 'Go to Manage Payments';
+
+                    // Show both buttons below the status message
+                    const statusEl = document.getElementById('statusMessage');
+                    if (statusEl) {
+                        statusEl.appendChild(receiptBtn);
+                        statusEl.appendChild(manageLink);
+                    }
+
+                    // Auto-open print dialog immediately (user requested popup)
+                    try {
+                        printOrderReceipt(createdOrder);
+                    } catch (err) {
+                        console.warn('Auto print failed (possibly blocked by popup blocker):', err);
+                    }
+                } catch (err) {
+                    console.error('Error while auto-processing down payment or preparing receipt:', err);
+                }
+            })(order, paymentOption);
+
+            // Redirect to admin dashboard after a short delay (keep as fallback)
             setTimeout(() => {
                 window.location.href = '{% url "etailoring:admin_dashboard" %}';
-            }, 2000);
+            }, 4000);
         })
         .catch(error => {
             console.error('Error:', error);
@@ -1188,45 +1477,81 @@
 
     // Load customers from API
     function loadCustomers() {
-        fetch('/api/admin/customers/', {
-            headers: {
-                'Authorization': 'Token ' + (localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || ''),
-                'X-CSRFToken': csrfToken,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to load customers: ' + response.status);
-            }
-            return response.json();
-        })
-        .then(data => {
-            const customers = data.results || data; // Handle both paginated and non-paginated responses
-            const customerSelect = document.getElementById('customer');
-            // Clear existing options except the first one
-            customerSelect.innerHTML = '<option value="">Select a customer</option>';
-            
-            customers.forEach(customer => {
-                const option = document.createElement('option');
-                option.value = customer.id;
-                option.textContent = `${customer.user.first_name} ${customer.user.last_name} (${customer.user.username})`;
-                customerSelect.appendChild(option);
-            });
-        })
-        .catch(error => {
-            console.error('Error loading customers:', error);
-            showStatusMessage('Error loading customers. Please refresh the page.', 'error');
-        });
+        loadCustomersWithCallback(null);
     }
     
-
+    function loadCustomersWithCallback(callback) {
+         console.log('loadCustomersWithCallback called with callback:', !!callback);
+         fetch('/api/admin/customers/', {
+             headers: {
+                 'Authorization': 'Token ' + (localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || ''),
+                 'X-CSRFToken': csrfToken,
+                 'Content-Type': 'application/json'
+             },
+             credentials: 'include'
+         })
+         .then(response => {
+             console.log('Customer list response status:', response.status);
+             if (!response.ok) {
+                 throw new Error('Failed to load customers: ' + response.status);
+             }
+             return response.json();
+         })
+         .then(data => {
+             console.log('Customers loaded. Response data:', data);
+             const customers = data.results || data; // Handle both paginated and non-paginated responses
+             console.log('Customers array:', customers);
+             const customerSelect = document.getElementById('customer');
+             // Clear existing options except the first one
+             customerSelect.innerHTML = '<option value="">Select a customer</option>';
+             
+             customers.forEach(customer => {
+                 const option = document.createElement('option');
+                 option.value = customer.id;
+                 option.textContent = `${customer.user.first_name} ${customer.user.last_name} (${customer.user.username})`;
+                 customerSelect.appendChild(option);
+             });
+             
+             console.log('Customers dropdown populated with', customers.length, 'customers');
+             
+             // Check if we need to auto-select a customer
+             if (callback) {
+                 // First check URL parameter (highest priority)
+                 const urlParams = new URLSearchParams(window.location.search);
+                 let customerId = urlParams.get('customer');
+                 console.log('URL parameter customer id:', customerId);
+                 
+                 // If no URL param, check localStorage
+                 if (!customerId) {
+                     customerId = localStorage.getItem('lastCreatedCustomerId');
+                     console.log('localStorage customer id:', customerId);
+                 }
+                 
+                 // Clear localStorage after reading it to avoid future unwanted selections
+                 if (customerId) {
+                     console.log('Auto-selecting customer:', customerId);
+                     localStorage.removeItem('lastCreatedCustomerId');
+                     callback(customerId);
+                 } else {
+                     console.log('No customer ID found to auto-select');
+                 }
+             }
+         })
+         .catch(error => {
+             console.error('Error loading customers:', error);
+             showStatusMessage('Error loading customers. Please refresh the page.', 'error');
+         });
+     }
     
 
     
-    // Load tailors from API
-    function loadTailors() {
+
+    
+    // Load tailors from API, filtered by garment type
+    function loadTailors(garmentType) {
+        const tailorSelect = document.getElementById('tailor');
+        if (!tailorSelect) return;
+        
         fetch('/api/admin/tailors/', {
             headers: {
                 'Authorization': 'Token ' + (localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || ''),
@@ -1242,24 +1567,174 @@
             return response.json();
         })
         .then(data => {
-            const tailors = data.results || data; // Handle both paginated and non-paginated responses
-            const tailorSelect = document.getElementById('tailor');
-            // Clear existing options except the first one
+            const allTailors = data.results || data; // Handle both paginated and non-paginated responses
+            
+            // Clear existing options
             tailorSelect.innerHTML = '<option value="">Do not assign (create pending order)</option>';
             
-            tailors.forEach(tailor => {
+            // Filter tailors by garment type if one is selected
+            let filteredTailors = allTailors;
+            if (garmentType) {
+                filteredTailors = allTailors.filter(tailor => {
+                    const specialty = (tailor.specialty || '').toUpperCase().trim();
+                    const garment = (garmentType || '').toUpperCase().trim();
+                    
+                    // Check if specialty matches garment type or is a general specialty
+                    // 1. Exact match (POLO = POLO, PANTS = PANTS, etc.)
+                    // 2. General/All purpose tailors
+                    // 3. Partial match (specialty contains garment type)
+                    // 4. Special case mappings
+                    return specialty === garment || 
+                           specialty === 'GENERAL' || 
+                           specialty === 'ALL' ||
+                           specialty.includes(garment) ||
+                           (specialty.includes('SHIRT') && (garment === 'POLO' || garment === 'BLOUSE')) ||
+                           (garment.includes('SHIRT') && specialty.includes('SHIRT')) ||
+                           (specialty === 'TOP' && (garment === 'POLO' || garment === 'BLOUSE' || garment === 'TOP'));
+                });
+            }
+            
+            if (filteredTailors.length === 0) {
                 const option = document.createElement('option');
-                option.value = tailor.id;
-                option.textContent = `${tailor.user.first_name} ${tailor.user.last_name} (${tailor.specialty})`;
+                option.value = '';
+                option.textContent = garmentType ? 'No tailors available for this garment type' : 'No tailors available';
+                option.disabled = true;
                 tailorSelect.appendChild(option);
-            });
+            } else {
+                filteredTailors.forEach(tailor => {
+                    const option = document.createElement('option');
+                    option.value = tailor.id;
+                    option.textContent = `${tailor.user.first_name} ${tailor.user.last_name} (${tailor.specialty})`;
+                    tailorSelect.appendChild(option);
+                });
+            }
         })
         .catch(error => {
             console.error('Error loading tailors:', error);
             showStatusMessage('Error loading tailors. Please refresh the page.', 'error');
         });
     }
+
+    // Load fabrics from API and populate the fabric select (uses Fabric.id as value)
+    function loadFabrics() {
+        fetch('/api/admin/fabrics/', {
+            headers: {
+                'Authorization': 'Token ' + (localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || ''),
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to load fabrics: ' + response.status);
+            return response.json();
+        })
+        .then(data => {
+            const fabrics = data.results || data;
+            const fabricSelect = document.getElementById('fabric_type');
+            if (!fabricSelect) return;
+
+            // Preserve the 'Other' option if present
+            const otherOption = Array.from(fabricSelect.options).find(opt => opt.value === '__other');
+
+            fabricSelect.innerHTML = '<option value="">Select a fabric</option>';
+            fabrics.forEach(fabric => {
+                const option = document.createElement('option');
+                option.value = fabric.id;
+                option.textContent = fabric.name;
+                fabricSelect.appendChild(option);
+            });
+
+            if (otherOption) fabricSelect.appendChild(otherOption);
+        })
+        .catch(error => {
+            console.error('Error loading fabrics:', error);
+            // Keep the existing hard-coded options if API fails
+        });
+    }
     
+    // Load accessories from API and populate the accessories checkboxes
+    function loadAccessories() {
+        const container = document.getElementById('accessories_container');
+        if (!container) return;
+
+        fetch('/api/admin/accessories/', {
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                ...(sessionStorage.getItem('authToken') || localStorage.getItem('authToken') ? { 'Authorization': 'Token ' + (sessionStorage.getItem('authToken') || localStorage.getItem('authToken')) } : {})
+            },
+            credentials: 'include'
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Failed to load accessories: ' + response.status);
+            return response.json();
+        })
+        .then(data => {
+            const accessories = data.results || data;
+            container.innerHTML = '';
+            
+            if (accessories.length === 0) {
+                container.innerHTML = '<p class="col-span-full text-gray-500">No accessories available</p>';
+                return;
+            }
+            
+            accessories.forEach(a => {
+                const isLow = typeof a.low_stock_threshold !== 'undefined' && a.quantity <= a.low_stock_threshold;
+                const price = a.price_per_unit !== undefined ? `₱${Number(a.price_per_unit).toFixed(2)}` : '';
+                
+                const checkboxDiv = document.createElement('div');
+                checkboxDiv.className = 'flex items-start p-3 bg-white rounded border border-gray-200 hover:border-green-400 transition-colors';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `accessory_${a.id}`;
+                checkbox.name = 'accessories_ids';
+                checkbox.value = a.id;
+                checkbox.className = 'h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded mt-1';
+                checkbox.dataset.available = a.quantity;
+                checkbox.dataset.price = a.price_per_unit;
+                
+                // Store applicable garments as comma-separated codes for filtering
+                // Empty string means universal (applicable to all garments)
+                checkboxDiv.dataset.applicableGarments = (a.applicable_garments || []).join(',');
+                
+                const label = document.createElement('label');
+                label.htmlFor = `accessory_${a.id}`;
+                label.className = 'ml-3 flex-1 cursor-pointer';
+                
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'text-sm font-medium text-gray-800';
+                nameDiv.textContent = a.name;
+                
+                const priceQtyDiv = document.createElement('div');
+                priceQtyDiv.className = 'text-xs text-gray-600 mt-1';
+                const qtyClass = isLow ? 'text-red-600 font-semibold' : '';
+                const lowBadge = isLow ? ' <span class="ml-2 inline-block bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-medium">LOW STOCK</span>' : '';
+                priceQtyDiv.innerHTML = `${price} • Stock: <span class="${qtyClass}">${a.quantity}</span>${lowBadge}`;
+                
+                label.appendChild(nameDiv);
+                label.appendChild(priceQtyDiv);
+                
+                checkboxDiv.appendChild(checkbox);
+                checkboxDiv.appendChild(label);
+                
+                container.appendChild(checkboxDiv);
+            });
+            // After loading accessories, apply garment-based filtering if a garment is selected
+            try {
+                const currentGarment = document.getElementById('garment_type') ? document.getElementById('garment_type').value : null;
+                if (currentGarment) filterAccessoriesByGarment(currentGarment);
+            } catch (e) {
+                // ignore
+            }
+        })
+        .catch(err => {
+            console.error('Error loading accessories:', err);
+            container.innerHTML = '<p class="col-span-full text-red-500">Error loading accessories</p>';
+        });
+    }
+
     // Use shared pricing logic from pricing.js
     function updatePricingDisplay() {
         PricingManager.updatePricingDisplay({
@@ -1431,18 +1906,38 @@
             showStatusMessage('No matching measurements found to populate for this garment type', 'warning');
         }
     }
+
+    // Filter accessories shown in the accessories container based on selected garment type.
+    // Uses the applicable_garments field from the API. Accessories with empty applicable_garments
+    // are treated as universal and shown for all garment types.
+    function filterAccessoriesByGarment(garmentType) {
+        const container = document.getElementById('accessories_container');
+        if (!container) return;
+
+        Array.from(container.children).forEach(div => {
+            const applicableGarmentsStr = div.dataset.applicableGarments || '';
+            const applicableGarments = applicableGarmentsStr ? applicableGarmentsStr.split(',') : [];
+
+            // If empty applicable_garments, it's universal - always show
+            if (applicableGarments.length === 0) {
+                div.style.display = 'flex';
+                return;
+            }
+
+            // Show if current garment type is in the applicable list
+            const matches = applicableGarments.includes(garmentType);
+            div.style.display = matches ? 'flex' : 'none';
+
+            // Uncheck hidden checkboxes so they don't get submitted
+            const cb = div.querySelector('input[type="checkbox"]');
+            if (cb && div.style.display === 'none') cb.checked = false;
+        });
+    }
     
     function showStatusMessage(message, type) {
         const statusElement = document.getElementById('statusMessage');
-        
-        // Handle multiline messages
-        if (message.includes('\n')) {
-            const messageLines = message.split('\n');
-            const messageHTML = messageLines.map(line => `<p>${line}</p>`).join('');
-            statusElement.innerHTML = messageHTML;
-        } else {
-            statusElement.textContent = message;
-        }
+        // Allow HTML in message (we control messages in this UI)
+        statusElement.innerHTML = message;
         
         statusElement.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
         
@@ -1469,9 +1964,9 @@
         const selectedDate = new Date(dueDateInput.value);
 
         if (selectedDate <= today) {
-            showFieldError(dueDateInput, 'Due date must be in the future');
-            return false;
-        }
+             showFieldError(dueDateInput, 'Expected delivery date must be in the future');
+             return false;
+         }
 
         clearFieldError(dueDateInput);
         return true;
@@ -1589,5 +2084,87 @@
             }
         });
     });
+
+    // Helper to open a printable receipt window for an order
+    function printOrderReceipt(order) {
+        if (!order) return;
+        
+        // If status is PAID, balance must be 0 (fix for full payment selection)
+        const isPaid = order.payment_status === 'PAID';
+        const balance = isPaid ? 0 : parseFloat(order.remaining_balance || 0);
+        
+        const w = window.open('', '_blank');
+        if (!w) {
+            showModal('Popup blocked', 'Popup blocked. Please allow popups to print the receipt.');
+            return;
+        }
+
+        const html = `
+            <html>
+            <head>
+                <title>Receipt - Order #${order.id}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 24px; }
+                    .header { text-align: center; margin-bottom: 20px; }
+                    .row { display:flex; justify-content:space-between; margin-bottom:8px; }
+                    .total { font-weight: bold; font-size: 1.1em; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h2>El Senior Dumingag</h2>
+                    <div>Order Receipt</div>
+                </div>
+                <div class="row"><div>Order ID:</div><div>#${order.id}</div></div>
+                <div class="row"><div>Customer:</div><div>${order.customer && order.customer.user ? (order.customer.user.first_name + ' ' + order.customer.user.last_name) : 'N/A'}</div></div>
+                <div class="row"><div>Created:</div><div>${order.created_at ? new Date(order.created_at).toLocaleString() : ''}</div></div>
+                <hr />
+                <div class="row"><div>Total Amount:</div><div>₱${Number(order.total_amount || 0).toFixed(2)}</div></div>
+                ${(!isPaid && Number(order.down_payment_amount || 0) > 0) ? `
+                <div class="row"><div>Down Payment:</div><div>₱${Number(order.down_payment_amount || 0).toFixed(2)}</div></div>
+                ` : ''}
+                <div class="row"><div>Remaining Balance:</div><div>₱${Number(balance).toFixed(2)}</div></div>
+                <div class="row total"><div>Payment Status:</div><div>${order.payment_status || ''}</div></div>
+                <hr />
+                <div style="margin-top:20px;">Thank you for your business.</div>
+                <script>window.onload = function(){ window.print(); };<\/script>
+            </body>
+            </html>
+        `;
+
+        w.document.write(html);
+        w.document.close();
+    }
+
+    // Modal helpers
+    function showModal(title, bodyHtml) {
+        const modal = document.getElementById('globalModal');
+        const titleEl = document.getElementById('globalModalTitle');
+        const bodyEl = document.getElementById('globalModalBody');
+        const okBtn = document.getElementById('globalModalOk');
+        const closeBtn = document.getElementById('globalModalClose');
+
+        if (!modal || !titleEl || !bodyEl) {
+            alert(title + '\n\n' + bodyHtml);
+            return;
+        }
+
+        titleEl.textContent = title || '';
+        bodyEl.innerHTML = bodyHtml || '';
+
+        // Show modal
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+
+        function hide() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            okBtn.removeEventListener('click', hide);
+            closeBtn.removeEventListener('click', hide);
+        }
+
+        okBtn.addEventListener('click', hide);
+        closeBtn.addEventListener('click', hide);
+    }
 </script>
 {% endblock %}

@@ -108,6 +108,20 @@
     </div>
 </div>
 
+<!-- Global modal for reports/errors -->
+<div id="globalModal" class="fixed inset-0 hidden items-center justify-center bg-black bg-opacity-50 z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h3 id="globalModalTitle" class="text-lg font-semibold">Modal Title</h3>
+            <button id="globalModalClose" class="text-gray-500 hover:text-gray-900">✕</button>
+        </div>
+        <div id="globalModalBody" class="text-sm text-gray-800 whitespace-pre-wrap"></div>
+        <div class="mt-4 text-right">
+            <button id="globalModalOk" class="px-4 py-2 bg-green-600 text-white rounded-lg">OK</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // Get CSRF token
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -275,6 +289,12 @@
                         <button class="text-red-600 hover:text-red-900 delete-order" data-id="${order.id}" title="Delete">
                             <i class="fas fa-trash"></i>
                         </button>
+                        <button class="text-yellow-600 hover:text-yellow-900 deduct-inventory" data-id="${order.id}" title="Deduct Inventory">
+                            <i class="fas fa-sort-amount-down"></i>
+                        </button>
+                        <button class="text-gray-600 hover:text-gray-900 deduction-report" data-id="${order.id}" title="View Deduction Report">
+                            <i class="fas fa-file-alt"></i>
+                        </button>
                     </td>
                 `;
                 orderTableBody.appendChild(row);
@@ -308,6 +328,69 @@
                     deleteOrder(orderId);
                 });
             });
+            
+                    document.querySelectorAll('.deduct-inventory').forEach(button => {
+                button.addEventListener('click', function() {
+                    const orderId = this.getAttribute('data-id');
+                    if (!confirm(`Run inventory deduction for order #${orderId}? This will subtract items from stock.`)) return;
+                    fetch(`/api/admin/inventory/deduct/${orderId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken,
+                            ...(sessionStorage.getItem('authToken') || localStorage.getItem('authToken') ? { 'Authorization': 'Token ' + (sessionStorage.getItem('authToken') || localStorage.getItem('authToken')) } : {})
+                        },
+                        credentials: 'include'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.detail) {
+                            showModal('Failed to deduct inventory', String(data.detail));
+                        } else {
+                            showModal('Inventory deduction', String(data.message || 'Inventory deducted successfully'));
+                            loadOrderData();
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error running deduction:', err);
+                        showModal('Error', 'Error running deduction');
+                    });
+                });
+            });
+
+            document.querySelectorAll('.deduction-report').forEach(button => {
+                button.addEventListener('click', function() {
+                    const orderId = this.getAttribute('data-id');
+                    fetch(`/api/admin/inventory/deduction-report/${orderId}/`, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken,
+                            ...(sessionStorage.getItem('authToken') || localStorage.getItem('authToken') ? { 'Authorization': 'Token ' + (sessionStorage.getItem('authToken') || localStorage.getItem('authToken')) } : {})
+                        },
+                        credentials: 'include'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.detail) {
+                            showModal('Failed to get deduction report', String(data.detail));
+                            return;
+                        }
+                        const report = data.report;
+                        let msg = `Deduction report for order #${report.order_id}\n`;
+                        msg += `Fabric: ${report.fabric.name} - required ${report.fabric.required_units}, available ${report.fabric.available}\n`;
+                        msg += 'Accessories:\n';
+                        report.accessories.forEach(a => {
+                            msg += ` - ${a.name}: required ${a.required_units}, available ${a.available}\n`;
+                        });
+                        // Use modal to display report
+                        showModal(`Deduction report for order #${report.order_id}`, '<pre>' + msg + '</pre>');
+                    })
+                    .catch(err => {
+                        console.error('Error fetching report:', err);
+                        showModal('Error fetching deduction report', 'Error fetching deduction report');
+                    });
+                });
+            });
         })
         .catch(error => {
             console.error('Error loading orders:', error);
@@ -315,6 +398,35 @@
         });
     }
     
+    // Modal helper (shared locally in this template)
+    function showModal(title, bodyHtml) {
+        const modal = document.getElementById('globalModal');
+        const titleEl = document.getElementById('globalModalTitle');
+        const bodyEl = document.getElementById('globalModalBody');
+        const okBtn = document.getElementById('globalModalOk');
+        const closeBtn = document.getElementById('globalModalClose');
+
+        if (!modal || !titleEl || !bodyEl) {
+            alert(title + '\n\n' + bodyHtml);
+            return;
+        }
+
+        titleEl.textContent = title || '';
+        bodyEl.innerHTML = bodyHtml || '';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+
+        function hide() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            okBtn.removeEventListener('click', hide);
+            closeBtn.removeEventListener('click', hide);
+        }
+
+        okBtn.addEventListener('click', hide);
+        closeBtn.addEventListener('click', hide);
+    }
+
     function loadCustomerFilterData() {
         // Get token from session storage first, then local storage as fallback
         let authToken = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
@@ -433,8 +545,8 @@
                                 <p><strong>Customer:</strong> ${order.customer && order.customer.user ? `${order.customer.user.first_name} ${order.customer.user.last_name}` : 'Unknown Customer'}</p>
                                 <p><strong>Fabric:</strong> ${order.fabric ? `${order.fabric.name} (${order.fabric.unit_type || 'N/A'})` : 'Unknown Fabric'}</p>
                                 <p><strong>Total Amount:</strong> ${PricingManager.formatCurrency(order.total_amount || 0)}</p>
-                                <p><strong>Down Payment (50%):</strong> ${PricingManager.formatCurrency(PricingManager.calculateDownPayment(order.total_amount || 0))}</p>
-                                <p><strong>Remaining Balance:</strong> ${PricingManager.formatCurrency(PricingManager.calculateRemainingBalance(order.total_amount || 0, PricingManager.calculateDownPayment(order.total_amount || 0)))}</p>
+                                <p><strong>Down Payment (50%):</strong> ${PricingManager.formatCurrency(order.down_payment_amount || PricingManager.calculateDownPayment(order.total_amount || 0))}</p>
+                                <p><strong>Remaining Balance:</strong> ${PricingManager.formatCurrency(order.payment_status === 'PAID' ? 0 : (order.remaining_balance || 0))}</p>
                             </div>
                             <div>
                                 <p><strong>Status:</strong> 

@@ -24,6 +24,7 @@
                     <th class="py-2 px-4 border-b text-left">ID</th>
                     <th class="py-2 px-4 border-b text-left">Name</th>
                     <th class="py-2 px-4 border-b text-left">Description</th>
+                    <th class="py-2 px-4 border-b text-left">Garments</th>
                     <th class="py-2 px-4 border-b text-left">Quantity</th>
                     <th class="py-2 px-4 border-b text-left">Price/Unit</th>
                     <th class="py-2 px-4 border-b text-left">Status</th>
@@ -87,6 +88,13 @@
                     <label class="block text-gray-700 mb-2" for="description">Description</label>
                     <textarea id="description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
                 </div>
+                <div class="md:col-span-2">
+                    <label class="block text-gray-700 mb-2">Applicable Garments</label>
+                    <div id="applicableGarments" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-white max-h-40 overflow-y-auto">
+                        <!-- Checkbox options populated dynamically -->
+                    </div>
+                    <p class="text-sm text-gray-500 mt-1">Check one or more garment types this accessory applies to. Leave empty to make it universal.</p>
+                </div>
             </div>
             
             <div class="flex justify-end space-x-2">
@@ -105,10 +113,19 @@
     let currentPage = 1;
     let totalPages = 1;
     let totalRecords = 0;
+
+    // Garment types cache (code -> name)
+    let garmentTypes = [];
+    let garmentMap = {}; // code -> name
     
-    // Load accessory data when page loads
+    // Load garment types first, then accessory data when page loads
     document.addEventListener('DOMContentLoaded', function() {
-        loadAccessoryData();
+        loadGarmentTypes()
+            .then(() => loadAccessoryData())
+            .catch(err => {
+                console.error('Error loading garment types:', err);
+                loadAccessoryData();
+            });
     });
     
     // Refresh button
@@ -149,13 +166,28 @@
     
     function loadAccessoryData() {
         // Fetch accessory data from API with pagination
+        console.log('Loading accessory data, page:', currentPage);
+        const authToken = localStorage.getItem('authToken');
+        
         fetch(`/api/admin/accessories/?page=${currentPage}`, {
+            method: 'GET',
             headers: {
-                'Authorization': 'Token ' + localStorage.getItem('authToken'),
+                'Content-Type': 'application/json',
+                'Authorization': 'Token ' + authToken,
                 'X-CSRFToken': csrfToken
-            }
+            },
+            credentials: 'include'
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Accessories response status:', response.status);
+            if (!response.ok) {
+                return response.text().then(text => {
+                    console.error('Error response:', text);
+                    throw new Error('Failed to load accessories: ' + response.status);
+                });
+            }
+            return response.json();
+        })
         .then(data => {
             const accessories = data.results || data;
             const accessoryTableBody = document.getElementById('accessoryTableBody');
@@ -172,12 +204,18 @@
                 
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50';
+                // Map garment codes to names for display
+                const garmentDisplay = (accessory.applicable_garments && accessory.applicable_garments.length)
+                    ? accessory.applicable_garments.map(code => garmentMap[code] || code).join(', ')
+                    : 'All';
+
                 row.innerHTML = `
                     <td class="py-2 px-4 border-b">${accessory.id}</td>
                     <td class="py-2 px-4 border-b">${accessory.name}</td>
                     <td class="py-2 px-4 border-b">${accessory.description || 'N/A'}</td>
+                    <td class="py-2 px-4 border-b">${garmentDisplay}</td>
                     <td class="py-2 px-4 border-b">${accessory.quantity} units</td>
-                    <td class="py-2 px-4 border-b">$${accessory.price_per_unit}</td>
+                    <td class="py-2 px-4 border-b">₱${accessory.price_per_unit}</td>
                     <td class="py-2 px-4 border-b">
                         <span class="px-2 py-1 rounded-full text-xs ${isLowStock ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
                             ${isLowStock ? 'Low Stock' : 'In Stock'}
@@ -222,6 +260,90 @@
             document.getElementById('accessoryTableBody').innerHTML = '<tr><td colspan="7" class="py-4 px-4 text-center text-red-500">Error loading accessory data</td></tr>';
         });
     }
+
+    // Load garment types for the select and caching
+    function loadGarmentTypes() {
+        console.log('Loading garment types...');
+        const authToken = localStorage.getItem('authToken');
+        console.log('Auth token available:', !!authToken);
+        
+        return fetch('/api/admin/garment-types/', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Token ' + authToken,
+                'X-CSRFToken': csrfToken
+            },
+            credentials: 'include'
+        })
+        .then(response => {
+            console.log('Garment types response status:', response.status);
+            if (!response.ok) {
+                return response.text().then(text => {
+                    console.error('Error response:', text);
+                    throw new Error('Failed to load garment types: ' + response.status);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Garment types loaded:', data);
+            // Handle both array and paginated response formats
+            garmentTypes = (data.results || data) || [];
+            garmentMap = {};
+            if (Array.isArray(garmentTypes)) {
+                garmentTypes.forEach(gt => {
+                    // Expect serializer returns {id, code, name}
+                    garmentMap[gt.code] = gt.name || gt.code;
+                });
+            } else {
+                console.warn('Garment types is not an array:', garmentTypes);
+                garmentTypes = [];
+            }
+            populateGarmentOptions();
+        })
+        .catch(err => {
+            console.error('Error fetching garment types:', err);
+            throw err;
+        });
+    }
+
+    function populateGarmentOptions() {
+        const container = document.getElementById('applicableGarments');
+        if (!container) {
+            console.warn('applicableGarments container not found');
+            return;
+        }
+        container.innerHTML = '';
+        
+        if (!Array.isArray(garmentTypes)) {
+            console.warn('garmentTypes is not an array:', garmentTypes);
+            container.innerHTML = '<p class="text-red-500 text-sm">Error loading garment types</p>';
+            return;
+        }
+        
+        if (garmentTypes.length === 0) {
+            console.warn('No garment types available');
+            container.innerHTML = '<p class="text-gray-500 text-sm">No garment types available</p>';
+            return;
+        }
+        
+        garmentTypes.forEach(gt => {
+            try {
+                const id = `garment_opt_${gt.code}`;
+                const wrapper = document.createElement('div');
+                wrapper.className = 'flex items-center mb-1';
+                wrapper.innerHTML = `
+                    <input type="checkbox" id="${id}" class="mr-2 garment-checkbox" value="${gt.code}">
+                    <label for="${id}" class="text-gray-700">${gt.name || gt.code}</label>
+                `;
+                container.appendChild(wrapper);
+            } catch (e) {
+                console.error('Error creating checkbox for garment type:', gt, e);
+            }
+        });
+        console.log('Populated', garmentTypes.length, 'garment options');
+    }
     
     function updatePagination(total, current, perPage) {
         totalRecords = total;
@@ -237,24 +359,69 @@
     }
     
     function openAccessoryModal(accessory = null) {
-        document.getElementById('accessoryModal').classList.remove('hidden');
-        document.getElementById('accessoryModal').classList.add('flex');
-        
-        if (accessory) {
-            // Edit mode
-            document.getElementById('modalTitle').textContent = 'Edit Accessory';
-            document.getElementById('accessoryId').value = accessory.id;
-            document.getElementById('name').value = accessory.name;
-            document.getElementById('quantity').value = accessory.quantity;
-            document.getElementById('pricePerUnit').value = accessory.price_per_unit;
-            document.getElementById('description').value = accessory.description || '';
-            document.getElementById('lowStockThreshold').value = accessory.low_stock_threshold;
-        } else {
-            // Create mode
-            document.getElementById('modalTitle').textContent = 'Add Accessory';
-            document.getElementById('accessoryForm').reset();
-            document.getElementById('accessoryId').value = '';
-            document.getElementById('lowStockThreshold').value = '10';
+        try {
+            document.getElementById('accessoryModal').classList.remove('hidden');
+            document.getElementById('accessoryModal').classList.add('flex');
+            
+            // Ensure garment types are loaded and checkboxes populated before showing modal
+            if (!garmentTypes || garmentTypes.length === 0) {
+                loadGarmentTypes()
+                    .then(() => populateGarmentOptions())
+                    .catch(err => console.warn('Could not load garment types:', err));
+            } else {
+                // Garment types already loaded, just populate the options
+                populateGarmentOptions();
+            }
+
+            if (accessory) {
+                // Edit mode
+                console.log('Opening edit modal for accessory:', accessory);
+                document.getElementById('modalTitle').textContent = 'Edit Accessory';
+                document.getElementById('accessoryId').value = accessory.id;
+                document.getElementById('name').value = accessory.name;
+                document.getElementById('quantity').value = accessory.quantity;
+                document.getElementById('pricePerUnit').value = accessory.price_per_unit;
+                document.getElementById('description').value = accessory.description || '';
+                document.getElementById('lowStockThreshold').value = accessory.low_stock_threshold;
+                
+                // Populate applicable garments selection with a slight delay to ensure checkboxes are rendered
+                setTimeout(() => {
+                    try {
+                        const checks = document.querySelectorAll('#applicableGarments .garment-checkbox');
+                        console.log('Found checkboxes:', checks.length);
+                        checks.forEach(cb => cb.checked = false);
+                        if (accessory.applicable_garments && accessory.applicable_garments.length) {
+                            console.log('Setting checked garments:', accessory.applicable_garments);
+                            accessory.applicable_garments.forEach(code => {
+                                const cb = Array.from(checks).find(c => c.value === code);
+                                if (cb) {
+                                    cb.checked = true;
+                                    console.log('Checked:', code);
+                                } else {
+                                    console.log('Checkbox not found for:', code);
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        console.warn('Could not populate applicable garments (checkboxes):', e);
+                    }
+                }, 50);
+            } else {
+                // Create mode
+                console.log('Opening create modal');
+                document.getElementById('modalTitle').textContent = 'Add Accessory';
+                document.getElementById('accessoryForm').reset();
+                document.getElementById('accessoryId').value = '';
+                document.getElementById('lowStockThreshold').value = '10';
+                // Reset garments selection (checkboxes) - delay to ensure they're rendered
+                setTimeout(() => {
+                    const checks = document.querySelectorAll('#applicableGarments .garment-checkbox');
+                    checks.forEach(cb => cb.checked = false);
+                }, 50);
+            }
+        } catch (e) {
+            console.error('Error opening modal:', e);
+            alert('Error opening modal: ' + e.message);
         }
     }
     
@@ -272,6 +439,14 @@
             description: document.getElementById('description').value,
             low_stock_threshold: document.getElementById('lowStockThreshold').value
         };
+        // Include applicable garments (array of codes) from checkboxes
+        try {
+            const checks = document.querySelectorAll('#applicableGarments .garment-checkbox');
+            const selected = Array.from(checks).filter(c => c.checked).map(c => c.value);
+            accessoryData.applicable_garments = selected; // empty array => universal
+        } catch (e) {
+            // If checkboxes not present, don't include the field
+        }
         
         const method = accessoryId ? 'PUT' : 'POST';
         const url = accessoryId ? `/api/admin/accessories/${accessoryId}/` : '/api/admin/accessories/';
@@ -288,13 +463,18 @@
                 'Authorization': 'Token ' + localStorage.getItem('authToken'),
                 'X-CSRFToken': csrfToken
             },
+            credentials: 'include',
             body: JSON.stringify(accessoryData)
         })
         .then(response => {
             if (response.ok) {
                 return response.json();
             } else {
-                throw new Error('Failed to save accessory');
+                return response.json().then(errData => {
+                    throw new Error(`Failed to save accessory: ${response.status} - ${JSON.stringify(errData)}`);
+                }).catch(() => {
+                    throw new Error(`Failed to save accessory: HTTP ${response.status}`);
+                });
             }
         })
         .then(data => {
@@ -304,25 +484,43 @@
         })
         .catch(error => {
             console.error('Error saving accessory:', error);
-            alert('Error saving accessory.');
+            alert('Error saving accessory: ' + error.message);
         });
     }
     
     function editAccessory(accessoryId) {
         // Fetch accessory details from API
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            alert('Authentication required. Please log in again.');
+            return;
+        }
+        
         fetch(`/api/admin/accessories/${accessoryId}/`, {
+            method: 'GET',
             headers: {
-                'Authorization': 'Token ' + localStorage.getItem('authToken'),
+                'Content-Type': 'application/json',
+                'Authorization': 'Token ' + authToken,
                 'X-CSRFToken': csrfToken
-            }
+            },
+            credentials: 'include'
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(text => {
+                    console.error('API Error Response:', text);
+                    throw new Error(`HTTP error! status: ${response.status} - ${text}`);
+                });
+            }
+            return response.json();
+        })
         .then(accessory => {
+            console.log('Loaded accessory:', accessory);
             openAccessoryModal(accessory);
         })
         .catch(error => {
             console.error('Error loading accessory:', error);
-            alert('Error loading accessory details.');
+            alert('Error loading accessory details: ' + error.message);
         });
     }
     
@@ -334,7 +532,8 @@
                 headers: {
                     'Authorization': 'Token ' + localStorage.getItem('authToken'),
                     'X-CSRFToken': csrfToken
-                }
+                },
+                credentials: 'include'
             })
             .then(response => {
                 if (response.ok) {

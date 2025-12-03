@@ -446,75 +446,83 @@
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         
         // Submit the data
-        fetch('/api/register/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify(customerData)
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(errors => {
-                    throw new Error(JSON.stringify(errors));
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            showStatusMessage('Customer created successfully!', 'success');
-            // Hide the form and show post-creation options
-            document.getElementById('customerForm').classList.add('hidden');
-            document.getElementById('postCreationOptions').classList.remove('hidden');
-            
-            // Store the created customer ID for potential order creation
-            localStorage.setItem('lastCreatedCustomerId', data.id);
-            
-            // Show customer details (optional) - since we generate the username/password
-            console.log('Created customer:', data);
-        })
-        .catch(error => {
-            console.error('Error:', error);
+         console.log('Submitting customer data:', customerData);
+         fetch('/api/register/', {
+             method: 'POST',
+             headers: {
+                 'Content-Type': 'application/json',
+                 'X-CSRFToken': csrfToken
+             },
+             body: JSON.stringify(customerData)
+         })
+         .then(response => {
+             console.log('Register response status:', response.status);
+             console.log('Register response ok:', response.ok);
+             if (!response.ok) {
+                 return response.json().then(errors => {
+                     console.error('Register API errors:', errors);
+                     throw new Error(JSON.stringify(errors));
+                 });
+             }
+             return response.json();
+         })
+         .then(data => {
+             console.log('Customer created successfully. Response data:', data);
+             console.log('Customer ID:', data.id);
+             showStatusMessage('Customer created successfully!', 'success');
+             // Hide the form and show post-creation options
+             document.getElementById('customerForm').classList.add('hidden');
+             document.getElementById('postCreationOptions').classList.remove('hidden');
+             
+             // Store the created customer ID for potential order creation
+             localStorage.setItem('lastCreatedCustomerId', data.id);
+             console.log('Stored lastCreatedCustomerId:', localStorage.getItem('lastCreatedCustomerId'));
+             
+             // Show customer details (optional) - since we generate the username/password
+             console.log('Created customer:', data);
+         })
+         .catch(error => {
+             console.error('Error creating customer:', error);
 
-            // Better error handling with debugging information
-            let errorMessage = 'Error creating customer';
-            if (error.message) {
-                try {
-                    // Try to parse the error message as JSON
-                    const errorObj = JSON.parse(error.message);
+             // Better error handling with debugging information
+             let errorMessage = 'Error creating customer';
+             if (error.message) {
+                 try {
+                     // Try to parse the error message as JSON
+                     const errorObj = JSON.parse(error.message);
 
-                    // Format field-specific errors nicely
-                    if (typeof errorObj === 'object') {
-                        const fieldErrors = [];
-                        for (const [field, errors] of Object.entries(errorObj)) {
-                            // Format field name nicer
-                            let fieldName = field.replace('_', ' ');
-                            fieldName = fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
+                     // Format field-specific errors nicely
+                     if (typeof errorObj === 'object') {
+                         const fieldErrors = [];
+                         for (const [field, errors] of Object.entries(errorObj)) {
+                             // Format field name nicer
+                             let fieldName = field.replace('_', ' ');
+                             fieldName = fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
 
-                            if (Array.isArray(errors)) {
-                                fieldErrors.push(`${fieldName}: ${errors.join(', ')}`);
-                            } else {
-                                fieldErrors.push(`${fieldName}: ${errors}`);
-                            }
-                        }
+                             if (Array.isArray(errors)) {
+                                 fieldErrors.push(`${fieldName}: ${errors.join(', ')}`);
+                             } else {
+                                 fieldErrors.push(`${fieldName}: ${errors}`);
+                             }
+                         }
 
-                        if (fieldErrors.length > 0) {
-                            errorMessage = fieldErrors.join('\n');
-                        } else {
-                            errorMessage = JSON.stringify(errorObj);
-                        }
-                    } else {
-                        errorMessage = JSON.stringify(errorObj);
-                    }
-                } catch (e) {
-                    // If not JSON, use the error message directly
-                    errorMessage = error.message;
-                }
-            }
+                         if (fieldErrors.length > 0) {
+                             errorMessage = fieldErrors.join('\n');
+                         } else {
+                             errorMessage = JSON.stringify(errorObj);
+                         }
+                     } else {
+                         errorMessage = JSON.stringify(errorObj);
+                     }
+                 } catch (e) {
+                     // If not JSON, use the error message directly
+                     errorMessage = error.message;
+                 }
+             }
 
-            showStatusMessage(errorMessage, 'error');
-        });
+             console.error('Final error message:', errorMessage);
+             showStatusMessage(errorMessage, 'error');
+         });
     });
     
     // Handle cancel button

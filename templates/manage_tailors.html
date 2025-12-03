@@ -28,7 +28,7 @@
                     <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Phone</th>
                     <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Email</th>
                     <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Specialty</th>
-                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Commission Rate</th>
+                    <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Commission (Tariff / % fallback)</th>
                     <th class="py-3 px-4 border-b text-left text-green-800 font-semibold">Actions</th>
                 </tr>
             </thead>
@@ -94,8 +94,9 @@
                     <input type="text" id="specialty" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required>
                 </div>
                 <div>
-                    <label class="block text-gray-700 mb-2" for="commissionRate">Commission Rate (%) *</label>
-                    <input type="number" id="commissionRate" step="0.01" min="0" max="100" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500" required>
+                    <label class="block text-gray-700 mb-2" for="commissionRate">Commission (legacy % — kept for fallback)</label>
+                    <input type="number" id="commissionRate" step="0.01" min="0" max="100" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                    <p class="text-xs text-gray-500 mt-1">The system now uses fixed tariffs per garment type when available (e.g. blouse ₱180). The percentage field is retained for legacy fallback.</p>
                 </div>
                 <div>
                     <label class="block text-gray-700 mb-2" for="password">Password *</label>
@@ -290,7 +291,17 @@
         
         // Only include password if it's provided (for creating new tailors)
         const password = document.getElementById('password').value;
-        if (password) {
+        if (tailorId) {
+            // Edit mode: password optional
+            if (password) {
+                tailorData.user.password = password;
+            }
+        } else {
+            // Create mode: password required
+            if (!password) {
+                alert('Please provide a password for the new tailor.');
+                return;
+            }
             tailorData.user.password = password;
         }
         

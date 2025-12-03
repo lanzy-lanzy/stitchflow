@@ -1,4 +1,6 @@
 from io import BytesIO
+import csv
+import io as _io
 from datetime import datetime, timedelta
 from decimal import Decimal
 from django.utils import timezone
@@ -43,6 +45,8 @@ class AdminReportGenerator:
             return self._generate_inventory_report()
         elif self.report_type == 'tailor':
             return self._generate_tailor_performance()
+        elif self.report_type == 'sales':
+            return self._generate_sales_report()
         elif self.report_type == 'custom':
             return self._generate_custom_report()
         else:
@@ -265,7 +269,8 @@ class AdminReportGenerator:
         )
         
         content = []
-        content.append(Paragraph("StitchFlow Business Intelligence", header_style))
+        # Updated header per request: use brand name "El Senior Original"
+        content.append(Paragraph("El Senior Original", header_style))
         content.append(Paragraph(title, subtitle_style))
         
         # Report metadata
@@ -313,11 +318,147 @@ class AdminReportGenerator:
             'customer': 'Customer_Analytics',
             'inventory': 'Inventory_Report',
             'tailor': 'Tailor_Performance',
+            'sales': 'Sales_Report',
             'custom': 'Custom_Report'
         }
         
         report_name = report_names.get(self.report_type, 'Admin_Report')
         return f"StitchFlow_{report_name}_{date_str}.pdf"
+
+    def _generate_sales_report(self):
+        """Generate sales report. Supports PDF and CSV output depending on kwargs['format']."""
+        format_type = self.kwargs.get('format', 'pdf')
+
+        # Query orders in range
+        orders = Order.objects.filter(created_at__range=[self.date_from, self.date_to]).select_related('customer__user')
+
+        # CSV output
+        if format_type == 'csv':
+            sio = _io.StringIO()
+            writer = csv.writer(sio)
+            writer.writerow(['Order ID', 'Created At', 'Customer', 'Tailor', 'Total Amount', 'Status'])
+
+            for order in orders.order_by('created_at'):
+                tailor_name = ''
+                try:
+                    # Some orders may not have an assigned tailor yet
+                    tailor = order.task_set.select_related('tailor__user').first()
+                    if tailor and tailor.tailor:
+                        tailor_name = tailor.tailor.user.get_full_name()
+                except Exception:
+                    tailor_name = ''
+
+                customer_name = order.customer.user.get_full_name() if getattr(order, 'customer', None) else ''
+                writer.writerow([
+                    order.id,
+                    order.created_at.isoformat(),
+                    customer_name,
+                    tailor_name,
+                    str(order.total_amount or 0),
+                    order.status
+                ])
+
+            csv_bytes = sio.getvalue().encode('utf-8')
+            sio.close()
+            return csv_bytes
+
+        # PDF output
+        doc = SimpleDocTemplate(self.buffer, pagesize=A4, topMargin=0.5*inch)
+        story = []
+
+        story.extend(self._create_header("Sales Report"))
+        story.append(Spacer(1, 20))
+
+        # Summary metrics
+        total_revenue = orders.aggregate(Sum('total_amount'))['total_amount__sum'] or Decimal('0')
+        total_orders = orders.count()
+        avg_order_value = (total_revenue / total_orders) if total_orders > 0 else Decimal('0')
+
+        summary_data = [
+            ['Metric', 'Value'],
+            ['Total Revenue', f"PHP {total_revenue:,.2f}"],
+            ['Total Orders', str(total_orders)],
+            ['Average Order Value', f"PHP {avg_order_value:,.2f}"]
+        ]
+
+        summary_table = Table(summary_data, colWidths=[3*inch, 2*inch])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), self.primary_color),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+
+        story.append(summary_table)
+        story.append(Spacer(1, 12))
+
+        # Revenue by day
+        revenue_by_day = {}
+        for o in orders:
+            day = o.created_at.strftime('%Y-%m-%d')
+            revenue_by_day.setdefault(day, Decimal('0'))
+            revenue_by_day[day] += o.total_amount or Decimal('0')
+
+        if revenue_by_day:
+            table_data = [['Date', 'Revenue']]
+            for day in sorted(revenue_by_day.keys()):
+                table_data.append([day, f"PHP {revenue_by_day[day]:,.2f}"])
+
+            revenue_table = Table(table_data, colWidths=[3*inch, 2*inch])
+            revenue_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), self.primary_color),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ]))
+
+            story.append(Spacer(1, 6))
+            story.append(Paragraph('Revenue by Day', getSampleStyleSheet()['Heading3']))
+            story.append(revenue_table)
+            story.append(Spacer(1, 12))
+
+        # Top tailors by revenue
+        try:
+            tailor_revenue = {}
+            for o in orders:
+                # Look for related tasks with assigned tailors
+                task = o.task_set.select_related('tailor__user').first()
+                if task and getattr(task, 'tailor', None):
+                    name = task.tailor.user.get_full_name()
+                    tailor_revenue.setdefault(name, Decimal('0'))
+                    tailor_revenue[name] += o.total_amount or Decimal('0')
+
+            if tailor_revenue:
+                table_data = [['Tailor', 'Revenue']]
+                for name, rev in sorted(tailor_revenue.items(), key=lambda x: x[1], reverse=True)[:10]:
+                    table_data.append([name, f"PHP {rev:,.2f}"])
+
+                tailor_table = Table(table_data, colWidths=[3*inch, 2*inch])
+                tailor_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), self.primary_color),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 9),
+                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
+                ]))
+
+                story.append(Paragraph('Top Tailors by Revenue', getSampleStyleSheet()['Heading3']))
+                story.append(tailor_table)
+                story.append(Spacer(1, 12))
+        except Exception:
+            # Non-critical: continue without tailor breakdown
+            pass
+
+        story.extend(self._create_footer())
+        doc.build(story)
+        pdf_data = self.buffer.getvalue()
+        self.buffer.close()
+        return pdf_data
 
     def _create_executive_summary(self):
         """Create executive summary section"""

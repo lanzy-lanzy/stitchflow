@@ -53,6 +53,8 @@ def generate_admin_report(request, report_type):
         date_from_str = request.GET.get('date_from')
         date_to_str = request.GET.get('date_to')
         period = request.GET.get('period', 'last_month')
+        # Output format (pdf or csv)
+        format_type = request.GET.get('format', 'pdf')
         
         # Parse date range
         if date_from_str and date_to_str:
@@ -86,6 +88,8 @@ def generate_admin_report(request, report_type):
         
         # Handle special parameters for specific report types
         kwargs = {}
+        # Always pass requested format through to the generator
+        kwargs['format'] = format_type
         if report_type == 'tailor':
             tailor_id = request.GET.get('tailor_id')
             if not tailor_id:
@@ -93,9 +97,8 @@ def generate_admin_report(request, report_type):
             kwargs['tailor_id'] = tailor_id
         elif report_type == 'custom':
             metrics = request.GET.getlist('metrics')
-            format_type = request.GET.get('format', 'pdf')
             kwargs['metrics'] = metrics
-            kwargs['format'] = format_type
+            # format already set in kwargs above
         
         # Generate report
         report_generator = AdminReportGenerator(
@@ -106,11 +109,21 @@ def generate_admin_report(request, report_type):
             **kwargs
         )
         
-        pdf_data = report_generator.generate_report()
+        data = report_generator.generate_report()
         filename = report_generator.get_filename()
-        
-        # Return PDF response
-        response = HttpResponse(pdf_data, content_type='application/pdf')
+
+        # Choose content type based on requested format
+        if format_type == 'csv':
+            content_type = 'text/csv'
+            # ensure filename ends with .csv
+            if not filename.lower().endswith('.csv'):
+                filename = filename.rsplit('.', 1)[0] + '.csv'
+        else:
+            content_type = 'application/pdf'
+            if not filename.lower().endswith('.pdf'):
+                filename = filename.rsplit('.', 1)[0] + '.pdf'
+
+        response = HttpResponse(data, content_type=content_type)
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
         

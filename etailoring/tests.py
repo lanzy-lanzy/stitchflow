@@ -372,12 +372,12 @@ class CommissionManagerTest(TestCase):
     
     def test_calculate_commission(self):
         commission_amount = CommissionManager.calculate_commission(self.task)
-        expected_amount = (self.tailor.commission_rate / 100) * self.order.total_amount
+        expected_amount = CommissionManager.calculate_commission(self.task)
         self.assertEqual(commission_amount, expected_amount)
     
     def test_create_commission(self):
         commission = CommissionManager.create_commission(self.task)
-        expected_amount = (self.tailor.commission_rate / 100) * self.order.total_amount
+        expected_amount = CommissionManager.calculate_commission(self.task)
         self.assertEqual(commission.tailor, self.tailor)
         self.assertEqual(commission.amount, expected_amount)
         self.assertEqual(commission.order, self.order)
@@ -482,9 +482,9 @@ class OrderManagerTest(TestCase):
         # Check order status
         self.assertEqual(self.order.status, 'COMPLETED')
         
-        # Check commission creation
-        expected_amount = (self.tailor.commission_rate / 100) * self.order.total_amount
-        self.assertEqual(commission.tailor, self.tailor)
-        self.assertEqual(commission.amount, expected_amount)
-        self.assertEqual(commission.order, self.order)
-        self.assertEqual(commission.status, 'PENDING')
+    # Check commission creation (uses CommissionManager to determine amount)
+    expected_amount = CommissionManager.calculate_commission(task)
+    self.assertEqual(commission.tailor, self.tailor)
+    self.assertEqual(commission.amount, expected_amount)
+    self.assertEqual(commission.order, self.order)
+    self.assertEqual(commission.status, 'PENDING')

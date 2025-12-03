@@ -140,6 +140,11 @@
                 <div class="px-4 py-3 text-text-medium text-xs font-bold uppercase tracking-wider mt-6 mb-2 flex items-center">
                     <i class="fas fa-chart-line mr-2 text-text-light"></i> Reports
                 </div>
+                <a href="{% url 'etailoring:admin_reports_page' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-primary-beige hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'admin_reports_page' %}bg-primary-beige shadow-inner{% endif %}">
+                    <i class="fas fa-chart-pie mr-3 w-5 text-center"></i>
+                    <span>Admin Reports</span>
+                </a>
+
                 <a href="{% url 'etailoring:generate_tailor_report' %}" class="flex items-center py-3 px-4 rounded-xl transition-all duration-200 hover:bg-primary-beige hover:shadow-md ml-4 {% if request.resolver_match.url_name == 'generate_tailor_report' %}bg-primary-beige shadow-inner{% endif %}">
                     <i class="fas fa-file-pdf mr-3 w-5 text-center"></i>
                     <span>Tailor Reports</span>

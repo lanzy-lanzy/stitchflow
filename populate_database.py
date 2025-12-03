@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
 Database Population Script for StitchFlow Tailoring System
 This script populates the database with sample data including:
@@ -11,7 +12,12 @@ This script populates the database with sample data including:
 
 import os
 import sys
+import io
 import django
+
+# Force UTF-8 output on Windows
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 from decimal import Decimal
 from datetime import datetime, timedelta
 import json
@@ -430,7 +436,6 @@ def create_sample_orders():
             'quantity': 1,
             'fabric_type': 'Silk',
             'color_design_preference': 'Elegant navy blue evening dress with subtle beading',
-            'accessories_preference': 'Pearl buttons, invisible zipper',
             'status': 'COMPLETED',
             'due_date': datetime.now().date() - timedelta(days=5),
             'measurements': {
@@ -448,7 +453,6 @@ def create_sample_orders():
             'quantity': 1,
             'fabric_type': 'Wool Blend',
             'color_design_preference': 'Classic charcoal gray business suit jacket',
-            'accessories_preference': 'Shoulder pads, metal buttons',
             'status': 'IN_PROGRESS',
             'due_date': datetime.now().date() + timedelta(days=10),
             'measurements': {
@@ -466,7 +470,6 @@ def create_sample_orders():
             'quantity': 2,
             'fabric_type': 'Cotton',
             'color_design_preference': 'White and light blue casual blouses',
-            'accessories_preference': 'Pearl buttons, standard trim',
             'status': 'ASSIGNED',
             'due_date': datetime.now().date() + timedelta(days=7),
             'measurements': {
@@ -484,7 +487,6 @@ def create_sample_orders():
             'quantity': 1,
             'fabric_type': 'Denim',
             'color_design_preference': 'Classic blue jeans with straight cut',
-            'accessories_preference': 'Metal zipper, standard pockets',
             'status': 'PENDING',
             'due_date': datetime.now().date() + timedelta(days=14),
             'measurements': {
@@ -502,7 +504,6 @@ def create_sample_orders():
             'quantity': 1,
             'fabric_type': 'Chiffon',
             'color_design_preference': 'Flowing maxi skirt in soft pink',
-            'accessories_preference': 'Invisible zipper, decorative trim',
             'status': 'DELIVERED',
             'due_date': datetime.now().date() - timedelta(days=15),
             'measurements': {
@@ -530,7 +531,6 @@ def create_sample_orders():
             'quantity': order_data['quantity'],
             'fabric_type': order_data['fabric_type'],
             'color_design_preference': order_data['color_design_preference'],
-            'accessories_preference': order_data['accessories_preference'],
             'status': order_data['status'],
             'due_date': order_data['due_date'],
             'total_amount': total_amount,
@@ -564,7 +564,17 @@ def create_sample_orders():
 
             # Create commission for completed tasks
             if order_data['status'] == 'COMPLETED':
-                commission_amount = (tailor.commission_rate / 100) * order.total_amount
+                # Use fixed tariffs if available; otherwise fall back to percentage
+                try:
+                    fixed = tailor.get_commission_amount(order.garment_type)
+                except Exception:
+                    fixed = None
+
+                if fixed is not None:
+                    commission_amount = fixed
+                else:
+                    commission_amount = (tailor.commission_rate / 100) * order.total_amount
+
                 Commission.objects.create(
                     tailor=tailor,
                     amount=commission_amount,

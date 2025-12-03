@@ -53,6 +53,7 @@ urlpatterns = [
     
     path('api/admin/accessories/', views.AccessoryListCreateView.as_view(), name='admin_accessory_list'),
     path('api/admin/accessories/<int:pk>/', views.AccessoryDetailView.as_view(), name='admin_accessory_detail'),
+    path('api/admin/garment-types/', views.GarmentTypeListView.as_view(), name='admin_garmenttype_list'),
     
     path('api/admin/orders/', views.OrderListCreateView.as_view(), name='admin_order_list'),
     path('api/admin/orders/<int:pk>/', views.OrderDetailView.as_view(), name='admin_order_detail'),
@@ -77,6 +78,7 @@ urlpatterns = [
     path('api/admin/inventory/bulk-restock/', inventory_views.bulk_restock, name='admin_bulk_restock'),
     path('api/admin/inventory/deduct/', inventory_views.deduct_inventory, name='admin_deduct_inventory'),
     path('api/admin/inventory/deduct/<int:order_id>/', inventory_views.deduct_inventory, name='admin_deduct_inventory_for_order'),
+    path('api/admin/inventory/deduction-report/<int:order_id>/', inventory_views.deduction_report, name='admin_deduction_report_for_order'),
     
     # Tailor URLs
     path('api/tailor/tasks/', views.TailorTaskListView.as_view(), name='tailor_task_list'),

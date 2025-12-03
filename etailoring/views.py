@@ -23,8 +23,12 @@ from .serializers import (
     FabricSerializer, AccessorySerializer, OrderSerializer, 
     TaskSerializer, CommissionSerializer
 )
-from .business_logic import OrderManager
+from .business_logic import OrderManager, CommissionManager
 from .report_generator import TailorReportGenerator
+from .sms_service import SemaphoreSMS
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # Homepage view
@@ -327,21 +331,35 @@ def logout_view(request):
 
 @api_view(['POST'])
 def register_view(request):
-    serializer = CustomerSerializer(data=request.data)
-    if serializer.is_valid():
-        customer = serializer.save()
-        
-        # Create user extension
-        UserExtension.objects.create(
-            user=customer.user,
-            role='CUSTOMER',
-            phone_number=customer.phone_number
-        )
-        
-        # No automatic login - customers don't use the login system
-        
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    import logging
+    logger = logging.getLogger('etailoring')
+    
+    try:
+        logger.info(f"Register request data: {request.data}")
+        serializer = CustomerSerializer(data=request.data)
+        if serializer.is_valid():
+            customer = serializer.save()
+            logger.info(f"Customer created: {customer.id}")
+            
+            # Create user extension
+            UserExtension.objects.create(
+                user=customer.user,
+                role='CUSTOMER',
+                phone_number=customer.phone_number
+            )
+            
+            logger.info(f"UserExtension created for customer: {customer.id}")
+            # No automatic login - customers don't use the login system
+            
+            response_data = serializer.data
+            logger.info(f"Returning response data: {response_data}")
+            return Response(response_data, status=status.HTTP_201_CREATED)
+        else:
+            logger.error(f"Serializer errors: {serializer.errors}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        logger.exception(f"Error in register_view: {str(e)}")
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # Admin Views
@@ -386,6 +404,19 @@ class AccessoryListCreateView(generics.ListCreateAPIView):
     serializer_class = AccessorySerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        garment = self.request.query_params.get('garment') or self.request.query_params.get('garment_type')
+        if garment:
+            # Return accessories that either explicitly list the garment code
+            # or have no applicable_garments (treated as universal)
+            from django.db.models import Q
+            # Use annotate to check if the M2M has no related objects
+            qs = qs.annotate(garment_count=Count('applicable_garments')).filter(
+                Q(applicable_garments__code__iexact=garment) | Q(garment_count=0)
+            ).distinct()
+        return qs
+
 
 class AccessoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Accessory.objects.all()
@@ -393,10 +424,37 @@ class AccessoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, IsAdminUser]
 
 
+class GarmentTypeListView(generics.ListAPIView):
+    """Return available garment types for admin UI."""
+    queryset = None
+    serializer_class = None
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get_queryset(self):
+        from .models import GarmentType
+        return GarmentType.objects.all()
+
+    def get_serializer_class(self):
+        from .serializers import GarmentTypeSerializer
+        return GarmentTypeSerializer
+
+
 class OrderListCreateView(generics.ListCreateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
+    
+    def perform_create(self, serializer):
+        """Override to add server-side logging and better error visibility."""
+        try:
+            order = serializer.save()
+            # Log important order creation details
+            logger.info(f"Order created: id={order.id}, total={order.total_amount}, down_payment={order.down_payment_amount}, created_by={getattr(self.request.user, 'username', None)}")
+        except Exception as e:
+            # Log exception with traceback
+            logger.exception(f"Error creating order by user={getattr(self.request.user, 'username', None)}: {e}")
+            # Re-raise so DRF can return a proper error response
+            raise
 
 
 class OrderDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -449,6 +507,7 @@ def process_customer_payment(request, order_id):
 
             order.payment_status = 'PAID'
             order.paid_at = timezone.now()
+            order.remaining_balance = 0  # Set remaining balance to zero when fully paid
 
         elif payment_type == 'FULL_PAYMENT':
             # Process full payment at once
@@ -456,6 +515,7 @@ def process_customer_payment(request, order_id):
             order.paid_at = timezone.now()
             order.down_payment_status = 'PAID'
             order.down_payment_paid_at = timezone.now()
+            order.remaining_balance = 0  # Set remaining balance to zero when fully paid
 
         else:
             return Response({
@@ -493,9 +553,13 @@ def payment_summary(request):
         down_payment_orders = Order.objects.filter(payment_status='DOWN_PAYMENT_PAID')
         paid_orders = Order.objects.filter(payment_status='PAID')
 
+        # For the admin summary we want the 'pending' card to reflect the pending down-payment amounts
+        # (i.e., the amounts customers still owe as down payments), so aggregate down_payment_amount
+        # for orders whose payment_status is PENDING. Keep full payment totals as before.
         summary = {
             'pending_count': pending_orders.count(),
-            'pending_amount': pending_orders.aggregate(total=Sum('total_amount'))['total'] or 0,
+            'pending_amount': pending_orders.aggregate(total=Sum('down_payment_amount'))['total'] or 0,
+            'pending_total_amount': pending_orders.aggregate(total=Sum('total_amount'))['total'] or 0,
             'down_payment_count': down_payment_orders.count(),
             'down_payment_amount': down_payment_orders.aggregate(total=Sum('down_payment_amount'))['total'] or 0,
             'full_payment_count': paid_orders.count(),
@@ -515,6 +579,7 @@ def payment_summary(request):
 def approve_task(request, task_id):
     """
     API endpoint for admin to approve a completed task and create commission.
+    Sends SMS notification to customer that their garment is ready for pickup.
     """
     try:
         task = Task.objects.get(id=task_id)
@@ -527,8 +592,30 @@ def approve_task(request, task_id):
         # Use business logic to approve task and create commission
         commission = OrderManager.approve_task(task)
 
+        # Send SMS notification to customer that garment is ready for pickup
+        try:
+            customer = task.order.customer
+            customer_name = customer.user.get_full_name() or customer.user.username
+            customer_phone = customer.phone_number
+            order_id = task.order.id
+            
+            sms_success, sms_message = SemaphoreSMS.notify_customer_ready_for_pickup(
+                customer_name=customer_name,
+                customer_phone=customer_phone,
+                order_id=order_id
+            )
+            
+            if sms_success:
+                logger.info(f'SMS notification sent to customer {customer_name} for Order #{order_id}')
+            else:
+                logger.warning(f'Failed to send SMS to customer {customer_name}: {sms_message}')
+                
+        except Exception as e:
+            logger.error(f'Error sending SMS notification for task {task_id}: {str(e)}')
+            # Don't fail the task approval if SMS fails, just log the error
+
         return Response({
-            'detail': 'Task approved successfully. Commission created.',
+            'detail': 'Task approved successfully. Commission created. Customer notified via SMS.',
             'task_id': task.id,
             'task_status': task.status,
             'commission_id': commission.id,
@@ -564,10 +651,12 @@ def pay_commission_for_task(request, task_id):
         try:
             commission = Commission.objects.get(order=task.order)
         except Commission.DoesNotExist:
-            # If no commission exists, create one
+            # If no commission exists, create one using CommissionManager so we
+            # respect fixed tariffs defined on the Tailor model.
+            amount = CommissionManager.calculate_commission(task)
             commission = Commission.objects.create(
                 tailor=task.tailor,
-                amount=(task.tailor.commission_rate / 100) * task.order.total_amount,
+                amount=amount,
                 order=task.order
             )
         
