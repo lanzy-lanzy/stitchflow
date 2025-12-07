@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto p-4">
+  <h1 class="text-2xl font-semibold mb-4">Claim Audit Records</h1>
+
+  <form method="get" class="mb-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+    <input type="hidden" id="ajax_mode" name="ajax" value="1" />
+    <input type="text" name="order_id" placeholder="Order ID" value="{{ filters.order_id }}" class="border rounded p-2" />
+    <input type="text" name="claimant" placeholder="Claimant name" value="{{ filters.claimant }}" class="border rounded p-2" />
+    <input type="text" name="claimant_phone" placeholder="Claimant phone" value="{{ filters.claimant_phone }}" class="border rounded p-2" />
+    <input type="text" name="recorded_by" placeholder="Recorded by (username)" value="{{ filters.recorded_by }}" class="border rounded p-2" />
+    <input type="date" name="date_from" placeholder="From" value="{{ filters.date_from }}" class="border rounded p-2" />
+    <input type="date" name="date_to" placeholder="To" value="{{ filters.date_to }}" class="border rounded p-2" />
+    <div class="col-span-3 flex gap-2">
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Filter</button>
+      <a href="?" class="bg-gray-200 px-4 py-2 rounded">Clear</a>
+      <label class="ml-2 inline-flex items-center"><input type="checkbox" id="liveFilter" class="mr-2">Live filter (AJAX)</label>
+      <a href="{% url 'etailoring:export_claims_report' %}?{{ request.GET.urlencode }}&format=pdf" class="bg-green-600 text-white px-4 py-2 rounded">Export PDF</a>
+      <a href="{% url 'etailoring:export_claims_report' %}?{{ request.GET.urlencode }}&format=csv" class="bg-yellow-600 text-black px-4 py-2 rounded">Export CSV</a>
+    </div>
+  </form>
+
+  <div class="overflow-x-auto bg-white rounded shadow">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Claim ID</th>
+          <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Order</th>
+          <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Customer</th>
+          <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Claimant</th>
+          <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Phone</th>
+          <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Recorded By</th>
+          <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Recorded At</th>
+          <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Notes</th>
+          <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Reversed</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        {% for c in claims %}
+        <tr>
+          <td class="px-4 py-2 text-sm text-gray-700">{{ c.id }}</td>
+          <td class="px-4 py-2 text-sm text-gray-700">{{ c.order.id }}</td>
+          <td class="px-4 py-2 text-sm text-gray-700">{{ c.order.customer.user.get_full_name }}</td>
+          <td class="px-4 py-2 text-sm text-gray-700">{{ c.claimant_name|default:"(customer)" }}</td>
+          <td class="px-4 py-2 text-sm text-gray-700">{{ c.claimant_phone }}</td>
+          <td class="px-4 py-2 text-sm text-gray-700">{% if c.recorded_by %}{{ c.recorded_by.get_full_name }}{% endif %}</td>
+          <td class="px-4 py-2 text-sm text-gray-700">{{ c.recorded_at }}</td>
+          <td class="px-4 py-2 text-sm text-gray-700">{{ c.notes|truncatechars:80 }}</td>
+          <td class="px-4 py-2 text-sm text-gray-700">{% if c.reversed %}Yes{% else %}No{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="9" class="px-4 py-6 text-center text-gray-500">No claims found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+    <!-- Pagination Controls -->
+    {% if page_obj and paginator %}
+    <div class="mt-4 flex items-center justify-between">
+      <div class="text-sm text-gray-600">Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ paginator.count }} claims</div>
+      <div class="flex gap-2">
+        {% if page_obj.has_previous %}
+          <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}" id="prevPage" class="px-3 py-1 bg-gray-200 rounded">Previous</a>
+        {% endif %}
+        <span class="px-2 py-1">Page <span id="pageNum">{{ page_obj.number }}</span> of <span id="pageCount">{{ paginator.num_pages }}</span></span>
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}" id="nextPage" class="px-3 py-1 bg-gray-200 rounded">Next</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  
+    <script>
+    (function() {
+      const form = document.querySelector('form');
+      const liveCheckbox = document.getElementById('liveFilter');
+      const tbody = document.querySelector('table tbody');
+      const pageNumSpan = document.getElementById('pageNum');
+      const pageCountSpan = document.getElementById('pageCount');
+
+      function serializeParams(params) {
+        return Object.keys(params).map(k => encodeURIComponent(k) + '=' + encodeURIComponent(params[k])).join('&');
+      }
+
+      async function fetchClaims(params) {
+        const q = serializeParams(params);
+        const url = '/api/admin/claims/?' + q;
+        const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        if (!res.ok) throw new Error('Failed to fetch claims');
+        return await res.json();
+      }
+
+      function buildRow(c) {
+        return `\n        <tr>\n          <td class="px-4 py-2 text-sm text-gray-700">${c.id}</td>\n          <td class="px-4 py-2 text-sm text-gray-700">${c.order_id || ''}</td>\n          <td class="px-4 py-2 text-sm text-gray-700">${c.customer || ''}</td>\n          <td class="px-4 py-2 text-sm text-gray-700">${c.claimant_name || '(customer)'}</td>\n          <td class="px-4 py-2 text-sm text-gray-700">${c.claimant_phone || ''}</td>\n          <td class="px-4 py-2 text-sm text-gray-700">${c.recorded_by || ''}</td>\n          <td class="px-4 py-2 text-sm text-gray-700">${c.recorded_at || ''}</td>\n          <td class="px-4 py-2 text-sm text-gray-700">${(c.notes||'').substring(0,80)}</td>\n          <td class="px-4 py-2 text-sm text-gray-700">${c.reversed ? 'Yes' : 'No'}</td>\n        </tr>`;
+      }
+
+      async function doFetch(page=1) {
+        const fd = new FormData(form);
+        const params = {};
+        for (const [k, v] of fd.entries()) {
+          if (v) params[k] = v;
+        }
+        params.page = page;
+        try {
+          const data = await fetchClaims(params);
+          tbody.innerHTML = data.results.map(buildRow).join('\n') || '<tr><td colspan="9" class="px-4 py-6 text-center text-gray-500">No claims found.</td></tr>';
+          if (pageNumSpan) pageNumSpan.textContent = data.page;
+          if (pageCountSpan) pageCountSpan.textContent = data.num_pages;
+          // update prev/next links
+          const prev = document.getElementById('prevPage');
+          const next = document.getElementById('nextPage');
+          if (prev) prev.onclick = (e) => { e.preventDefault(); doFetch(data.page - 1); };
+          if (next) next.onclick = (e) => { e.preventDefault(); doFetch(data.page + 1); };
+        } catch (err) {
+          console.error(err);
+        }
+      }
+
+      form.addEventListener('submit', function(e) {
+        if (liveCheckbox && liveCheckbox.checked) {
+          e.preventDefault();
+          doFetch(1);
+        }
+      });
+
+      // Live filter on input change when checkbox is checked
+      form.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('input', function() {
+          if (liveCheckbox && liveCheckbox.checked) {
+            doFetch(1);
+          }
+        });
+      });
+
+      // Initial AJAX load only if live checkbox checked by default
+      if (liveCheckbox && liveCheckbox.checked) {
+        doFetch(1);
+      }
+    })();
+    </script>
+</div>
+{% endblock %}

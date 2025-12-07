@@ -25,6 +25,7 @@ urlpatterns = [
     path('manage-orders/', views.manage_orders_view, name='manage_orders'),
     path('manage-tasks/', views.manage_tasks_view, name='manage_tasks'),
     path('manage-commissions/', views.manage_commissions_view, name='manage_commissions'),
+    path('manage-workflow/', views.manage_workflow_view, name='manage_workflow'),
     path('order-summary/', views.order_summary_view, name='order_summary'),
     path('logout/', views.logout_page_view, name='logout'),
     path('assign-order/<int:order_id>/', views.assign_order_view, name='assign_order'),
@@ -71,6 +72,7 @@ urlpatterns = [
     path('manage-payments/', views.manage_payments, name='manage_payments'),
     path('api/admin/payment-summary/', views.payment_summary, name='admin_payment_summary'),
     path('api/admin/assign-order/', views.assign_order_to_tailor, name='admin_assign_order'),
+    path('api/admin/orders/<int:order_id>/claim/', views.mark_order_claimed, name='admin_mark_order_claimed'),
     path('api/admin/fabrics/<int:fabric_id>/restock/', inventory_views.restock_fabric, name='admin_restock_fabric'),
     path('api/admin/accessories/<int:accessory_id>/restock/', inventory_views.restock_accessory, name='admin_restock_accessory'),
     path('api/admin/inventory/low-stock/', inventory_views.get_low_stock_items, name='admin_low_stock'),
@@ -101,11 +103,15 @@ urlpatterns = [
     # Admin Report URLs
     path('admin-reports/', admin_report_views.admin_reports_page, name='admin_reports_page'),
     path('admin-reports/generate/<str:report_type>/', admin_report_views.generate_admin_report, name='generate_admin_report'),
+    path('admin-claims/', admin_report_views.admin_claims_page, name='admin_claims_page'),
+    path('admin-claims/export/', admin_report_views.export_claims_report, name='export_claims_report'),
+    path('api/admin/claims/', admin_report_views.admin_claims_api, name='admin_claims_api'),
 
     # Admin Stats API URLs
     path('api/admin/stats/revenue/', admin_report_views.admin_stats_revenue, name='admin_stats_revenue'),
     path('api/admin/stats/orders/', admin_report_views.admin_stats_orders, name='admin_stats_orders'),
     path('api/admin/stats/commissions/', admin_report_views.admin_stats_commissions, name='admin_stats_commissions'),
+    path('api/admin/stats/claims/', admin_report_views.admin_stats_claims, name='admin_stats_claims'),
     path('api/admin/stats/tailors/', admin_report_views.admin_stats_tailors, name='admin_stats_tailors'),
 
     # Admin Charts API URLs

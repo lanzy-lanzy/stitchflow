@@ -1,0 +1,313 @@
+{% extends 'base.html' %}
+{% block title %}Manage Workflow - El Senior Dumingag{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold">Admin Workflow</h1>
+            <p class="text-sm text-gray-600">Orders, Tasks & Commissions — quick actions in one place.</p>
+        </div>
+        <div class="text-sm text-gray-500">Tip: actions update lists automatically.</div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <section class="bg-white p-4 rounded-lg shadow-md">
+            <h2 class="font-semibold mb-3">Orders <span class="text-xs text-gray-400">(Unassigned / Pending)</span></h2>
+            <div id="ordersList" class="space-y-3 text-sm text-gray-700">Loading orders...</div>
+        </section>
+
+        <section class="bg-white p-4 rounded-lg shadow-md">
+            <h2 class="font-semibold mb-3">Tasks <span class="text-xs text-gray-400">(Completed / Awaiting Approval)</span></h2>
+            <div id="tasksList" class="space-y-3 text-sm text-gray-700">Loading tasks...</div>
+        </section>
+
+        <section class="bg-white p-4 rounded-lg shadow-md">
+            <h2 class="font-semibold mb-3">Commissions <span class="text-xs text-gray-400">(Pending)</span></h2>
+            <div id="commissionsList" class="space-y-3 text-sm text-gray-700">Loading commissions...</div>
+        </section>
+    </div>
+</div>
+
+<script>
+// CSRF helper
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+// Helper: safe access for nested fields
+function getCustomerNameFromOrder(order) {
+    if (!order) return 'Unknown Customer';
+    if (order.customer) {
+        if (order.customer.full_name) return order.customer.full_name;
+        if (order.customer.user) return `${order.customer.user.first_name || ''} ${order.customer.user.last_name || ''}`.trim() || order.customer.user.username;
+    }
+    if (order.customer_name) return order.customer_name;
+    return 'Unknown Customer';
+}
+
+// Helper: safe tailor name
+function getTailorName(t) {
+    if (!t) return 'Tailor';
+    if (t.user) return `${t.user.first_name || ''} ${t.user.last_name || ''}`.trim() || t.user.username;
+    return t.id ? `Tailor ${t.id}` : 'Tailor';
+}
+
+// Fetch and render orders
+async function loadOrders() {
+    const container = document.getElementById('ordersList');
+    container.innerHTML = '<p class="text-gray-500">Loading orders...</p>';
+    try {
+        const res = await fetch('/api/admin/orders/');
+        if (!res.ok) throw new Error('Failed to fetch orders');
+        const data = await res.json();
+        const orders = data.results || data;
+        if (!orders || orders.length === 0) {
+            container.innerHTML = '<p class="text-gray-500">No orders found.</p>';
+            return;
+        }
+        container.innerHTML = '';
+        // Render each order as a nicer card
+        orders.forEach(order => {
+            const el = document.createElement('div');
+            el.className = 'p-3 border rounded-lg shadow-sm flex items-start justify-between bg-gray-50';
+
+            const left = document.createElement('div');
+            left.className = 'flex-1';
+            const custName = getCustomerNameFromOrder(order);
+            const claimed = !!order.claimed_at;
+            const statusText = claimed ? 'CLAIMED' : (order.status || 'N/A');
+            let badgeClass = 'bg-yellow-100 text-yellow-800';
+            if (claimed) badgeClass = 'bg-green-100 text-green-800';
+            else if (order.status === 'ASSIGNED') badgeClass = 'bg-green-100 text-green-800';
+            else if (order.status === 'APPROVED') badgeClass = 'bg-amber-100 text-amber-800';
+
+            const statusBadge = `<span class="inline-block text-xs px-2 py-1 rounded ${badgeClass}">${statusText}</span>`;
+
+            const claimedInfo = claimed ? `<div class="text-xs text-green-700 mt-2">Picked up: ${new Date(order.claimed_at).toLocaleString()}${order.claimed_by ? ' by ' + (order.claimed_by || '') : ''}</div>` : '';
+
+            left.innerHTML = `<div class="flex items-center justify-between"><div class="font-medium">Order #${order.id}</div>${statusBadge}</div><div class="text-xs text-gray-600 mt-1">${custName}</div><div class="text-xs text-gray-500 mt-2">Total: ₱${order.total_amount || '0.00'} • Due: ${order.due_date || 'N/A'}</div>${claimedInfo}`;
+
+            const right = document.createElement('div');
+            right.className = 'ml-4 w-40';
+            // If already claimed, disable the actions and show claimed state
+                if (claimed) {
+                    right.innerHTML = `
+                        <button class="w-full bg-gray-300 text-gray-700 px-3 py-1 rounded" disabled>Claimed</button>
+                        <a href="/admin-claims/?order_id=${order.id}" class="w-full block text-center mt-2 text-sm text-blue-600 underline">View Claim History</a>
+                    `;
+                } else {
+                    right.innerHTML = `
+                        <select class="w-full border px-2 py-1 mb-2 tailors-select" data-order-id="${order.id}"></select>
+                        <button class="w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded assign-btn" data-order-id="${order.id}">Assign</button>
+                        <button class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded mark-claimed-btn" data-order-id="${order.id}">Mark Claimed</button>
+                        <a href="/admin-claims/?order_id=${order.id}" class="w-full block text-center mt-2 text-sm text-blue-600 underline">View Claim History</a>
+                    `;
+                }
+
+            el.appendChild(left);
+            el.appendChild(right);
+            container.appendChild(el);
+        });
+
+        // Load tailors and populate selects
+        const tailorsRes = await fetch('/api/admin/tailors/');
+        const tailorsData = await tailorsRes.json();
+        const tailors = tailorsData.results || tailorsData;
+        document.querySelectorAll('.tailors-select').forEach(sel => {
+            sel.innerHTML = '<option value="">Choose tailor</option>';
+            tailors.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.text = getTailorName(t);
+                sel.appendChild(opt);
+            });
+        });
+
+        document.querySelectorAll('.assign-btn').forEach(btn => {
+            btn.addEventListener('click', async (ev) => {
+                const orderId = btn.getAttribute('data-order-id');
+                const select = document.querySelector(`.tailors-select[data-order-id='${orderId}']`);
+                const tailorId = select.value;
+                if (!tailorId) { alert('Choose a tailor first'); return; }
+                btn.disabled = true;
+                btn.textContent = 'Assigning...';
+                try {
+                    const r = await fetch('/api/admin/assign-order/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrftoken
+                        },
+                        body: JSON.stringify({ order_id: orderId, tailor_id: tailorId })
+                    });
+                    const j = await r.json();
+                    if (!r.ok) throw new Error(j.detail || 'Assign failed');
+                    alert('Order assigned. Task created.');
+                    loadOrders();
+                    loadTasks();
+                } catch (err) {
+                    alert('Error: ' + err.message);
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Assign';
+                }
+            });
+        });
+
+        // Mark Claimed buttons
+        document.querySelectorAll('.mark-claimed-btn').forEach(btn => {
+            btn.addEventListener('click', async (ev) => {
+                const orderId = btn.getAttribute('data-order-id');
+                if (!confirm('Mark this order as claimed by the customer?')) return;
+                btn.disabled = true;
+                const prev = btn.textContent;
+                btn.textContent = 'Processing...';
+                try {
+                    const r = await fetch(`/api/admin/orders/${orderId}/claim/`, { method: 'POST', headers: { 'X-CSRFToken': csrftoken } });
+                    const j = await r.json();
+                    if (!r.ok) throw new Error(j.detail || 'Failed to mark claimed');
+                    alert('Order marked as claimed.');
+                    loadOrders();
+                    loadCommissions();
+                } catch (err) {
+                    alert('Error: ' + err.message);
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = prev;
+                }
+            });
+        });
+
+    } catch (err) {
+        container.innerHTML = `<p class="text-red-500">${err.message}</p>`;
+    }
+}
+
+// Fetch and render tasks
+async function loadTasks() {
+    const container = document.getElementById('tasksList');
+    container.innerHTML = '<p class="text-gray-500">Loading tasks...</p>';
+    try {
+        const res = await fetch('/api/admin/tasks/');
+        if (!res.ok) throw new Error('Failed to fetch tasks');
+        const data = await res.json();
+        const tasks = data.results || data;
+        const pending = tasks.filter(t => t.status === 'COMPLETED');
+        if (!pending || pending.length === 0) {
+            container.innerHTML = '<p class="text-gray-500">No completed tasks awaiting approval.</p>';
+            return;
+        }
+        container.innerHTML = '';
+        pending.forEach(task => {
+            const el = document.createElement('div');
+            el.className = 'p-3 border rounded-lg shadow-sm flex items-start justify-between bg-gray-50';
+            const left = document.createElement('div');
+            left.className = 'flex-1';
+            const tailorName = getTailorName(task.tailor);
+            const custName = task.customer_name || (task.order_details && task.order_details.customer_name) || 'Customer';
+            left.innerHTML = `<div class="font-medium">Task #${task.id} — Order #${task.order}</div><div class="text-xs text-gray-600 mt-1">Tailor: ${tailorName}</div><div class="text-xs text-gray-500 mt-2">Customer: ${custName}</div>`;
+            const btns = document.createElement('div');
+            btns.className = 'ml-4 flex-shrink-0 space-y-2 w-36';
+            btns.innerHTML = `<button class="w-full bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded approve-btn" data-task-id="${task.id}">Approve</button> <button class="w-full bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded pay-commission-btn" data-task-id="${task.id}">Pay Commission</button>`;
+            el.appendChild(left);
+            el.appendChild(btns);
+            container.appendChild(el);
+        });
+        document.querySelectorAll('.approve-btn').forEach(b => b.addEventListener('click', async (ev) => {
+            const id = b.getAttribute('data-task-id');
+            b.disabled = true; b.textContent = 'Approving...';
+            try {
+                const r = await fetch(`/api/admin/tasks/${id}/approve/`, { method: 'POST', headers: { 'X-CSRFToken': csrftoken } });
+                const j = await r.json();
+                if (!r.ok) throw new Error(j.detail || 'Approve failed');
+                alert('Task approved and commission created.');
+                loadTasks();
+                loadCommissions();
+            } catch (err) { alert('Error: ' + err.message); }
+            finally { b.disabled = false; b.textContent = 'Approve'; }
+        }));
+        document.querySelectorAll('.pay-commission-btn').forEach(b => b.addEventListener('click', async (ev) => {
+            const id = b.getAttribute('data-task-id');
+            b.disabled = true; b.textContent = 'Paying...';
+            try {
+                const r = await fetch(`/api/admin/tasks/${id}/pay-commission/`, { method: 'POST', headers: { 'X-CSRFToken': csrftoken } });
+                const j = await r.json();
+                if (!r.ok) throw new Error(j.detail || 'Pay failed');
+                alert('Commission paid for task.');
+                loadTasks();
+                loadCommissions();
+            } catch (err) { alert('Error: ' + err.message); }
+            finally { b.disabled = false; b.textContent = 'Pay Commission'; }
+        }));
+
+    } catch (err) {
+        container.innerHTML = `<p class="text-red-500">${err.message}</p>`;
+    }
+}
+
+// Fetch and render commissions
+async function loadCommissions() {
+    const container = document.getElementById('commissionsList');
+    container.innerHTML = '<p class="text-gray-500">Loading commissions...</p>';
+    try {
+        const res = await fetch('/api/admin/commissions/');
+        if (!res.ok) throw new Error('Failed to fetch commissions');
+        const data = await res.json();
+        const commissions = data.results || data;
+        const pending = commissions.filter(c => c.status !== 'PAID');
+        if (!pending || pending.length === 0) {
+            container.innerHTML = '<p class="text-gray-500">No pending commissions.</p>';
+            return;
+        }
+        container.innerHTML = '';
+        pending.forEach(c => {
+            const el = document.createElement('div');
+            el.className = 'p-3 border rounded-lg shadow-sm flex items-start justify-between bg-gray-50';
+            const left = document.createElement('div');
+            left.className = 'flex-1';
+            const tailorName = getTailorName(c.tailor);
+            left.innerHTML = `<div class="font-medium">Commission #${c.id}</div><div class="text-sm text-gray-700 mt-1">₱${c.amount}</div><div class="text-xs text-gray-500 mt-2">Tailor: ${tailorName}</div>`;
+            const btn = document.createElement('button');
+            btn.className = 'ml-4 w-32 bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded';
+            btn.textContent = 'Mark Paid';
+            btn.addEventListener('click', async () => {
+                btn.disabled = true; btn.textContent = 'Processing...';
+                try {
+                    const r = await fetch(`/api/admin/commissions/${c.id}/pay/`, { method: 'POST', headers: { 'X-CSRFToken': csrftoken } });
+                    const j = await r.json();
+                    if (!r.ok) throw new Error(j.detail || 'Pay failed');
+                    alert('Commission marked as paid.');
+                    loadCommissions();
+                    loadTasks();
+                } catch (err) { alert('Error: ' + err.message); }
+                finally { btn.disabled = false; btn.textContent = 'Mark Paid'; }
+            });
+            el.appendChild(left);
+            el.appendChild(btn);
+            container.appendChild(el);
+        });
+    } catch (err) {
+        container.innerHTML = `<p class="text-red-500">${err.message}</p>`;
+    }
+}
+
+// Initial load
+loadOrders();
+loadTasks();
+loadCommissions();
+</script>
+
+{% endblock %}

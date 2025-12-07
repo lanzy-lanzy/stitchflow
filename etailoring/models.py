@@ -232,6 +232,9 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     paid_at = models.DateTimeField(null=True, blank=True)
+    # Timestamp and user who recorded that the customer claimed/picked up the garment
+    claimed_at = models.DateTimeField(null=True, blank=True)
+    claimed_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='claimed_orders')
 
     # Down payment fields
     down_payment_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -429,6 +432,27 @@ class Commission(models.Model):
     
     def __str__(self):
         return f"Commission for {self.tailor.user.username} - Order {self.order.id}"
+
+
+class Claim(models.Model):
+    """Audit record for when an order is claimed (picked up) by a customer.
+
+    Stores who claimed (name/phone), who recorded the claim in the system (admin),
+    optional notes, and timestamps. This allows reversals or notes to be kept
+    as an audit trail separate from the `Order` convenience fields.
+    """
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='claims')
+    claimant_name = models.CharField(max_length=200, blank=True)
+    claimant_phone = models.CharField(max_length=50, blank=True)
+    recorded_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='recorded_claims')
+    recorded_at = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True)
+    reversed = models.BooleanField(default=False)
+    reversed_at = models.DateTimeField(null=True, blank=True)
+    reversed_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='reversed_claims')
+
+    def __str__(self):
+        return f"Claim for Order {self.order.id} by {self.claimant_name or 'Unknown'} at {self.recorded_at.isoformat()}"
 
 
 # --- Inventory deduction hooks -------------------------------------------------

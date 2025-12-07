@@ -217,6 +217,18 @@ def manage_commissions_view(request):
 
 
 @login_required
+def manage_workflow_view(request):
+    """
+    Consolidated admin workflow view that provides quick actions for
+    orders, tasks, and commissions in a single page to simplify admin work.
+    """
+    if not request.user.is_staff:
+        return redirect('etailoring:homepage')
+    # Minimal context — the page will load data via admin APIs
+    return render(request, 'manage_workflow.html')
+
+
+@login_required
 def manage_payments(request):
     """
     Admin view to manage customer payments.
@@ -883,6 +895,55 @@ def restock_accessory(request, accessory_id):
     except Exception as e:
         return Response({'detail': f'An error occurred: {str(e)}'}, 
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated, IsAdminUser])
+def mark_order_claimed(request, order_id):
+    """
+    API endpoint for admin to mark an order as claimed (customer picked up garment).
+    Records `claimed_at` and `claimed_by` but does not change payment/commission state.
+    """
+    try:
+        order = Order.objects.get(id=order_id)
+
+        if order.claimed_at:
+            return Response({'detail': 'Order already marked claimed.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        order.claimed_at = timezone.now()
+        order.claimed_by = request.user
+
+        # Create an audit Claim entry so we keep a history of who claimed and any notes.
+        try:
+            from .models import Claim
+            claimant_name = request.data.get('claimant_name') or (order.customer.user.get_full_name() if order.customer and order.customer.user else '')
+            claimant_phone = request.data.get('claimant_phone') or (order.customer.phone_number if hasattr(order, 'customer') else '')
+            Claim.objects.create(
+                order=order,
+                claimant_name=claimant_name,
+                claimant_phone=claimant_phone,
+                recorded_by=request.user,
+                notes=request.data.get('notes', '')
+            )
+        except Exception:
+            # If claim creation fails for any reason, continue — we still want the
+            # primary order fields to be recorded. Log in production.
+            logger.exception('Failed to create Claim audit record for order %s', getattr(order, 'id', 'unknown'))
+
+        # When admin marks claimed, treat this as completion of the order lifecycle.
+        # Only update status if it's not already a terminal state.
+        if order.status not in ('COMPLETED', 'APPROVED', 'CANCELLED'):
+            order.status = 'COMPLETED'
+            order.save(update_fields=['claimed_at', 'claimed_by', 'status', 'updated_at'])
+        else:
+            order.save(update_fields=['claimed_at', 'claimed_by', 'updated_at'])
+
+        return Response({'detail': 'Order marked as claimed.', 'order_id': order.id}, status=status.HTTP_200_OK)
+    except Order.DoesNotExist:
+        return Response({'detail': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        logger.exception('Error marking order claimed: %s', e)
+        return Response({'detail': f'An error occurred: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # Tailor Views

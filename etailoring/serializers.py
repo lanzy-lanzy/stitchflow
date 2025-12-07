@@ -188,6 +188,9 @@ class GarmentTypeSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     total_amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    claimed_at = serializers.DateTimeField(read_only=True)
+    # Expose the full name of the user who recorded the claim (if any)
+    claimed_by = serializers.CharField(source='claimed_by.get_full_name', read_only=True)
     customer = CustomerSerializer(read_only=True)
     customer_id = serializers.PrimaryKeyRelatedField(
         queryset=Customer.objects.all(),
@@ -233,6 +236,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'category', 'category_display', 'garment_type', 'garment_type_display', 'quantity',
             'fabric_type', 'color_design_preference', 'payment_option', 'order_date', 'due_date',
             'total_amount', 'down_payment_amount', 'down_payment_status', 'down_payment_paid_at', 'remaining_balance', 'status', 'payment_status', 'paid_at', 'created_at', 'updated_at',
+            'claimed_at', 'claimed_by',
             # Measurement fields
             'neck_circumference', 'shoulder_width', 'chest_bust_circumference',
             'upper_bust_circumference', 'under_bust_circumference', 'waist_circumference',
