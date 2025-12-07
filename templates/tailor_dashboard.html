@@ -351,6 +351,22 @@
             // Handle paginated responses
             const tasks = data.results || data;
 
+            // Sort tasks so newest appear first (use order created date, fallback to assigned_at, then id)
+            try {
+                tasks.sort((a, b) => {
+                    const getTime = (t) => {
+                        if (!t) return 0;
+                        if (t.order_details && t.order_details.created_at) return new Date(t.order_details.created_at).getTime();
+                        if (t.assigned_at) return new Date(t.assigned_at).getTime();
+                        if (t.id != null) return Number(t.id);
+                        return 0;
+                    };
+                    return getTime(b) - getTime(a);
+                });
+            } catch (e) {
+                console.warn('Failed to sort tasks by date, leaving original order.', e);
+            }
+
             // Store tasks globally for modal access
             window.currentTasks = tasks;
 
