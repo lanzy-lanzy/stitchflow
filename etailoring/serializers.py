@@ -236,7 +236,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'category', 'category_display', 'garment_type', 'garment_type_display', 'quantity',
             'fabric_type', 'color_design_preference', 'payment_option', 'order_date', 'due_date',
             'total_amount', 'down_payment_amount', 'down_payment_status', 'down_payment_paid_at', 'remaining_balance', 'status', 'payment_status', 'paid_at', 'created_at', 'updated_at',
-            'claimed_at', 'claimed_by',
+            'claimed_at', 'claimed_by', 'assigned_tailor',
             # Measurement fields
             'neck_circumference', 'shoulder_width', 'chest_bust_circumference',
             'upper_bust_circumference', 'under_bust_circumference', 'waist_circumference',
@@ -247,7 +247,22 @@ class OrderSerializer(serializers.ModelSerializer):
             'inseam_crotch_to_ankle', 'outseam_waist_to_ankle', 'front_rise', 'back_rise',
             'skirt_dress_length', 'hem_circumference', 'jacket_length_shoulder_to_hem'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'paid_at', 'order_date']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'paid_at', 'order_date', 'assigned_tailor']
+
+    assigned_tailor = serializers.SerializerMethodField()
+
+    def get_assigned_tailor(self, obj):
+        try:
+            task = Task.objects.get(order=obj)
+            tailor = task.tailor
+            # Return tailor details and current task status
+            return {
+                'id': tailor.id,
+                'name': f"{tailor.user.first_name} {tailor.user.last_name}".strip() or tailor.user.username,
+                'task_status': task.status
+            }
+        except Task.DoesNotExist:
+            return None
     
     def create(self, validated_data):
         from django.utils import timezone

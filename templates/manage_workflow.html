@@ -74,55 +74,70 @@ async function loadOrders() {
         if (!res.ok) throw new Error('Failed to fetch orders');
         const data = await res.json();
         const orders = data.results || data;
-        if (!orders || orders.length === 0) {
-            container.innerHTML = '<p class="text-gray-500">No orders found.</p>';
+        // Filter out completed/claimed orders to keep the list clean? 
+        // Or keep them as per current design? current design shows unclaimed.
+        // Let's filter out claimed to be safe.
+        const pendingOrders = orders.filter(o => !o.claimed_at);
+        
+        if (!pendingOrders || pendingOrders.length === 0) {
+            container.innerHTML = '<p class="text-gray-500">No pending orders.</p>';
             return;
         }
         container.innerHTML = '';
         // Render each order as a nicer card
-        orders.forEach(order => {
+        pendingOrders.forEach(order => {
             const el = document.createElement('div');
             el.className = 'p-3 border rounded-lg shadow-sm flex items-start justify-between bg-gray-50';
 
             const left = document.createElement('div');
             left.className = 'flex-1';
             const custName = getCustomerNameFromOrder(order);
-            const claimed = !!order.claimed_at;
-            const statusText = claimed ? 'CLAIMED' : (order.status || 'N/A');
+            const statusText = order.status || 'N/A';
             let badgeClass = 'bg-yellow-100 text-yellow-800';
-            if (claimed) badgeClass = 'bg-green-100 text-green-800';
-            else if (order.status === 'ASSIGNED') badgeClass = 'bg-green-100 text-green-800';
-            else if (order.status === 'APPROVED') badgeClass = 'bg-amber-100 text-amber-800';
+            
+            if (order.status === 'ASSIGNED') badgeClass = 'bg-blue-100 text-blue-800';
+            else if (order.status === 'IN_PROGRESS') badgeClass = 'bg-indigo-100 text-indigo-800';
+            else if (order.status === 'COMPLETED') badgeClass = 'bg-green-100 text-green-800';
+            else if (order.status === 'APPROVED') badgeClass = 'bg-teal-100 text-teal-800';
 
             const statusBadge = `<span class="inline-block text-xs px-2 py-1 rounded ${badgeClass}">${statusText}</span>`;
 
-            const claimedInfo = claimed ? `<div class="text-xs text-green-700 mt-2">Picked up: ${new Date(order.claimed_at).toLocaleString()}${order.claimed_by ? ' by ' + (order.claimed_by || '') : ''}</div>` : '';
-
-            left.innerHTML = `<div class="flex items-center justify-between"><div class="font-medium">Order #${order.id}</div>${statusBadge}</div><div class="text-xs text-gray-600 mt-1">${custName}</div><div class="text-xs text-gray-500 mt-2">Total: ₱${order.total_amount || '0.00'} • Due: ${order.due_date || 'N/A'}</div>${claimedInfo}`;
+            left.innerHTML = `<div class="flex items-center justify-between"><div class="font-medium">Order #${order.id}</div>${statusBadge}</div><div class="text-xs text-gray-600 mt-1">${custName}</div><div class="text-xs text-gray-500 mt-2">Total: ₱${order.total_amount || '0.00'} • Due: ${order.due_date || 'N/A'}</div>`;
+            
+            // Show assigned tailor if exists
+            if (order.assigned_tailor) {
+                left.innerHTML += `<div class="text-xs text-indigo-600 mt-2 font-medium">Assigned to: ${order.assigned_tailor.name}</div>`;
+            }
 
             const right = document.createElement('div');
             right.className = 'ml-4 w-40';
-            // If already claimed, disable the actions and show claimed state
-                if (claimed) {
-                    right.innerHTML = `
-                        <button class="w-full bg-gray-300 text-gray-700 px-3 py-1 rounded" disabled>Claimed</button>
-                        <a href="/admin-claims/?order_id=${order.id}" class="w-full block text-center mt-2 text-sm text-blue-600 underline">View Claim History</a>
-                    `;
-                } else {
-                    right.innerHTML = `
-                        <select class="w-full border px-2 py-1 mb-2 tailors-select" data-order-id="${order.id}"></select>
-                        <button class="w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded assign-btn" data-order-id="${order.id}">Assign</button>
-                        <button class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded mark-claimed-btn" data-order-id="${order.id}">Mark Claimed</button>
-                        <a href="/admin-claims/?order_id=${order.id}" class="w-full block text-center mt-2 text-sm text-blue-600 underline">View Claim History</a>
-                    `;
-                }
+            
+            
+            // Only show Mark Claimed if status is APPROVED
+            // This prevents claiming before the work is done and approved
+            const showMarkClaimed = (order.status === 'APPROVED');
+
+            if (order.assigned_tailor) {
+                // If already assigned, show minimal actions
+                 right.innerHTML = `
+                    ${showMarkClaimed ? `<button class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded mark-claimed-btn" data-order-id="${order.id}">Mark Claimed</button>` : ''}
+                    <a href="/admin-claims/?order_id=${order.id}" class="w-full block text-center mt-2 text-sm text-blue-600 underline">View Claim History</a>
+                `;
+            } else {
+                // If not assigned, show assignment tools
+                right.innerHTML = `
+                    <select class="w-full border px-2 py-1 mb-2 tailors-select" data-order-id="${order.id}"></select>
+                    <button class="w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded assign-btn" data-order-id="${order.id}">Assign</button>
+                    ${showMarkClaimed ? `<button class="w-full mt-2 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded mark-claimed-btn" data-order-id="${order.id}">Mark Claimed</button>` : ''}
+                `;
+            }
 
             el.appendChild(left);
             el.appendChild(right);
             container.appendChild(el);
         });
 
-        // Load tailors and populate selects
+        // Load tailors and populate selects only where needed
         const tailorsRes = await fetch('/api/admin/tailors/');
         const tailorsData = await tailorsRes.json();
         const tailors = tailorsData.results || tailorsData;
@@ -201,17 +216,18 @@ async function loadTasks() {
     const container = document.getElementById('tasksList');
     container.innerHTML = '<p class="text-gray-500">Loading tasks...</p>';
     try {
-        const res = await fetch('/api/admin/tasks/');
+        // Fetch only COMPLETED tasks to ensure we see them all
+        const res = await fetch('/api/admin/tasks/?status=COMPLETED');
         if (!res.ok) throw new Error('Failed to fetch tasks');
         const data = await res.json();
         const tasks = data.results || data;
-        const pending = tasks.filter(t => t.status === 'COMPLETED');
-        if (!pending || pending.length === 0) {
+        
+        if (!tasks || tasks.length === 0) {
             container.innerHTML = '<p class="text-gray-500">No completed tasks awaiting approval.</p>';
             return;
         }
         container.innerHTML = '';
-        pending.forEach(task => {
+        tasks.forEach(task => {
             const el = document.createElement('div');
             el.className = 'p-3 border rounded-lg shadow-sm flex items-start justify-between bg-gray-50';
             const left = document.createElement('div');
@@ -221,36 +237,28 @@ async function loadTasks() {
             left.innerHTML = `<div class="font-medium">Task #${task.id} — Order #${task.order}</div><div class="text-xs text-gray-600 mt-1">Tailor: ${tailorName}</div><div class="text-xs text-gray-500 mt-2">Customer: ${custName}</div>`;
             const btns = document.createElement('div');
             btns.className = 'ml-4 flex-shrink-0 space-y-2 w-36';
-            btns.innerHTML = `<button class="w-full bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded approve-btn" data-task-id="${task.id}">Approve</button> <button class="w-full bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded pay-commission-btn" data-task-id="${task.id}">Pay Commission</button>`;
+            
+            // Only show Approve button which now handles everything
+            btns.innerHTML = `<button class="w-full bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded approve-btn" data-task-id="${task.id}">Approve & Pay</button>`;
+            
             el.appendChild(left);
             el.appendChild(btns);
             container.appendChild(el);
         });
+        
         document.querySelectorAll('.approve-btn').forEach(b => b.addEventListener('click', async (ev) => {
             const id = b.getAttribute('data-task-id');
-            b.disabled = true; b.textContent = 'Approving...';
+            b.disabled = true; b.textContent = 'Processing...';
             try {
                 const r = await fetch(`/api/admin/tasks/${id}/approve/`, { method: 'POST', headers: { 'X-CSRFToken': csrftoken } });
                 const j = await r.json();
                 if (!r.ok) throw new Error(j.detail || 'Approve failed');
-                alert('Task approved and commission created.');
+                alert('Task approved & commission paid. Order is now READY FOR PICKUP.');
                 loadTasks();
                 loadCommissions();
+                loadOrders(); // Reload orders to update status and show Mark Claimed button
             } catch (err) { alert('Error: ' + err.message); }
-            finally { b.disabled = false; b.textContent = 'Approve'; }
-        }));
-        document.querySelectorAll('.pay-commission-btn').forEach(b => b.addEventListener('click', async (ev) => {
-            const id = b.getAttribute('data-task-id');
-            b.disabled = true; b.textContent = 'Paying...';
-            try {
-                const r = await fetch(`/api/admin/tasks/${id}/pay-commission/`, { method: 'POST', headers: { 'X-CSRFToken': csrftoken } });
-                const j = await r.json();
-                if (!r.ok) throw new Error(j.detail || 'Pay failed');
-                alert('Commission paid for task.');
-                loadTasks();
-                loadCommissions();
-            } catch (err) { alert('Error: ' + err.message); }
-            finally { b.disabled = false; b.textContent = 'Pay Commission'; }
+            finally { b.disabled = false; b.textContent = 'Approve & Pay'; }
         }));
 
     } catch (err) {

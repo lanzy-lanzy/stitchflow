@@ -476,9 +476,15 @@ class OrderDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class TaskListCreateView(generics.ListCreateAPIView):
-    queryset = Task.objects.all()
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get_queryset(self):
+        queryset = Task.objects.all().order_by('-id')
+        status_param = self.request.query_params.get('status')
+        if status_param:
+            queryset = queryset.filter(status=status_param)
+        return queryset
 
 
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -590,8 +596,10 @@ def payment_summary(request):
 @permission_classes([IsAuthenticated, IsAdminUser])
 def approve_task(request, task_id):
     """
-    API endpoint for admin to approve a completed task and create commission.
-    Sends SMS notification to customer that their garment is ready for pickup.
+    API endpoint for admin to approve a completed task, create commission,
+    and automatically pay the commission.
+    The order remains in APPROVED status (not claimed yet) so the admin 
+    can manually marking it as claimed later.
     """
     try:
         task = Task.objects.get(id=task_id)
@@ -603,6 +611,15 @@ def approve_task(request, task_id):
 
         # Use business logic to approve task and create commission
         commission = OrderManager.approve_task(task)
+
+        # Automatically pay the commission
+        commission.status = 'PAID'
+        commission.paid_at = timezone.now()
+        commission.save()
+
+        # NOTE: We do NOT auto-claim the order here anymore.
+        # The user wants "Mark Claimed" to be visible AFTER approval.
+        # So order status remains 'APPROVED' (set by OrderManager.approve_task).
 
         # Send SMS notification to customer that garment is ready for pickup
         try:
@@ -624,14 +641,15 @@ def approve_task(request, task_id):
                 
         except Exception as e:
             logger.error(f'Error sending SMS notification for task {task_id}: {str(e)}')
-            # Don't fail the task approval if SMS fails, just log the error
 
         return Response({
-            'detail': 'Task approved successfully. Commission created. Customer notified via SMS.',
+            'detail': 'Task approved and commission paid successfully. Order is now APPROVED and ready for claim.',
             'task_id': task.id,
             'task_status': task.status,
             'commission_id': commission.id,
-            'commission_amount': str(commission.amount)
+            'commission_amount': str(commission.amount),
+            'commission_status': 'PAID',
+            'order_status': task.order.status
         }, status=status.HTTP_200_OK)
 
     except Task.DoesNotExist:
@@ -641,6 +659,7 @@ def approve_task(request, task_id):
         return Response({'detail': str(e)},
                         status=status.HTTP_400_BAD_REQUEST)
     except Exception as e:
+        logger.exception(f"Error approving task {task_id}: {e}")
         return Response({'detail': f'An error occurred: {str(e)}'},
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
